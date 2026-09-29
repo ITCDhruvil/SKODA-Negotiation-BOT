@@ -1,0 +1,13 @@
+S.No.,Company Code,Shopping Cart No.,Item Number,Requestor,Supplier ,"P.Org.
+( LPOS / PPMI)",P.Grp.,Purchase Order Name,Globe Number,Best Bid (considering all line items),Deemed Transaction,Currency,Invoice Recipient,Payment Terms,Incoterm Key,Incoterm Location,"Product ID
+( Part Number )",Product Category,"Description
+( not reqd. if Part Number is avl.)",Qty.,Unit,Gross Price/Unit,"Delivery Date
+(DD.MM.YYYY)",Validity Date,Tax Code,HSN / SAC Number,Vendor Text ( Item),Vendor Text ( Appendix),Penalty Clause Information,Add. Delivery date information,Vendor Text ( Header),Warranty Period,Ship - To Address,Technical Contact Person,Technical Contact Person Phone,Internal Note,Add. Payment term information
+1,800,1010515907,1,Ms. Apurva Hundekari,3300179408,LPOS,GPZ,Test PO 1,,10,2,INR,227380,ZD30,FH,SAVWIPL,,17000000,Test Scenario 1 - 20.06.2023,2,EA,0.02,31.07.2023,,5L,9983,Vendor Text ( Item),Vendor Text ( Appendix),,,,,,abcd,02135-661000,For Testing of BOT,
+2,800,1010515907,2,Ms. Apurva Hundekari,,,GPZ,,,,,,,,,,,19000000,Test Scenario 2,100,EA,0.01,25.05.2023,,5A,9983,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,FC,,,,,,,,,,,,,,
