@@ -1,0 +1,128 @@
+ASSUMPTIONS LOG - Main Negotiation Bot
+Append new points at the bottom. Format: number, statement, reason.
+
+1. INR is the primary currency for all prices, values and the export.
+   Reason: sample cart report is INR; EUR columns exist only as SAP shadow values.
+
+2. EUR figures are kept only to derive the SC value type (CTM < 10k EUR).
+   Reason: the only place the sample uses EUR meaningfully.
+
+3. Bot may negotiate ALL template terms: price, payment terms, incoterm, delivery/pickup date, validity, warranty, penalty clause. (Changed from price+payment+date after user chose "All template terms".)
+   Reason: user decision; gives full export round-trip. Consequence: needs a rule to compare offers with mixed terms (see point 15).
+
+4. Real cart data enters via CSV import of the exact 30-column Open Shopping Cart Report layout. No Excel upload in the POC.
+   Reason: sample is CSV; Excel adds parsing scope with no demo value.
+
+5. CSV files are read as cp1252; header names are whitespace-stripped; cart number is forward-filled across positions.
+   Reason: observed in the sample file (stray euro glyph, trailing spaces, blank cart on pos 2+).
+
+6. INR value column is the source of truth. Qty x unit price is validated per currency and only when unit price is not 0 or 1; mismatches raise data-quality warnings, not silent fixes.
+   Reason: the 3 meal rows (cart 1012358189) have qty = value, EUR unit price 0, INR unit price 1.
+
+7. BUY anchors: target <= ceiling < best bid for normal events. Ceiling is the max price we accept.
+   Reason: user prompt wording; needs confirmation in the spec.
+
+8. SELL anchors: floor <= best bid < target for normal events. Floor is the min price we accept.
+   Reason: mirror of BUY; needs confirmation in the spec.
+
+9. Seed data includes at least one BUY event with all bids above the ceiling and one SELL lot with all bids below the floor.
+   Reason: exercises the no-deal / escalate-to-buyer path.
+
+10. Scrap prices (INR/kg), market references and reserve prices are illustrative, not live quotes, and are labelled so in the UI.
+    Reason: no market data feed in scope.
+
+11. Shopping Cart template export applies to closed BUY events only. Template columns with no input source (Globe Number, Invoice Recipient, Tax Code, HSN/SAC, contacts, ship-to) use per-category seed defaults or stay blank.
+    Reason: template is BUY-specific; input CSV lacks these fields.
+
+12. Closed SELL events export a plain deal-summary CSV; no SAP template is defined for scrap sales.
+    Reason: no SELL template provided.
+
+13. Reference repo D:\negotiation_chatbot routes live in backend/app/main.py (no pipeline_routes.py). RAG, finetune, playbook, harness, handoff, postgres and redis modules are ignored.
+    Reason: verified by directory listing; not needed for this POC.
+
+14. Build order follows five phases: deal module and seed, API and lifecycle, frontend pages, negotiation workspace, export and demo.
+    Reason: keeps each phase demoable and limits sprawl.
+
+15. Mixed-term offers are compared by converting terms to an "effective price" (e.g. payment days, incoterm freight, warranty valued at an assumed rate). Rates are illustrative and configurable.
+    Reason: consequence of negotiating all terms (point 3); exact method to be confirmed in the spec.
+
+16. Source: user-provided Module 3 description (optional module, Negotiation Bot as buyer's helper). Real-world rules below are treated as product requirements; how much is simulated in the POC is decided in the spec.
+    Reason: pasted by user after kickoff review.
+
+17. Eligibility bands (Phase 1): cart value INR 2,000 to 3.5 lakh with >= 2 offers. Phase 2: up to INR 10 lakh with >= 3 offers. Events outside the band or below the offer minimum show "not eligible" and cannot start negotiation. POC implements both phases as a config value.
+    Reason: Module 3 description. Seed carts and bids must respect the bands (note: seed also has a sample cart above/below bands for the not-eligible case).
+
+18. Bot starts only after the buyer sets target price and limits (ceiling/floor). Bot never places the order; buyer approval remains the final decision.
+    Reason: Module 3 description; matches existing prompt (buyer-initiated, approval gate).
+
+19. Any offer or request outside the buyer's limits makes the bot stop and hand the case back to the buyer (same as the no-deal / escalate path in point 9).
+    Reason: Module 3 description.
+
+20. Supplier invitation channels: email, SMS, WhatsApp, sent Monday to Saturday 9:00 to 20:00 IST only. POC simulates the channel and enforces the time window (with a demo-override toggle so the demo can run any time).
+    Reason: Module 3 description; real integrations are out of scope per kickoff prompt.
+
+21. Suppliers may reply in English, Hindi or Marathi; bot replies in the supplier's language. POC uses mock/scripted vendor replies in all three.
+    Reason: Module 3 description.
+
+22. Supplier must give consent and verify by OTP before negotiation starts. POC simulates consent and a mock OTP (fixed test code, no real SMS).
+    Reason: Module 3 description; real OTP delivery out of scope.
+
+23. SELL (scrap) events are not mentioned in Module 3. Assumed they follow the same rules (consent/OTP, hours, languages, hand-back) and the same INR bands.
+    Reason: kickoff scope includes scrap sales; to be confirmed.
+
+24. Scrap SELL lots are sized to fit the same INR bands: hero lot is about 5 TON aluminium turnings (about INR 8.5 lakh, Phase 2 band, needs >= 3 bids). Seed includes 2-3 oversize or under-size lots that show "not eligible". (User decision, replaces the 20 TON hero lot in the kickoff prompt.)
+    Reason: 20 TON x ~INR 170/kg is about INR 34 lakh, above the 10 lakh Phase 2 ceiling.
+
+25. Supplier-side flow is simulated end-to-end in the POC (user decision): buyer picks channel per vendor and sends invite; a supplier-simulator page shows the message, consent tick and mock OTP; hours rule enforced with a demo-override toggle; vendor replies scripted or persona-driven in English, Hindi and Marathi. No real email, SMS or WhatsApp.
+    Reason: user chose the full simulated story over backend-only or deferral.
+
+26. Extra lifecycle states for each vendor per event: not_invited, invited, consented, otp_verified, negotiating, handed_back, closed. A vendor cannot negotiate until otp_verified.
+    Reason: needed to model consent and OTP; to be confirmed in the spec state machine.
+
+27. Architecture approach B (user decision): fresh core (deal module, models, lifecycle) written from scratch with tests; Aria orchestrator/LLM/demo pieces are ported selectively, one at a time, against new tests. No wholesale copy.
+    Reason: clean direction-aware seam; avoids automotive leftovers.
+
+28. Supplier-side Module 3 flow (invite channel, consent, mock OTP, working hours, EN/HI/MR language) is a frontend-only scripted story (user decision). No backend endpoints, storage or real services for it; state lives in client memory and resets on reload. Backend only sees the negotiation after the story reaches "otp_verified".
+    Reason: POC only; user wants no real services. Supersedes the backend parts of points 22, 25 and 26 (vendor states are UI-only).
+
+29. Hours rule and eligibility band are checked in the frontend for the story; the backend still validates cart value band and minimum offers when a negotiation starts (cheap, deterministic, part of deal maths).
+    Reason: money maths and rules stay in the backend; the time-of-day check is UI theatre with a demo override.
+
+30. Vendor replies in Hindi/Marathi are pre-written scripted lines mapped to the same structured offer (price, terms). The backend negotiation engine works on structured offers in English; translation is a presentation layer in the frontend.
+    Reason: keeps the engine and tests language-free; POC scope.
+
+31. Flow (user decision): initial points -> buyer reviews -> vendors respond -> bot analyzes quotes -> buyer starts negotiation -> bot negotiates/recommends -> buyer approves -> outcome recorded. "Initial points" is read as the buyer's negotiation points (target, limit, terms to push), to be confirmed.
+    Reason: user described the flow in chat.
+
+32. Item states: draft, points_reviewed, awaiting_bids, bids_in, analyzed, negotiating, result_pending, awaiting_approval, closed, plus handed_back. Event status is derived from its items (received, in_progress, closed).
+    Reason: maps the user's flow to the state machine; replaces the earlier item state list.
+
+33. Vendor bids are not all pre-seeded. Hero events start at draft; the seed holds scripted vendor responses which the frontend story releases into the backend as bids. Other events are pre-seeded at each later stage so the dashboard is populated on first load.
+    Reason: lets the demo run the whole flow while the dashboard still has data.
+
+34. Minimum-offers check (2 for Phase 1, 3 for Phase 2) runs when bids arrive, not at event creation; below the minimum the item stays in awaiting_bids.
+    Reason: bids arrive after the buyer reviews the points.
+
+35. Setup gets an "objective" field: reduce price, improve lead time, improve payment terms, improve commercial terms. It steers bot tactics; ceiling/floor guardrails still apply.
+    Reason: original Aria brief pasted by user.
+
+36. Dashboard has a "Simulate Event" action that creates a new event in draft from a scripted template (BUY or SELL).
+    Reason: original Aria brief ("New RFQ / Simulate RFQ").
+
+37. Closed-event summary shows original value, final value, total savings or uplift, items negotiated (x / y), vendors participated, and negotiation duration.
+    Reason: original Aria brief section 10.
+
+38. The Aria brief's 18-step demo is the acceptance script for both hero events (BUY and SELL), adapted to the new flow (points first, vendors respond, analyze).
+    Reason: original Aria brief section 14.
+
+39. Automotive data and categories from the Aria brief are NOT used; only its UX and flow are reused. Seed scale follows the kickoff prompt (>= 150 positions, >= 40 vendors), not the Aria brief (10-15 RFQs, 100+ items). Where the two flows differ (quotes-first vs points-first) the user's latest flow wins.
+    Reason: kickoff prompt scope and the user's later flow decision.
+
+40. Hero BUY (user decision): EVT-2026-041, delegation meals catering, 6 positions, 5 suppliers. Hero item: lunch buffet 600 meals, bids INR 285/292/298/305/312, target 250, ceiling 270, negotiated to 270 (realised saving INR 9,000; potential INR 21,000). Other positions fixed in the spec.
+    Reason: user chose the catering cart; numbers mirror the Front Chassis example scaled to meals.
+
+41. Hero SELL: EVT-2026-052, aluminium turnings 5,000 kg. Bids INR/kg 163/162/161.5/158/154, market reference 165, floor 160, target 170; negotiated to 168 (realised uplift INR 25,000; potential INR 35,000). Best bid value about INR 8.15 lakh (kickoff said about 8.5 lakh). Illustrative prices only.
+    Reason: fits Phase 2 band, keeps 5-8 INR/kg gap between best bid and target.
+
+42. Frontend routes use /events (not /rfqs) and /negotiate/[sessionId]; backend endpoints as listed in the design section 3. Names may be adjusted in the spec.
+    Reason: neutral event naming for BUY and SELL.

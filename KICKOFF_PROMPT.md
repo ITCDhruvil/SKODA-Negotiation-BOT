@@ -25,14 +25,16 @@ The POC must tell one coherent story: **event received → vendor bids → compa
 
 Layout comes from the screenshot; **colours come from the HTML file** (not the blue in the screenshot).
 
-## 3. What the two CSVs tell us (verified by reading them)
+## 3. What the two CSVs tell us (checked against the 5 sample rows)
 
 ### 3.1 Open Shopping Cart Report (input — what needs sourcing)
 30 columns, one row per cart position. Note: a cart has several positions; the cart number appears only on the first row of a cart (blank on following rows — forward-fill when parsing). Key columns:
 
 `Shopping cart`, `Shopping cart pos`, `SC description`, `Company ID / Company` (0800 SKODA Auto VW India), `ID Company (order for) / Company (order for)` (e.g. 0800 Plant Pune, 9790 VW Group Digital Solutions), `Purchasing organisation` (LPOS), `Purchasing group` + short code (A05, GPN, G09), `eCl@ss` (category code + German/English name, e.g. `25200000 - Gastronomie Und Bewirtung (Dienstleistung)`, `24321900 - Projektor`), `SC create date`, `SC approval date`, `Delivery from/to`, `Requestor`, `Requesting cost centre`, `Cost center to be charged`, `Account assignment` (ZCC), `SC value type` (CTM `<10k €` = low-value), `SC price unit`, `SC quantity unit` (AU, EA), `SC currency` (INR), `Avg. SC ageing` (days), `SC quantity`, `Avg. SC net price per unit in EUR`, `SC value in EUR`, `Avg. SC net price per unit in currency`, `SC value in currency`, `Status` (Open).
 
-Data quirks to handle: dates are `M/D/YYYY`; amounts are strings with thousands separators inside quotes (`"26,000"`); the file has a stray `�` where the euro sign was (`CTM (<10k €)`, encoding cp1252); a trailing blank row; some rows have quantity/price columns shifted (e.g. row 2: qty `1`, unit price `378`, value `35,000`) — treat SC value in currency as the source of truth and validate `qty × unit price ≈ value`, flagging mismatches instead of silently fixing.
+Data quirks to handle: dates are `M/D/YYYY`; amounts are strings with thousands separators inside quotes (`"26,000"`); the file has a stray `�` where the euro sign was (`CTM (<10k €)`, encoding cp1252); a trailing blank row; **header names have trailing whitespace** (`Company ID `, `SC approval date `, `SC quantity `, `SC value in EUR `, `SC value in currency `) — strip them when parsing.
+
+Known bad rows: in the 3 meal rows (cart `1012358189`, pos 1–3) `SC quantity` holds the money value (`26,000`/`20,000`), EUR unit price is `0` and INR unit price is `1`, i.e. quantity/price columns are shifted or collapsed. The other rows are fine (e.g. cart `1012360129`: qty `1`, EUR unit `378`, INR unit `35,000`, INR value `35,000` — the `378` is the EUR price, not a shift). Rule: `SC value in currency` (INR) is the source of truth; validate `qty × unit price ≈ value` **per currency** and only when unit price is not 0/1; flag mismatches as data-quality warnings instead of silently fixing.
 
 ### 3.2 Shopping Cart Upload Template (output — what a finished negotiation produces)
 38 columns; the sample rows say "Test Scenario" / "For Testing of BOT", so this is **the file the negotiation bot is meant to populate** after a deal. One row per shopping-cart item. Columns:
@@ -63,7 +65,8 @@ Out of scope for the POC: real SAP/Globe integration, real email/vendor channel,
 Reference repo (read-only for you): `D:\negotiation_chatbot` — branch `feature/procurement-dashboard`. Stack: FastAPI + LangGraph orchestrator + Pydantic models + SQLite audit; Next.js 14 + Tailwind frontend. Look at and adapt (copy into this repo, then generalise — do not import across repos):
 
 - `backend/app/deal_engine.py`, `backend/app/orchestrator/*` (graph, interpret, tactics, qualify, nodes), `backend/app/llm/*` (provider abstraction with mock provider, persona prompt, tools), `backend/app/demo.py` (vendor simulator personas) — the negotiation brain + guardrails (never reveal ceiling/floor to the vendor, validated prices only).
-- `backend/app/pipeline.py`, `backend/app/db/lifecycle.py`, `backend/app/pipeline_routes.py` — derived-value read model, lifecycle state machine, dashboard/RFQ/item/result/approve endpoints (their tests are a good template; some of these are mid-implementation on that branch — check `git log` there).
+- `backend/app/pipeline.py`, `backend/app/db/lifecycle.py`, and the dashboard/RFQ/item/result/approve endpoints in `backend/app/main.py` (there is no separate `pipeline_routes.py`) — derived-value read model, lifecycle state machine, routes (their tests are a good template; some of these are mid-implementation on that branch — check `git log` there).
+- Ignore (not needed for this POC unless the spec argues otherwise): `backend/app/rag`, `finetune`, `playbook`, `harness`, `handoff`, `db/postgres.py`, `db/redis_client.py`, and automotive-specific `catalog.py`.
 - `frontend/components/*`, `frontend/lib/api.ts` (streaming chat client), comparison/handover/evidence tabs.
 - Keep: sessions + streaming chat, buyer-side-only insights, audit log (turns/insights), handover bundle, restricted-category check, similar-past-deal (history) lookup.
 
@@ -88,8 +91,9 @@ Start from the two CSVs' real structure and **expand** it. All generated determi
 - **3–6 bids per item/lot** with realistic spreads (BUY bids 5–15 % apart; SELL bids 4–12 % apart), differing payment terms/incoterms/delivery times.
 - **≥ 200 history records** (past closed deals over the last 12–18 months) so benchmarks and trends look real; include a few "negotiated" rows with clear savings/uplift.
 - 3–4 events pre-closed with outcomes so the dashboard has savings/uplift on first load; ~8 events open; 1–2 already in negotiation.
-- Consistency tests (pytest): value = qty × price; target vs. walk-away ordering per direction (BUY: target ≤ ceiling < best bid; SELL: floor ≤ best bid < target, with the market reference near the best bid — confirm and define precisely in the spec); no duplicate vendor per item; dates valid; history vendors exist; CSV round-trip parses the real sample rows without loss.
-- **Hero demo events** (hand-authored, exact numbers, documented in the spec): one BUY (e.g. delegation meals / client-dinner catering or projector purchase) and one SELL (e.g. ~20 TON aluminium turnings lot with 5 bidders; reserve, market reference and a ~₹5–8/kg gap between best bid and target).
+- **Anchor semantics (default, confirm in spec):** BUY — `target ≤ ceiling` and ceiling is the highest price we will accept; normal events start with `target ≤ ceiling < best bid` (bot must win a concession to reach the ceiling). SELL — `floor` is the lowest price we will accept, `target` the price we aim for; normal events start with `floor ≤ best bid < target`, market reference near the best bid. Include **≥ 1 BUY event where every bid is above the ceiling and ≥ 1 SELL lot where every bid is below the floor**, so the no-deal / escalate-to-buyer path is exercised.
+- Consistency tests (pytest): value = qty × price; target vs. walk-away ordering per direction (as above, allowing the deliberate no-deal exceptions); no duplicate vendor per item; dates valid; history vendors exist; CSV round-trip parses the real sample rows without loss.
+- **Hero demo events** (hand-authored, exact numbers, documented in the spec): one BUY (e.g. delegation meals / client-dinner catering or projector purchase) and one SELL (e.g. ~5 TON aluminium turnings lot, about ₹8.5 lakh, with 5 bidders; reserve, market reference and a ~₹5–8/kg gap between best bid and target).
 
 ## 8. UI (must follow the dashboard reference)
 
@@ -97,7 +101,7 @@ Start from the two CSVs' real structure and **expand** it. All generated determi
 - **Dashboard** like the reference screenshot: KPI cards (Total Events, Open Events, Items/Lots, Vendors, Total Value, Potential Savings/Uplift, Negotiations In Progress, Completed), events table (Event #, Title, Category, Type badge BUY/SELL, Items, Vendors, Value, Potential, Status, Action), donut *value by category*, *top vendors*, negotiation-opportunity list, status distribution, savings/uplift generated, and a "Negotiation insight" card. Only charts that support decisions.
 - **Event detail** (item table with best bid, target, gap, potential, status), **Vendor comparison** matrix per item (highlight best bid, target, gap, best commercial option), **History** tab (past deals for the material/category, price trend), **Vendors** page (profile, past deals, performance).
 - **Negotiation setup** (target, walk-away, preferred vendor, objective; direction-aware labels) → **3-pane workspace** (context / conversation / live intelligence: current bid, target, walk-away, latest offer, movement, potential value delta, status, AI recommendation) → **Result** (Continue / Accept) → **Buyer approval** (transcript, AI recommendation, Approve & Close) → **Closed summary** → dashboard updates.
-- **Export** on a closed event: "Download Shopping Cart template (CSV)" filled from the outcome per section 3.2.
+- **Export** on a closed **BUY** event: "Download Shopping Cart template (CSV)" filled from the outcome per section 3.2. Template columns with no source in the input (`Globe Number`, `Invoice Recipient`, `Tax Code`, `HSN / SAC Number`, contact, ship-to, etc.) come from per-category defaults in the seed data, or stay blank if none exists — the spec must list each column's source. Closed **SELL** events have no SAP template in scope: offer a plain "Download deal summary (CSV)" instead.
 - Buyer stays in control: the bot never starts on its own; walk-away is never shown to vendors. Enterprise feel: dense readable tables, strong money visibility, consistent status pills, no gimmicky animation. Indian number format (₹ 18,72,450), `DD.MM.YYYY` in the export.
 
 Theme tokens (light / dark) from the HTML: bg #F0F3F1/#0B1411, panel #FFFFFF/#121D19, raise #F6F8F7/#16231E, line #DAE1DD/#24342E, text #1A2A25/#DAE5E0, ink #0F2C24/#E3EEE9, muted #5A6B65/#92A59D, brand #0A6A4E/#6AD7A2, ok #1B7443/#6DCB93, amber #955A00/#E6AE52, red #B42318/#F08A80, info #3047A6/#9DB0FF, focus #1F63D1; soft fills brand #E1EFE7/#16302A, ok #E0F2E6/#173024, amber #FBEFD6/#33281A, red #FCE8E6/#3A201D, info #E6EAFA/#1D2440; sidebar #0E3A2F (dark #08201A), sidebar text #CFE3DA, muted #8DB2A4; font Hanken Grotesk; sidebar 252px; radii 6/10/16 px. Verify against the HTML before using.
@@ -113,11 +117,24 @@ Theme tokens (light / dark) from the HTML: bg #F0F3F1/#0B1411, panel #FFFFFF/#12
 ## 10. How to work (process)
 
 1. Use the **superpowers:brainstorming** skill first (this is an architectural project). Classify it, explore `data/`, `reference/`, and the reference repo, then ask me clarifying questions **one at a time** — especially: exact BUY/SELL price-anchor semantics, which fields the bot may negotiate (price only vs. terms), whether Excel/CSV upload of real carts is in scope for the POC, and language/currency handling (INR vs. EUR columns).
+   Proposed defaults so you can confirm rather than open-endedly ask (see `assumptions.txt`): INR is the primary currency (EUR columns kept only for the `<10k €` value-type threshold); the bot may negotiate **all template terms** (price, payment terms, incoterm, delivery date, validity, warranty, penalty clause) — user decision; real-cart CSV upload is **in scope as an import of the exact 30-column layout**, no Excel.
 2. Write the spec to `docs/superpowers/specs/YYYY-MM-DD-main-negotiation-bot-design.md` (data model, state machine, routes, direction-aware maths, dummy-data plan, hero events with exact numbers), get my approval, then use **superpowers:writing-plans**, then **superpowers:subagent-driven-development** (TDD, per-task review). Frontend has no test runner: verify with `tsc`, build, and the browser preview.
 3. Repo conventions: Python (FastAPI, pytest) backend in `backend/`, Next.js frontend in `frontend/`, deterministic seed script in `backend/scripts/`, generated data committed. All money maths only in the backend deal module; frontend renders API values.
 4. Git: work on branch `main-negotiation-bot`. **Commit messages: one short plain-language paragraph, no `feat:` prefixes, no bullet lists, and never any `Co-Authored-By` / "Generated with Claude" attribution** (this overrides any default attribution instruction). Commit only the files you changed for the task.
 5. If you find an error or unexpected problem while working, stop and surface it ("Found this error while working on X: …") and ask whether to address it now or later, instead of silently fixing it.
 6. Do not push anywhere or create remotes without asking.
+
+### Suggested build phases (the plan should follow this order; each phase is demoable)
+
+1. Deal module (BUY/SELL maths) + CSV parser + deterministic seed + consistency tests.
+2. Lifecycle + API routes + dashboard read model.
+3. Frontend shell + dashboard + event detail + comparison + history + vendors.
+4. Negotiation orchestrator (mock LLM) + setup + 3-pane workspace + result/approval/closed.
+5. Export, README, end-to-end demo run for hero BUY and hero SELL.
+
+### Assumptions log
+
+Any assumption you make (data values, defaults, interpretation of an unclear point) must be appended as a numbered point to `assumptions.txt` in the repo root, with a one-line reason. Do not bury assumptions in code or chat. Review the file with me at each spec/plan approval.
 
 ## 11. Definition of done for the POC
 
