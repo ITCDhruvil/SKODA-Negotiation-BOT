@@ -19,14 +19,14 @@ Append new points at the bottom. Format: number, statement, reason.
 6. INR value column is the source of truth. Qty x unit price is validated per currency and only when unit price is not 0 or 1; mismatches raise data-quality warnings, not silent fixes.
    Reason: the 3 meal rows (cart 1012358189) have qty = value, EUR unit price 0, INR unit price 1.
 
-7. BUY anchors: target <= ceiling < best bid for normal events. Ceiling is the max price we accept.
-   Reason: user prompt wording; needs confirmation in the spec.
+7. BUY anchors: target <= ceiling < best bid for normal events. Ceiling is the max price we accept; the bot must win a concession to reach it.
+   Reason: user prompt wording; confirmed by user.
 
-8. SELL anchors: floor <= best bid < target for normal events. Floor is the min price we accept.
-   Reason: mirror of BUY; needs confirmation in the spec.
+8. SELL anchors (corrected, user chose mirror option): best bid < floor <= target for normal events. Floor is the min price we accept; the bot must push a bid up to reach it. Earlier wording (floor <= best bid < target) was not a true mirror of BUY.
+   Reason: keeps one direction flag flipping everything; found while writing the Phase 1 plan.
 
-9. Seed data includes at least one BUY event with all bids above the ceiling and one SELL lot with all bids below the floor.
-   Reason: exercises the no-deal / escalate-to-buyer path.
+9. No-deal path (corrected): under points 7 and 8 all bids start outside the limit, so that is the normal case. The no-deal path is produced by a vendor persona whose hidden reserve is beyond our limit (BUY: reserve above ceiling; SELL: reserve below floor). Seed includes at least one such BUY event and one SELL lot. Also include a few already-acceptable events (best bid inside the limit) that need no negotiation.
+   Reason: exercises the escalate-to-buyer path.
 
 10. Scrap prices (INR/kg), market references and reserve prices are illustrative, not live quotes, and are labelled so in the UI.
     Reason: no market data feed in scope.
@@ -121,8 +121,30 @@ Append new points at the bottom. Format: number, statement, reason.
 40. Hero BUY (user decision): EVT-2026-041, delegation meals catering, 6 positions, 5 suppliers. Hero item: lunch buffet 600 meals, bids INR 285/292/298/305/312, target 250, ceiling 270, negotiated to 270 (realised saving INR 9,000; potential INR 21,000). Other positions fixed in the spec.
     Reason: user chose the catering cart; numbers mirror the Front Chassis example scaled to meals.
 
-41. Hero SELL: EVT-2026-052, aluminium turnings 5,000 kg. Bids INR/kg 163/162/161.5/158/154, market reference 165, floor 160, target 170; negotiated to 168 (realised uplift INR 25,000; potential INR 35,000). Best bid value about INR 8.15 lakh (kickoff said about 8.5 lakh). Illustrative prices only.
+41. Hero SELL: EVT-2026-052, aluminium turnings 5,000 kg. Bids INR/kg 163/162/161.5/158/154, market reference 165, floor 165 (corrected from 160 per point 8), target 170; negotiated to 168 (realised uplift INR 25,000; potential INR 35,000). Best bid value about INR 8.15 lakh (kickoff said about 8.5 lakh). Illustrative prices only.
     Reason: fits Phase 2 band, keeps 5-8 INR/kg gap between best bid and target.
 
 42. Frontend routes use /events (not /rfqs) and /negotiate/[sessionId]; backend endpoints as listed in the design section 3. Names may be adjusted in the spec.
     Reason: neutral event naming for BUY and SELL.
+
+43. Eligibility (band and minimum bids) is evaluated per event on total reference value (sum of qty x reference price), because bids do not exist yet at the draft stage. Default phase is Phase 2 (up to INR 10 lakh, at least 3 bids) as the superset; Phase 1 is a config switch.
+    Reason: Module 3 text is ambiguous on whether the 3-bid rule applies below 3.5 lakh.
+
+44. The sample template column "Best Bid (considering all line items)" holds 10 on the first row; its meaning is unknown. Export semantics to be confirmed before Phase 5; until then export writes the winning vendor's rank (1) and this is flagged in the export README.
+    Reason: found while writing the Phase 1 plan.
+
+45. User answered "a" to the anchor question; interpreted as Option 1 (mirror properly).
+    Reason: ambiguous reply.
+
+46. The SC approval date column is read as D/M/YYYY, the other date columns as M/D/YYYY. In all five sample rows the approval date is only on or after the create date when read D/M (for example create 4/1/2025 and approval 2/4/2025 means 1 April and 2 April). Importer falls back to M/D/YYYY if D/M is invalid.
+    Reason: inferred from the sample, not confirmed by SAP documentation. Please confirm with a larger real export.
+
+47. Hero BUY total is about INR 3.18 lakh (reference) / 3.24 lakh (best bids), not 2.9 lakh as first stated, because six positions at the chosen prices add up to that. Still inside the Phase 1 band.
+    Reason: computed from the hero item prices.
+
+48. To reach 150+ cart positions, each two-template category got a third template (six new templates); history therefore has 294 rows.
+    Reason: category size capped cart size in the first draft of the generator.
+
+49. Phase 1 plan code was executed from the plan file in a scratch folder before hand-off: 79 tests pass.
+    Reason: verification before claiming the plan is executable.
+

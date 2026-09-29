@@ -51,8 +51,8 @@ Rules:
 
 ### Anchors (A7 to A9)
 - BUY: `target <= ceiling < best bid` at start. Ceiling is the highest acceptable price.
-- SELL: `floor <= best bid < target` at start. Floor is the lowest acceptable price.
-- Deliberate no-deal exceptions in seed: at least one BUY event with all bids above ceiling and one SELL lot with all bids below floor.
+- SELL: `best bid < floor <= target` at start. Floor is the lowest acceptable price; the bot must push a bid up to it.
+- Both directions: every bid starts outside the limit, so negotiation is required. The no-deal path comes from a vendor persona whose hidden reserve is beyond our limit; seed includes at least one such BUY event and one SELL lot, plus a few already-acceptable events that need no negotiation (A9).
 
 ## 4. State machine (A31 to A34)
 
@@ -62,9 +62,9 @@ Supplier states (`not_invited, invited, consented, otp_verified`) exist only in 
 
 ## 5. Hero events (A40, A41)
 
-**BUY `EVT-2026-041`**, delegation meals (eCl@ss 25200000): 6 positions, 5 suppliers, total about INR 2.9 lakh. Hero item: lunch buffet, 600 meals; bids per meal 285 / 292 / 298 / 305 / 312; target 250; ceiling 270. Potential = (285 - 250) x 600 = INR 21,000. Scripted run: counter 275, AI advises 270, agreed 270 with payment ZD45. Realised = (285 - 270) x 600 = INR 9,000. Other positions fixed by the seed under the same consistency rules; 3 of 6 negotiated in the closed summary.
+**BUY `EVT-2026-041`**, delegation meals (eCl@ss 25200000): 6 positions, 5 suppliers, total about INR 3.2 lakh (reference value INR 3.18 lakh, Phase 1 band). Hero item: lunch buffet, 600 meals; bids per meal 285 / 292 / 298 / 305 / 312; target 250; ceiling 270. Potential = (285 - 250) x 600 = INR 21,000. Scripted run: counter 275, AI advises 270, agreed 270 with payment ZD45. Realised = (285 - 270) x 600 = INR 9,000. Other positions fixed by the seed under the same consistency rules; 3 of 6 negotiated in the closed summary.
 
-**SELL `EVT-2026-052`**, aluminium turnings, 5,000 kg: bids INR/kg 163 / 162 / 161.5 / 158 / 154; market reference 165; floor 160; target 170 (illustrative). Best bid value about INR 8.15 lakh. Potential = (170 - 163) x 5,000 = INR 35,000. Scripted run: counter 166, AI pushes to 168, agreed. Realised uplift = INR 25,000. Bid 154 is below floor and is declined. Floor never shown to vendors.
+**SELL `EVT-2026-052`**, aluminium turnings, 5,000 kg: bids INR/kg 163 / 162 / 161.5 / 158 / 154; market reference 165; floor 165; target 170 (illustrative). Best bid value about INR 8.15 lakh. Potential = (170 - 163) x 5,000 = INR 35,000. Scripted run: counter 166, AI pushes to 168, agreed. Realised uplift = INR 25,000. Every bid starts below the floor; bid 154 is far below and is declined. Floor never shown to vendors.
 
 ## 6. Seed data (deterministic, committed)
 
