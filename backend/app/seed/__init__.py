@@ -1,0 +1,1 @@
+"""Deterministic seed data generator."""
