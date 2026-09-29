@@ -70,3 +70,44 @@ def test_anchors_valid_sell():
 def test_unknown_direction_rejected():
     with pytest.raises(ValueError):
         deal.best_price("swap", [1])
+
+
+def test_payment_days_parses_codes():
+    assert deal.payment_days("ZD30") == 30
+    assert deal.payment_days("zd45") == 45
+    assert deal.payment_days("ADV") == 0
+    assert deal.payment_days("LC") == 0
+
+
+def test_payment_days_rejects_unknown():
+    with pytest.raises(ValueError):
+        deal.payment_days("NET30")
+
+
+def test_effective_price_buy_rewards_credit_and_warranty():
+    eff = deal.effective_price(
+        "buy", 100, payment_code="ZD30", incoterm="FH", delivery_days=30, warranty_months=12
+    )
+    assert eff == 98.11
+
+
+def test_effective_price_buy_charges_freight_for_exw():
+    exw = deal.effective_price("buy", 100, payment_code="ADV", incoterm="EXW", delivery_days=0)
+    assert exw == 103.0
+
+
+def test_effective_price_sell_penalises_long_credit():
+    adv = deal.effective_price("sell", 100, payment_code="ADV", incoterm="EXW", delivery_days=0)
+    zd60 = deal.effective_price("sell", 100, payment_code="ZD60", incoterm="EXW", delivery_days=0)
+    assert adv == 100.0
+    assert zd60 < adv
+
+
+def test_effective_price_sell_deducts_freight_and_pickup_delay():
+    eff = deal.effective_price("sell", 100, payment_code="ZD30", incoterm="FCA", delivery_days=10)
+    assert eff == 98.01  # 99.0137 present value - (0.5% freight + 0.5% delay)
+
+
+def test_effective_price_rejects_unknown_incoterm():
+    with pytest.raises(ValueError):
+        deal.effective_price("buy", 100, payment_code="ZD30", incoterm="XYZ", delivery_days=1)
