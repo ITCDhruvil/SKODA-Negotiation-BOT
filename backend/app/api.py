@@ -38,11 +38,15 @@ def _range(date_from: Optional[date], date_to: Optional[date]) -> tuple[Optional
     return date_from, date_to
 
 
-def create_app(repo: Repo, seed_dataset: Dataset) -> FastAPI:
+DEFAULT_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+
+def create_app(repo: Repo, seed_dataset: Dataset,
+               cors_origins: Optional[list[str]] = None) -> FastAPI:
     """seed_dataset is what /api/admin/reset restores, even after a restart."""
     app = FastAPI(title="Main Negotiation Bot API")
     app.add_middleware(
-        CORSMiddleware, allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        CORSMiddleware, allow_origins=cors_origins or DEFAULT_ORIGINS,
         allow_methods=["*"], allow_headers=["*"])
 
     @app.exception_handler(RequestValidationError)

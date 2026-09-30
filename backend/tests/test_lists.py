@@ -62,3 +62,12 @@ def test_history_filters_and_limit(client):
 def test_list_responses_never_contain_a_reserve(client):
     for path in ("/api/items", "/api/history"):
         assert "reserve" not in client.get(path).text.lower()
+
+
+def test_cors_origins_are_configurable(repo: Repo, seed_dataset: Dataset):
+    app = create_app(repo, seed_dataset, cors_origins=["http://localhost:3100"])
+    c = TestClient(app)
+    ok = c.get("/api/health", headers={"Origin": "http://localhost:3100"})
+    assert ok.headers["access-control-allow-origin"] == "http://localhost:3100"
+    other = c.get("/api/health", headers={"Origin": "http://localhost:3000"})
+    assert "access-control-allow-origin" not in other.headers
