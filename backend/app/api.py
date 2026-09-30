@@ -124,8 +124,10 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     @app.get("/api/items", response_model=list[sch.ItemRow])
     def items(event_id: Optional[str] = None, has_bids: Optional[bool] = None,
               recommendation: Optional[sch.Recommendation] = None,
-              direction: Optional[Direction] = None, q: Optional[str] = None):
-        return readmodel.item_rows(snap(), event_id=event_id, has_bids=has_bids,
+              direction: Optional[Direction] = None, q: Optional[str] = None,
+              date_from: Optional[date] = None, date_to: Optional[date] = None):
+        s = snap().between(*_range(date_from, date_to))
+        return readmodel.item_rows(s, event_id=event_id, has_bids=has_bids,
                                    recommendation=recommendation, direction=direction, q=q)
 
     @app.get("/api/history", response_model=list[sch.HistoryRow])

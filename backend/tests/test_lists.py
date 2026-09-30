@@ -71,3 +71,35 @@ def test_cors_origins_are_configurable(repo: Repo, seed_dataset: Dataset):
     assert ok.headers["access-control-allow-origin"] == "http://localhost:3100"
     other = c.get("/api/health", headers={"Origin": "http://localhost:3000"})
     assert "access-control-allow-origin" not in other.headers
+
+
+def test_items_date_range_covering_everything_equals_unfiltered(client, seed_dataset: Dataset):
+    created = sorted(e.created for e in seed_dataset.events)
+    params = {"date_from": created[0].isoformat(), "date_to": created[-1].isoformat()}
+    assert client.get("/api/items", params=params).json() == client.get("/api/items").json()
+
+
+def test_items_date_range_narrows_to_events_created_in_it(client, seed_dataset: Dataset):
+    created = sorted({e.created for e in seed_dataset.events})
+    day = created[len(created) // 2].isoformat()
+    rows = client.get("/api/items", params={"date_from": day, "date_to": day}).json()
+    ids = {e.id for e in seed_dataset.events if e.created.isoformat() == day}
+    assert rows and {r["event_id"] for r in rows} == ids
+    assert len(rows) == sum(1 for i in seed_dataset.items if i.event_id in ids)
+
+
+def test_items_date_range_rejects_inverted_range(client):
+    r = client.get("/api/items", params={"date_from": "2026-05-01", "date_to": "2026-04-01"})
+    assert r.status_code == 422
+
+
+def test_history_points_carry_the_vendor_name(client):
+    vendors = {v["id"]: v["name"] for v in client.get("/api/vendors").json()}
+    rows = client.get("/api/history").json()
+    assert all(r["vendor_name"] == vendors[r["vendor_id"]] for r in rows)
+    item = client.get("/api/items/EVT-2026-041-01/history").json()
+    assert item["records"] and all(r["vendor_name"] == vendors[r["vendor_id"]]
+                                   for r in item["records"])
+    vid = rows[0]["vendor_id"]
+    detail = client.get(f"/api/vendors/{vid}").json()
+    assert all(h["vendor_name"] == vendors[vid] for h in detail["history"])

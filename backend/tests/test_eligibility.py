@@ -41,3 +41,18 @@ def test_bids_reason_names_the_minimum():
 
 def test_default_band_is_phase_2():
     assert el.DEFAULT_BAND is el.PHASE_2
+
+
+def test_indian_digit_grouping():
+    assert el.indian(0) == "0"
+    assert el.indian(999) == "999"
+    assert el.indian(2_000) == "2,000"
+    assert el.indian(100_000) == "1,00,000"
+    assert el.indian(1_234_567) == "12,34,567"
+    assert el.indian(123_456_789) == "12,34,56,789"
+
+
+def test_reasons_use_indian_grouping():
+    assert el.check_value(999).reason == "value 999 is below the minimum 2,000"
+    assert el.check_value(1_234_567).reason == "value 12,34,567 is above the maximum 10,00,000"
+    assert el.check_value(400_000, el.PHASE_1).reason == "value 4,00,000 is above the maximum 3,50,000"

@@ -73,6 +73,7 @@ class EventView(BaseModel):
     potential_delta: float
     realised_delta: float
     final_value: Optional[float]
+    original_value: Optional[float]
     items_negotiated: int
     vendors_participated: int
     duration_minutes: int
@@ -125,6 +126,7 @@ class HistoryPoint(BaseModel):
     date: date
     description: str
     vendor_id: str
+    vendor_name: str
     unit_price: float
     qty: float
     negotiated: bool
@@ -301,7 +303,6 @@ class ItemRow(ItemView):
 
 
 class HistoryRow(HistoryPoint):
-    vendor_name: str
     direction: Direction
     category_key: str
     unit: Unit

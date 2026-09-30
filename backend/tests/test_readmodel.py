@@ -50,7 +50,8 @@ def test_item_views_are_consistent_with_deal_for_every_item(snap):
         if bids:
             best = deal.best_price(d, [b.unit_price for b in bids])
             assert v.best_bid == best
-            assert v.gap == deal.gap_to_target(d, best, v.target)
+            assert v.gap == (0.0 if item.state == "closed"
+                             else deal.gap_to_target(d, best, v.target))
             if item.state != "closed":
                 assert v.potential_delta == deal.potential_delta(d, best, v.target, item.qty)
             outcome = snap.outcomes.get(item.id)
@@ -271,3 +272,26 @@ def test_between_keeps_only_events_in_range_and_their_children(snap):
     assert len(snap.between(None, None).events) == len(snap.events)
     assert snap.between(day, None).events == [e for e in snap.events if e.created >= day]
     assert snap.between(None, day).events == [e for e in snap.events if e.created <= day]
+
+
+def test_closed_items_have_no_gap_or_potential(snap):
+    closed = [i for i in snap.items if i.state == "closed" and snap.bids_by_item.get(i.id)]
+    assert closed
+    for item in closed:
+        v = rm.item_view(snap, item)
+        assert v.gap == 0.0 and v.potential_delta == 0.0
+
+
+def test_original_value_only_on_closed_events(snap):
+    closed = 0
+    for e in snap.events:
+        ev = rm.event_view(snap, e)
+        if ev.status != "closed":
+            assert ev.original_value is None
+            continue
+        closed += 1
+        if e.direction == "buy":
+            assert round(ev.original_value - ev.final_value, 2) == ev.realised_delta
+        else:
+            assert round(ev.final_value - ev.original_value, 2) == ev.realised_delta
+    assert closed == 4

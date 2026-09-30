@@ -496,6 +496,8 @@ export interface components {
             realised_delta: number;
             /** Final Value */
             final_value: number | null;
+            /** Original Value */
+            original_value: number | null;
             /** Items Negotiated */
             items_negotiated: number;
             /** Vendors Participated */
@@ -526,6 +528,8 @@ export interface components {
             description: string;
             /** Vendor Id */
             vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
             /** Unit Price */
             unit_price: number;
             /** Qty */
@@ -548,6 +552,8 @@ export interface components {
             description: string;
             /** Vendor Id */
             vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
             /** Unit Price */
             unit_price: number;
             /** Qty */
@@ -556,8 +562,6 @@ export interface components {
             negotiated: boolean;
             /** Original Price */
             original_price: number | null;
-            /** Vendor Name */
-            vendor_name: string;
             /**
              * Direction
              * @enum {string}
@@ -1165,6 +1169,8 @@ export interface operations {
                 recommendation?: ("waiting" | "negotiate" | "accept" | "review" | "done") | null;
                 direction?: ("buy" | "sell") | null;
                 q?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
             };
             header?: never;
             path?: never;

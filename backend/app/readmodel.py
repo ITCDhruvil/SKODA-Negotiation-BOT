@@ -100,7 +100,12 @@ def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
     bids = snap.bids_by_item.get(item.id, [])
     target, limit = points(item)
     best = _best_bid(d, bids)
-    gap = deal.gap_to_target(d, best.unit_price, target) if best else None
+    if best is None:
+        gap = None
+    elif item.state == "closed":
+        gap = 0.0
+    else:
+        gap = deal.gap_to_target(d, best.unit_price, target)
     if best is None:
         potential = None
     elif item.state == "closed":
@@ -163,6 +168,9 @@ def event_view(snap: Snapshot, event: Event,
     outcomes = [o for i in items if (o := snap.outcomes.get(i.id))]
     quoted = round(sum(v.value for v in views), 2)
     status = lifecycle.event_status(v.state for v in views)
+    original = (round(sum(
+        deal.value(i.qty, o.original_price) if (o := snap.outcomes.get(i.id)) else v.value
+        for i, v in zip(items, views)), 2) if status == "closed" else None)
     el = eligibility.check_value(reference)
     return sch.EventView(
         id=event.id, type=event.type, direction=event.direction, title=event.title,
@@ -176,7 +184,7 @@ def event_view(snap: Snapshot, event: Event,
         quoted_value=quoted,
         potential_delta=round(sum(v.potential_delta or 0.0 for v in views), 2),
         realised_delta=realised,
-        final_value=quoted if status == "closed" else None,
+        final_value=quoted if status == "closed" else None, original_value=original,
         items_negotiated=sum(1 for o in outcomes if o.negotiated),
         vendors_participated=len(vendor_ids),
         duration_minutes=sum(o.duration_minutes for o in outcomes if o.negotiated))
@@ -221,9 +229,10 @@ def comparison(snap: Snapshot, item: Item) -> sch.ComparisonView:
             if bids and not closed else 0.0))
 
 
-def _point(h: HistoryRecord) -> sch.HistoryPoint:
+def _point(snap: Snapshot, h: HistoryRecord) -> sch.HistoryPoint:
     return sch.HistoryPoint(
         id=h.id, date=h.closed_date, description=h.description, vendor_id=h.vendor_id,
+        vendor_name=_vendor_name(snap, h.vendor_id),
         unit_price=h.unit_price, qty=h.qty, negotiated=h.negotiated,
         original_price=h.original_price)
 
@@ -243,11 +252,11 @@ def history_view(snap: Snapshot, item: Item) -> sch.HistoryView:
     prices = [h.unit_price for h in recs]
     negotiated = [h for h in recs if h.negotiated]
     return sch.HistoryView(
-        item_id=item.id, basis=basis, records=[_point(h) for h in recs],
+        item_id=item.id, basis=basis, records=[_point(snap, h) for h in recs],
         stats=sch.HistoryStats(
             count=len(recs), average=round(sum(prices) / len(prices), 2), minimum=min(prices),
             maximum=max(prices), last_price=recs[-1].unit_price, last_date=recs[-1].closed_date),
-        last_negotiated=_point(negotiated[-1]) if negotiated else None)
+        last_negotiated=_point(snap, negotiated[-1]) if negotiated else None)
 
 
 def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:
@@ -379,7 +388,7 @@ def vendor_detail(snap: Snapshot, v: Vendor) -> sch.VendorDetail:
                              unit_price=b.unit_price, qty=i.qty)
             for bids in snap.bids_by_item.values() for b in bids if b.vendor_id == v.id
             for i in [snap.item_by_id[b.item_id]]]
-    return sch.VendorDetail(vendor=vendor_view(snap, v), history=[_point(h) for h in history],
+    return sch.VendorDetail(vendor=vendor_view(snap, v), history=[_point(snap, h) for h in history],
                             recent_bids=bids[:20])
 
 
@@ -428,6 +437,6 @@ def history_rows(snap: Snapshot, *, direction: Optional[str] = None,
         delta = (deal.realised_delta(h.direction, h.original_price, h.unit_price, h.qty)
                  if h.negotiated and h.original_price is not None else None)
         out.append(sch.HistoryRow(
-            **_point(h).model_dump(), vendor_name=_vendor_name(snap, h.vendor_id),
+            **_point(snap, h).model_dump(),
             direction=h.direction, category_key=h.category_key, unit=h.unit, value_delta=delta))
     return out[:limit] if limit else out
