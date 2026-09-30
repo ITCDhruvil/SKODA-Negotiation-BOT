@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens copied from reference/dashboard-ui/AIS_App_Shell_theme.html (light + dark). */
+:root {
+  --bg: #f0f3f1; --panel: #ffffff; --raise: #f6f8f7; --line: #dae1dd; --line2: #e8edea;
+  --ink: #0f2c24; --text: #1a2a25; --muted: #5a6b65;
+  --brand: #0a6a4e; --brand-soft: #e1efe7;
+  --emerald: #0e3a2f; --emerald2: #154a3c; --side-t: #cfe3da; --side-m: #8db2a4;
+  --electric: #78faae; --e-ink: #06331d;
+  --amber: #955a00; --amber-soft: #fbefd6; --red: #b42318; --red-soft: #fce8e6;
+  --ok: #1b7443; --ok-soft: #e0f2e6; --info: #3047a6; --info-soft: #e6eafa; --focus: #1f63d1;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1411; --panel: #121d19; --raise: #16231e; --line: #24342e; --line2: #1c2a25;
+  --ink: #e3eee9; --text: #daa5e0; --muted: #92a59d; --brand: #6ad7a2; --brand-soft: #16302a;
+  --emerald: #08201a; --emerald2: #0f2d24; --amber: #e6ae52; --amber-soft: #33281a;
+  --red: #f08a80; --red-soft: #3a201d; --ok: #6dcb93; --ok-soft: #173024;
+  --info: #9db0ff; --info-soft: #1d2440;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1411; --panel: #121d19; --raise: #16231e; --line: #24342e; --line2: #1c2a25;
+    --ink: #e3eee9; --text: #daa5e0; --muted: #92a59d; --brand: #6ad7a2; --brand-soft: #16302a;
+    --emerald: #08201a; --emerald2: #0f2d24; --amber: #e6ae52; --amber-soft: #33281a;
+    --red: #f08a80; --red-soft: #3a201d; --ok: #6dcb93; --ok-soft: #173024;
+    --info: #9db0ff; --info-soft: #1d2440;
+  }
+}
+
+
+/* Grid tracks must be allowed to shrink, or wide children (tables) stretch the page on phones.
+   Breakpoint utilities such as sm:grid-cols-2 still override this. */
+@layer base {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
