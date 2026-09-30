@@ -148,3 +148,9 @@ Append new points at the bottom. Format: number, statement, reason.
 49. Phase 1 plan code was executed from the plan file in a scratch folder before hand-off: 79 tests pass.
     Reason: verification before claiming the plan is executable.
 
+50. Seed stage mix follows the counts in the Phase 1 plan (about 46 events at draft or awaiting_bids, 31 analyzed, 4 closed, 2 handed_back) rather than the spec's 'about 8 open'; the spec text was written for a smaller event count.
+    Reason: final review M4.
+
+51. Switching to the Phase 1 band makes 22 events ineligible including the hero SELL lot (825,000); the default band stays Phase 2 (A43).
+    Reason: final review M9.
+

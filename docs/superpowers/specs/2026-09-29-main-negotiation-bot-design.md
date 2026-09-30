@@ -47,7 +47,7 @@ Rules:
 - **Derived, never stored**: value = qty x price; potential delta = gap to target x qty; realised delta (`value_delta`) = (original - final) x qty for BUY, (final - original) x qty for SELL; effective price (below).
 
 ### Effective price (A15)
-`effective = price x (1 + carry x payment_days/365) + incoterm_adj + warranty_adj + delay_adj`, all rates in one illustrative config (carry 12% p.a., warranty 0.2% per extra month). BUY rewards longer payment days; SELL rewards advance/short cycles. The matrix highlights best effective price; raw price stays visible.
+`effective = price x (1 - carry x payment_days/365) + incoterm_adj + warranty_adj + delay_adj`, all rates in one illustrative config (carry 12% p.a., warranty 0.2% per extra month). Later payment lowers present value: on BUY, longer credit lowers our effective cost; on SELL, longer credit lowers our effective revenue, so SELL rewards advance/short cycles. The matrix highlights best effective price; raw price stays visible.
 
 ### Anchors (A7 to A9)
 - BUY: `target <= ceiling < best bid` at start. Ceiling is the highest acceptable price.

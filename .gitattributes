@@ -1,0 +1,2 @@
+backend/data/seed/*.csv -text
+backend/data/seed/*.json text eol=lf
