@@ -172,3 +172,24 @@ Append new points at the bottom. Format: number, statement, reason.
 57. The API allows CORS from http://localhost:3000 and http://127.0.0.1:3000 only.
     Reason: Next.js dev server in Phase 3.
 
+58. Item recommendation is one of waiting (no live bids), negotiate (best bid outside the limit), accept (best bid within the limit, decided by deal.within_limit and exposed as ItemView.within_limit), review (handed back) or done (closed). potential_delta stays the optional upside toward the target; the dashboard opportunities list only takes items recommended as negotiate.
+    Reason: final review I4; an item already inside the limit must not be shown as a must-negotiate opportunity.
+
+59. State machine changes: confirming points is allowed only from draft (repeating it on a points_reviewed item is a no-op); set_points is allowed in draft, points_reviewed, analyzed and handed_back; setting points on a handed_back item moves it to analyzed and keeps its live bids; analyzed and handed_back can no longer move back to points_reviewed.
+    Reason: final review I3; a transition back to points_reviewed would strand an item that already has live bids.
+
+60. The dashboard and event list take optional date_from and date_to (inclusive, on the event creation date). All KPIs, categories, vendors, opportunities and insight are computed over the filtered events; the vendors KPI stays the total vendor count. date_from after date_to is a 422.
+    Reason: final review I6.
+
+61. Closed items are never opportunities (opportunity False, potential delta 0), and their value is quantity x the outcome's final price (the best-bid value if there is no outcome). Event quoted value therefore shows final prices for closed items. EventView also carries final_value (closed events only), items_negotiated, vendors_participated and duration_minutes (sum over negotiated outcomes).
+    Reason: final review M4 and M5.
+
+62. Suggested target and limit for draft items are derived at seed time from the hidden best bid, and some closed final prices equal the winning vendor's reserve. This is documented, not changed.
+    Reason: final review, seed realism note.
+
+63. EventView.realised_delta (aggregate over an event's outcomes) and OutcomeView.value_delta (a single outcome) intentionally differ in name.
+    Reason: final review, naming note.
+
+64. Item detail lists every invited vendor: those with a scripted (unreleased) bid have responded False, those with a live bid have responded True; no prices are included. Points objective is kept when the request omits it and cleared by an explicit null.
+    Reason: final review M6 and M10.
+
