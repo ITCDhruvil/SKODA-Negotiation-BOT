@@ -1,4 +1,8 @@
-"""Domain models. Bid.reserve is a simulated vendor's hidden walk-away price: never expose it."""
+"""Domain models.
+
+Dataset.reserves holds each simulated vendor's hidden walk-away price per bid. It is
+simulator-only and must never be returned by an API; Bid deliberately has no reserve field.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -52,6 +56,8 @@ class Event(_Model):
     hero: bool
     acceptable: bool
     no_deal: bool
+    # Seed-time stage used to lay out demo data. Live event status is derived from item states
+    # (received / in_progress / closed) and must not be read from `stage` by the API.
     stage: EventStage
 
 
@@ -71,6 +77,10 @@ class Item(_Model):
     incoterm: str
     delivery_days: int
     state: ItemState
+    objective: Optional[
+        Literal["reduce_price", "improve_lead_time", "improve_payment_terms",
+                "improve_commercial_terms"]
+    ] = None
 
 
 class Bid(_Model):
@@ -78,7 +88,6 @@ class Bid(_Model):
     item_id: str
     vendor_id: str
     unit_price: float
-    reserve: float
     payment_code: str
     incoterm: str
     delivery_days: int
@@ -95,6 +104,9 @@ class Outcome(_Model):
     qty: float
     original_price: float
     final_price: float
+    negotiated: bool
+    payment_code: str
+    incoterm: str
     closed_date: date
     duration_minutes: int
 
@@ -121,6 +133,9 @@ class Dataset(_Model):
     scripted_bids: list[Bid]
     outcomes: list[Outcome]
     history: list[HistoryRecord]
+    # Simulator-only: hidden vendor walk-away price keyed by bid id (bids and scripted_bids).
+    # Must never be returned by an API.
+    reserves: dict[str, float]
 
     def event_items(self, event_id: str) -> list[Item]:
         return [i for i in self.items if i.event_id == event_id]

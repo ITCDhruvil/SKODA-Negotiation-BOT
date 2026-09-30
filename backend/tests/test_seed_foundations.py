@@ -43,3 +43,15 @@ def test_vendor_build_is_deterministic():
     a = build_vendors(random.Random(SEED))
     b = build_vendors(random.Random(SEED))
     assert a == b
+
+
+def test_vendor_names_are_unique_and_fit_their_category():
+    vs = build_vendors(random.Random(SEED))
+    assert len({v.name for v in vs}) == len(vs)
+    suffix = {"25200000": "Caterers", "41120214": "Events", "24321900": "AV Systems",
+              "43211500": "IT Accessories", "44121600": "Stationers",
+              "90101500": "Facility Services", "82121500": "Printers", "78101800": "Logistics",
+              "86101700": "Learning", "40101800": "Industrial Supplies"}
+    for v in vs:
+        if v.type == "supplier":
+            assert f" {suffix[v.categories[0]]} " in v.name, v.name

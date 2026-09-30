@@ -33,22 +33,26 @@ def test_extra_fields_are_rejected():
 def test_event_value_sums_qty_times_reference_price():
     ds = Dataset(
         vendors=[], events=[_event()], items=[_item("a", 10, 5.5), _item("b", 2, 100)],
-        bids=[], scripted_bids=[], outcomes=[], history=[],
+        bids=[], scripted_bids=[], outcomes=[], history=[], reserves={},
     )
     assert ds.event_value("EVT-2026-001") == 255.0
 
 
 def test_item_bids_splits_live_and_scripted():
-    b1 = Bid(id="b1", item_id="a", vendor_id="V1", unit_price=1, reserve=1, payment_code="ZD30",
+    b1 = Bid(id="b1", item_id="a", vendor_id="V1", unit_price=1, payment_code="ZD30",
              incoterm="FH", delivery_days=1, validity_days=30, warranty_months=0)
     b2 = b1.model_copy(update={"id": "b2"})
     ds = Dataset(vendors=[], events=[], items=[], bids=[b1], scripted_bids=[b2], outcomes=[],
-                 history=[])
+                 history=[], reserves={})
     assert [b.id for b in ds.item_bids("a")] == ["b1"]
     assert [b.id for b in ds.item_bids("a", scripted=True)] == ["b2"]
 
 
 def test_dataset_json_round_trip():
     ds = Dataset(vendors=[], events=[_event()], items=[_item("a", 1, 1)], bids=[],
-                 scripted_bids=[], outcomes=[], history=[])
+                 scripted_bids=[], outcomes=[], history=[], reserves={})
     assert Dataset.model_validate_json(ds.model_dump_json()) == ds
+
+
+def test_bid_has_no_reserve_field():
+    assert "reserve" not in Bid.model_fields

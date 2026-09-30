@@ -111,3 +111,10 @@ def test_effective_price_sell_deducts_freight_and_pickup_delay():
 def test_effective_price_rejects_unknown_incoterm():
     with pytest.raises(ValueError):
         deal.effective_price("buy", 100, payment_code="ZD30", incoterm="XYZ", delivery_days=1)
+
+
+def test_freight_tables_are_immutable():
+    with pytest.raises(TypeError):
+        deal.DEFAULT_TERMS.freight_pct_buy["EXW"] = 1
+    with pytest.raises(TypeError):
+        deal.DEFAULT_TERMS.freight_pct_sell["EXW"] = 1

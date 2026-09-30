@@ -32,6 +32,7 @@ class _Acc:
         self.bids: list[Bid] = []
         self.scripted: list[Bid] = []
         self.outcomes: list[Outcome] = []
+        self.reserves: dict[str, float] = {}
 
 
 def build_positions() -> list[CartPosition]:
@@ -121,6 +122,9 @@ def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, 
     item_id = f"{event.id}-{idx:02d}"
     vendor_pool = pool(vendors, event.category_key)
     no_deal = event.no_deal and idx == 1
+    negotiated = idx <= math.ceil(n_items / 2)
+    # Non-negotiated items of a closed event start inside the limit and are accepted as bid.
+    acceptable = event.acceptable or (event.stage == "closed" and not negotiated)
     if hero:
         prices, target, limit = hero["prices"], hero["target"], hero["limit"]
         reserves = hero["reserves"]
@@ -134,17 +138,18 @@ def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, 
     else:
         factor = rng.uniform(0.97, 1.04) if d == "buy" else rng.uniform(0.97, 1.0)
         best = round_price(ref * factor)
-        target, limit = _anchors(rng, d, best, event.acceptable)
+        target, limit = _anchors(rng, d, best, acceptable)
         n = min(rng.randint(3, 6), len(vendor_pool))
         prices = _bid_prices(rng, d, best, n)
         chosen = rng.sample(vendor_pool, n)
         reserves = [_reserve(rng, d, p, limit, no_deal) for p in prices]
         terms = [_terms(rng, d, kind, v) for v in chosen]
     bids = [
-        Bid(id=f"{item_id}-B{k}", item_id=item_id, vendor_id=v.id, unit_price=float(p),
-            reserve=float(r), **t)
-        for k, (p, v, r, t) in enumerate(zip(prices, chosen, reserves, terms), start=1)
+        Bid(id=f"{item_id}-B{k}", item_id=item_id, vendor_id=v.id, unit_price=float(p), **t)
+        for k, (p, v, t) in enumerate(zip(prices, chosen, terms), start=1)
     ]
+    for b, r in zip(bids, reserves):
+        acc.reserves[b.id] = float(r)
     pointed = event.stage != "draft"
     acc.items.append(Item(
         id=item_id, event_id=event.id, position=idx, description=desc, kind=kind, qty=qty,
@@ -154,17 +159,22 @@ def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, 
         state=_item_state(event.stage, idx),
     ))
     (acc.scripted if event.stage in ("draft", "awaiting_bids") else acc.bids).extend(bids)
-    if event.stage == "closed" and idx <= math.ceil(n_items / 2):
-        if d == "buy":
-            final = limit - (limit - target) * rng.uniform(0.0, 0.5)
-            final = min(max(round_price(final), target), limit)
-        else:
-            final = limit + (target - limit) * rng.uniform(0.0, 0.5)
-            final = max(min(round_price(final), target), limit)
+    if event.stage == "closed":
         best_bid = bids[0]
+        reserve = acc.reserves[best_bid.id]
+        if negotiated:
+            if d == "buy":
+                final = limit - (limit - target) * rng.uniform(0.0, 0.5)
+                final = min(max(round_price(final), target, reserve), limit)
+            else:
+                final = limit + (target - limit) * rng.uniform(0.0, 0.5)
+                final = max(min(round_price(final), target, reserve), limit)
+        else:
+            final = best_bid.unit_price
         acc.outcomes.append(Outcome(
             item_id=item_id, vendor_id=best_bid.vendor_id, direction=d, qty=qty,
-            original_price=best_bid.unit_price, final_price=float(final),
+            original_price=best_bid.unit_price, final_price=float(final), negotiated=negotiated,
+            payment_code=best_bid.payment_code, incoterm=best_bid.incoterm,
             closed_date=event.approval_date + timedelta(days=8 + 3 * idx),
             duration_minutes=rng.randint(8, 35),
         ))
@@ -214,7 +224,7 @@ def _build_buy(rng, vendors, positions, free_ids, acc) -> None:
 def _add_sell_event(rng, vendors, event_id: str, *, i: int, material, qty: int, ref: float,
                     stage: str, acc: _Acc, hero: dict | None = None) -> None:
     acceptable = stage == "acceptable"
-    created = TODAY - timedelta(days=2 if hero else 30 + (i * 13) % 150)
+    created = TODAY - timedelta(days=2 if hero else 23 + (i * 13) % 42)
     event = Event(
         id=event_id, type="scrap_sale", direction="sell",
         title=hero["title"] if hero else f"{material.description} Lot - {qty:,} kg",
@@ -223,7 +233,7 @@ def _add_sell_event(rng, vendors, event_id: str, *, i: int, material, qty: int, 
         category=f"Scrap - {FAMILY_TITLES[material.family]}", category_key=material.family,
         requestor=SCRAP_REQUESTORS[i % len(SCRAP_REQUESTORS)], cost_centre="2199000",
         created=created, approval_date=created + timedelta(days=1),
-        due=created + timedelta(days=14 if hero else 45), source_cart_no=None,
+        due=created + timedelta(days=14 if hero else 70), source_cart_no=None,
         hero=hero is not None, acceptable=acceptable, no_deal=stage == "handed_back",
         stage="analyzed" if acceptable else stage,
     )
@@ -268,6 +278,7 @@ def build_dataset() -> Dataset:
         scripted_bids=sorted(acc.scripted, key=lambda b: b.id),
         outcomes=sorted(acc.outcomes, key=lambda o: o.item_id),
         history=build_history(random.Random(SEED + 4), vendors),
+        reserves=dict(sorted(acc.reserves.items())),
     )
 
 
@@ -276,5 +287,5 @@ def write_outputs(out_dir: Path = OUTPUT_DIR) -> None:
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "dataset.json").write_text(build_dataset().model_dump_json(indent=1),
-                                          encoding="utf-8")
+                                          encoding="utf-8", newline="\n")
     write_report(build_positions(), out_dir / "open_shopping_cart_report.csv")

@@ -19,7 +19,7 @@ def make_position(
 ) -> CartPosition:
     approval = created + timedelta(days=2)
     delivery_from = approval + timedelta(days=5)
-    delivery_to = delivery_from + timedelta(days=25)
+    delivery_to = delivery_from + timedelta(days=60)
     inr_value = float(qty * price)
     eur_value = float(round(inr_value / EUR_RATE))
     lpos = order_for[0] == "0800"
@@ -42,7 +42,7 @@ def make_cart_positions(rng: random.Random) -> list[CartPosition]:
     out: list[CartPosition] = []
     for c in range(59):
         cart_no = str(1012360000 + c * 53)
-        created = TODAY - timedelta(days=30 + (c * 11) % 150)
+        created = TODAY - timedelta(days=23 + (c * 11) % 42)
         order_for = _VW_DIGITAL if c % 6 == 5 else _PUNE
         requestor = rng.choice(REQUESTORS)
         cost_centre = str(2170000 + 1000 * rng.randint(0, 12))

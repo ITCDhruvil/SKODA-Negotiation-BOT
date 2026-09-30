@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 from datetime import timedelta
 
+from app.seed import heroes
 from app.models import HistoryRecord, Vendor
 from app.seed.catalog import BUY_CATEGORIES, SCRAP_MATERIALS
 from app.seed.constants import TODAY
@@ -24,6 +25,8 @@ def build_history(rng: random.Random, vendors: list[Vendor]) -> list[HistoryReco
     rows: list[HistoryRecord] = []
     n = PER_TEMPLATE
     for direction, key, desc, unit, lo, hi, qlo, qhi in specs:
+        if desc in heroes.HERO_HISTORY_DESCRIPTIONS:
+            continue  # hand-authored below
         vendor_pool = pool(vendors, key)
         base = (lo + hi) / 2
         for k in range(n):
@@ -51,6 +54,16 @@ def build_history(rng: random.Random, vendors: list[Vendor]) -> list[HistoryReco
                 vendor_id=rng.choice(vendor_pool).id, unit_price=unit_price, qty=float(qty),
                 unit=unit, closed_date=TODAY - timedelta(days=days_ago),
                 negotiated=negotiated, original_price=original,
+            ))
+    for desc, direction, key, unit, hero_rows in heroes.HERO_HISTORY:
+        vendor_pool = pool(vendors, key)
+        for k, (days_ago, price, qty, original) in enumerate(hero_rows):
+            rows.append(HistoryRecord(
+                id="", description=desc, category_key=key, direction=direction,
+                vendor_id=vendor_pool[k % len(vendor_pool)].id, unit_price=float(price),
+                qty=float(qty), unit=unit, closed_date=TODAY - timedelta(days=days_ago),
+                negotiated=original is not None,
+                original_price=None if original is None else float(original),
             ))
     rows.sort(key=lambda r: (r.closed_date, r.description))
     return [r.model_copy(update={"id": f"H{i + 1:04d}"}) for i, r in enumerate(rows)]

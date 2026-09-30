@@ -4,6 +4,7 @@ from datetime import timedelta
 import pytest
 
 from app import deal, eligibility
+from app.models import Bid
 from app.importer import parse_text, render_report
 from app.seed import heroes
 from app.seed.build import build_dataset, build_positions
@@ -76,15 +77,23 @@ def test_bid_counts_and_spreads(ds):
             assert 0.035 <= (max(prices) - min(prices)) / max(prices) <= 0.125
 
 
+def _acceptable_item_ids(ds):
+    """Items that start inside the limit: whole acceptable events plus non-negotiated closed items."""
+    ids = {i.id for i in ds.items if _events(ds)[i.event_id].acceptable}
+    ids |= {o.item_id for o in ds.outcomes if not o.negotiated}
+    return ids
+
+
 def test_anchor_rules(ds):
     ev = _events(ds)
+    acceptable = _acceptable_item_ids(ds)
     for item in ds.items:
         e = ev[item.event_id]
         best = deal.best_price(e.direction, [b.unit_price for b in _all_bids(ds, item.id)])
         t, lim = item.suggested_target, item.suggested_limit
-        if e.acceptable:
-            assert deal.within_limit(e.direction, best, lim)
-            assert (t <= best) if e.direction == "buy" else (t > best)
+        if item.id in acceptable:
+            assert deal.within_limit(e.direction, best, lim), item.id
+            assert (t <= best) if e.direction == "buy" else (t > best), item.id
         else:
             assert deal.anchors_valid(e.direction, t, lim, best), item.id
         if item.target is not None:
@@ -101,16 +110,16 @@ def test_vendor_reserves(ds):
                       reverse=e.direction == "sell")
         for b in bids:
             if e.direction == "buy":
-                assert b.reserve <= b.unit_price
+                assert ds.reserves[b.id] <= b.unit_price
             else:
-                assert b.reserve >= b.unit_price
+                assert ds.reserves[b.id] >= b.unit_price
         no_deal_item = e.no_deal and item.position == 1
         best = bids[0]
         if no_deal_item:
             for b in bids:
-                assert not deal.within_limit(e.direction, b.reserve, item.suggested_limit)
+                assert not deal.within_limit(e.direction, ds.reserves[b.id], item.suggested_limit)
         else:
-            assert deal.within_limit(e.direction, best.reserve, item.suggested_limit)
+            assert deal.within_limit(e.direction, ds.reserves[best.id], item.suggested_limit)
 
 
 def test_dates(ds):
@@ -133,20 +142,64 @@ def test_stage_mix(ds):
 
 
 def test_closed_events_have_outcomes_within_limits(ds):
-    ev = _events(ds)
     closed_ids = {e.id for e in ds.events if e.stage == "closed"}
-    assert {ev_id for ev_id in closed_ids} and ds.outcomes
+    assert closed_ids and ds.outcomes
+    assert all(not e.acceptable for e in ds.events if e.stage == "closed")
     for o in ds.outcomes:
         item = next(i for i in ds.items if i.id == o.item_id)
         assert item.event_id in closed_ids and item.state == "closed"
         assert deal.within_limit(o.direction, o.final_price, item.limit)
-        assert deal.realised_delta(o.direction, o.original_price, o.final_price, o.qty) > 0
+        delta = deal.realised_delta(o.direction, o.original_price, o.final_price, o.qty)
+        assert (delta > 0) if o.negotiated else (delta == 0)
         assert o.original_price == deal.best_price(
             o.direction, [b.unit_price for b in ds.item_bids(o.item_id)])
     for eid in closed_ids:
         n = len(ds.event_items(eid))
-        got = len([o for o in ds.outcomes if o.item_id.startswith(eid)])
-        assert got == -(-n // 2)
+        for item in ds.event_items(eid):
+            outs = [o for o in ds.outcomes if o.item_id == item.id]
+            assert len(outs) == 1, item.id
+            assert outs[0].negotiated == (item.position <= -(-n // 2))
+    assert len(ds.outcomes) == sum(len(ds.event_items(e)) for e in closed_ids)
+
+
+def test_non_negotiated_outcomes_take_the_best_bid(ds):
+    plain = [o for o in ds.outcomes if not o.negotiated]
+    assert plain
+    for o in plain:
+        bids = ds.item_bids(o.item_id)
+        pick = min if o.direction == "buy" else max
+        best = pick(bids, key=lambda b: b.unit_price)
+        assert o.original_price == o.final_price == best.unit_price
+        assert o.vendor_id == best.vendor_id
+        assert (o.payment_code, o.incoterm) == (best.payment_code, best.incoterm)
+
+
+def test_negotiated_final_is_achievable_against_winning_reserve(ds):
+    negotiated = [o for o in ds.outcomes if o.negotiated]
+    assert negotiated
+    for o in negotiated:
+        winner = next(b for b in ds.item_bids(o.item_id) if b.vendor_id == o.vendor_id)
+        reserve = ds.reserves[winner.id]
+        if o.direction == "buy":
+            assert o.final_price >= reserve
+        else:
+            assert o.final_price <= reserve
+        assert (o.payment_code, o.incoterm) == (winner.payment_code, winner.incoterm)
+
+
+def test_reserves_cover_every_bid_and_stay_off_the_bid_model(ds):
+    assert set(ds.reserves) == {b.id for b in ds.bids + ds.scripted_bids}
+    assert "reserve" not in Bid.model_fields
+
+
+def test_open_events_are_not_overdue(ds):
+    for e in ds.events:
+        if e.stage != "closed":
+            assert e.due > TODAY, e.id
+
+
+def test_items_seed_no_objective(ds):
+    assert all(i.objective is None for i in ds.items)
 
 
 def test_eligibility_split(ds):

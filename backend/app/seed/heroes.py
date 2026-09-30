@@ -58,6 +58,38 @@ HERO_SELL = {
 }
 
 
+# Hand-authored history rows for the hero items (spec section 5):
+# (days ago, unit price, qty, original price if negotiated). Buy originals sit above the unit
+# price, sell originals below it, so realised delta is positive on every negotiated row.
+_BUY_KEY = "25200000"
+HERO_HISTORY = (
+    ("Delegation Lunch Buffet", "buy", _BUY_KEY, "EA", (
+        (505, 274, 300, None), (410, 272, 250, 281), (315, 270, 200, None),
+        (220, 268, 350, 276), (125, 266, 150, None), (45, 264, 400, 272),
+    )),
+    ("Aluminium Turnings", "sell", "aluminium", "KG", (
+        (490, 164, 4000, None), (400, 165, 3500, 158), (310, 166, 5000, None),
+        (220, 167, 6000, 161), (130, 168, 4500, None), (50, 169, 5500, 163),
+    )),
+    ("Welcome Tea And Snacks", "buy", _BUY_KEY, "EA", (
+        (350, 50.0, 500, None), (180, 48.5, 600, 52.0),
+    )),
+    ("Plant Visit Refreshment Kits", "buy", _BUY_KEY, "EA", (
+        (330, 118, 180, None), (150, 113, 200, 121), (60, 111, 220, None),
+    )),
+    ("Dinner Buffet Day 1", "buy", _BUY_KEY, "EA", (
+        (400, 335, 120, None), (200, 325, 150, 342),
+    )),
+    ("Mineral Water 1 Ltr Cartons", "buy", _BUY_KEY, "EA", (
+        (260, 255, 100, None), (90, 249, 120, 261),
+    )),
+    ("Service Staff And Live Counters", "buy", _BUY_KEY, "AU", (
+        (280, 18000, 1, None), (100, 17400, 1, 18400),
+    )),
+)
+HERO_HISTORY_DESCRIPTIONS = frozenset(h[0] for h in HERO_HISTORY)
+
+
 def hero_buy_positions() -> list[CartPosition]:
     cat = BUY_CATEGORIES[0]
     created = TODAY - timedelta(days=3)

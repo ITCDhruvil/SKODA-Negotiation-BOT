@@ -5,7 +5,8 @@ direction "sell": we receive; higher is better; the limit is a floor.
 """
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from types import MappingProxyType
+from typing import Literal, Mapping, Sequence
 
 Direction = Literal["buy", "sell"]
 
@@ -67,11 +68,13 @@ class TermsConfig:
     carry_rate: float = 0.12
     warranty_rate_per_month: float = 0.002
     delay_rate_per_day: float = 0.0005
-    freight_pct_buy: dict[str, float] = field(
-        default_factory=lambda: {"EXW": 0.03, "FCA": 0.02, "FH": 0.0, "DAP": 0.0, "DDP": 0.0}
+    freight_pct_buy: Mapping[str, float] = field(
+        default_factory=lambda: MappingProxyType(
+            {"EXW": 0.03, "FCA": 0.02, "FH": 0.0, "DAP": 0.0, "DDP": 0.0})
     )
-    freight_pct_sell: dict[str, float] = field(
-        default_factory=lambda: {"EXW": 0.0, "FCA": 0.005, "FH": 0.02, "DAP": 0.02, "DDP": 0.03}
+    freight_pct_sell: Mapping[str, float] = field(
+        default_factory=lambda: MappingProxyType(
+            {"EXW": 0.0, "FCA": 0.005, "FH": 0.02, "DAP": 0.02, "DDP": 0.03})
     )
 
 
