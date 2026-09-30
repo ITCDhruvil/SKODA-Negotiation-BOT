@@ -269,3 +269,12 @@ def build_dataset() -> Dataset:
         outcomes=sorted(acc.outcomes, key=lambda o: o.item_id),
         history=build_history(random.Random(SEED + 4), vendors),
     )
+
+
+def write_outputs(out_dir: Path = OUTPUT_DIR) -> None:
+    from app.importer import write_report
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "dataset.json").write_text(build_dataset().model_dump_json(indent=1),
+                                          encoding="utf-8")
+    write_report(build_positions(), out_dir / "open_shopping_cart_report.csv")
