@@ -174,3 +174,103 @@ class ItemDetail(BaseModel):
     outcome: Optional[OutcomeView]
     value_eligibility: EligibilityView
     bids_eligibility: EligibilityView
+
+
+class Kpis(BaseModel):
+    total_events: int
+    open_events: int
+    items: int
+    vendors: int
+    total_value: float
+    potential_savings: float
+    potential_uplift: float
+    potential_total: float
+    negotiations_in_progress: int
+    completed_negotiations: int
+    realised_savings: float
+    realised_uplift: float
+    realised_total: float
+
+
+class CategoryValue(BaseModel):
+    category: str
+    category_key: str
+    value: float
+    share: float
+
+
+class VendorValue(BaseModel):
+    vendor_id: str
+    vendor_name: str
+    value: float
+    share: float
+
+
+class Opportunity(BaseModel):
+    event_id: str
+    item_id: str
+    title: str
+    description: str
+    direction: Direction
+    state: ItemState
+    best_bid: float
+    target: float
+    gap: float
+    potential_delta: float
+
+
+class Insight(BaseModel):
+    event_id: str
+    item_id: str
+    description: str
+    direction: Direction
+    spread: float
+    best_price: float
+    worst_price: float
+
+
+class DeltaGenerated(BaseModel):
+    savings: float
+    uplift: float
+    total: float
+
+
+class Dashboard(BaseModel):
+    kpis: Kpis
+    events: list[EventView]
+    value_by_category: list[CategoryValue]
+    top_vendors: list[VendorValue]
+    opportunities: list[Opportunity]
+    status_distribution: dict[str, int]
+    item_state_distribution: dict[str, int]
+    delta_generated: DeltaGenerated
+    insight: Optional[Insight]
+
+
+class VendorView(BaseModel):
+    id: str
+    name: str
+    sap_no: str
+    type: Literal["supplier", "scrap_buyer"]
+    categories: list[str]
+    rating: float
+    payment_pref: str
+    past_deals: int
+    live_bid_count: int
+    quoted_value: float
+    closed_deals: int
+    history_deals: int
+
+
+class VendorBidRow(BaseModel):
+    item_id: str
+    event_id: str
+    description: str
+    unit_price: float
+    qty: float
+
+
+class VendorDetail(BaseModel):
+    vendor: VendorView
+    history: list[HistoryPoint]
+    recent_bids: list[VendorBidRow]

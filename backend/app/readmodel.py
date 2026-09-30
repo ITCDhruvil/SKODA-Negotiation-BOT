@@ -1,6 +1,7 @@
 """Derived, read-only views. All maths goes through app.deal."""
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -230,3 +231,112 @@ def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:
         outcome=outcome_view(snap, outcome) if outcome else None,
         value_eligibility=sch.EligibilityView(eligible=val.eligible, reason=val.reason),
         bids_eligibility=sch.EligibilityView(eligible=n_bids.eligible, reason=n_bids.reason))
+
+
+_IN_PROGRESS = ("negotiating", "result_pending", "awaiting_approval")
+
+
+def dashboard(snap: Snapshot) -> sch.Dashboard:
+    ivs = {i.id: item_view(snap, i) for i in snap.items}
+    evs = sorted((event_view(snap, e, ivs) for e in snap.events),
+                 key=lambda e: (e.created, e.id), reverse=True)
+    direction = {e.id: e.direction for e in snap.events}
+
+    potential: dict[str, float] = defaultdict(float)
+    for i in snap.items:
+        iv = ivs[i.id]
+        if iv.potential_delta:
+            potential[direction[i.event_id]] += iv.potential_delta
+    realised: dict[str, float] = defaultdict(float)
+    for o in snap.outcomes.values():
+        realised[o.direction] += deal.realised_delta(
+            o.direction, o.original_price, o.final_price, o.qty)
+
+    total_value = round(sum(e.quoted_value for e in evs), 2)
+    kpis = sch.Kpis(
+        total_events=len(evs), open_events=sum(1 for e in evs if e.status != "closed"),
+        items=len(snap.items), vendors=len(snap.vendors), total_value=total_value,
+        potential_savings=round(potential["buy"], 2), potential_uplift=round(potential["sell"], 2),
+        potential_total=round(potential["buy"] + potential["sell"], 2),
+        negotiations_in_progress=sum(1 for i in snap.items if i.state in _IN_PROGRESS),
+        completed_negotiations=sum(1 for o in snap.outcomes.values() if o.negotiated),
+        realised_savings=round(realised["buy"], 2), realised_uplift=round(realised["sell"], 2),
+        realised_total=round(realised["buy"] + realised["sell"], 2))
+
+    by_cat: dict[tuple[str, str], float] = defaultdict(float)
+    for e in evs:
+        by_cat[(e.category, e.category_key)] += e.quoted_value
+    categories = [
+        sch.CategoryValue(category=c, category_key=k, value=round(v, 2),
+                          share=round(v / total_value, 4) if total_value else 0.0)
+        for (c, k), v in sorted(by_cat.items(), key=lambda kv: -kv[1])]
+
+    per_vendor: dict[str, float] = defaultdict(float)
+    for i in snap.items:
+        for b in snap.bids_by_item.get(i.id, []):
+            per_vendor[b.vendor_id] += i.qty * b.unit_price
+    vendor_total = sum(per_vendor.values())
+    top_vendors = [
+        sch.VendorValue(vendor_id=vid, vendor_name=_vendor_name(snap, vid), value=round(v, 2),
+                        share=round(v / vendor_total, 4) if vendor_total else 0.0)
+        for vid, v in sorted(per_vendor.items(), key=lambda kv: -kv[1])[:5]]
+
+    titles = {e.id: e.title for e in snap.events}
+    opportunities = sorted(
+        (sch.Opportunity(
+            event_id=iv.event_id, item_id=iv.id, title=titles[iv.event_id],
+            description=iv.description, direction=direction[iv.event_id], state=iv.state,
+            best_bid=iv.best_bid, target=iv.target, gap=iv.gap, potential_delta=iv.potential_delta)
+         for iv in ivs.values()
+         if iv.recommendation == "negotiate" and iv.state in
+         ("points_reviewed", "awaiting_bids", "bids_in", "analyzed") and iv.bid_count > 0),
+        key=lambda o: -o.potential_delta)[:8]
+
+    insight = None
+    best_spread = 0.0
+    for i in snap.items:
+        prices = [b.unit_price for b in snap.bids_by_item.get(i.id, [])]
+        if len(prices) >= 3 and (s := deal.bid_spread(prices)) > best_spread:
+            best_spread = s
+            insight = sch.Insight(
+                event_id=i.event_id, item_id=i.id, description=i.description,
+                direction=direction[i.event_id], spread=s,
+                best_price=deal.best_price(direction[i.event_id], prices),
+                worst_price=deal.best_first(direction[i.event_id], prices)[-1])
+
+    status_counts: dict[str, int] = defaultdict(int)
+    for e in evs:
+        status_counts[e.status] += 1
+    state_counts: dict[str, int] = defaultdict(int)
+    for i in snap.items:
+        state_counts[i.state] += 1
+    return sch.Dashboard(
+        kpis=kpis, events=evs, value_by_category=categories, top_vendors=top_vendors,
+        opportunities=opportunities,
+        status_distribution={s: status_counts.get(s, 0) for s in ("received", "in_progress", "closed")},
+        item_state_distribution=dict(sorted(state_counts.items())),
+        delta_generated=sch.DeltaGenerated(
+            savings=kpis.realised_savings, uplift=kpis.realised_uplift, total=kpis.realised_total),
+        insight=insight)
+
+
+def vendor_view(snap: Snapshot, v: Vendor) -> sch.VendorView:
+    live = [(snap.item_by_id[b.item_id], b) for bids in snap.bids_by_item.values()
+            for b in bids if b.vendor_id == v.id]
+    return sch.VendorView(
+        id=v.id, name=v.name, sap_no=v.sap_no, type=v.type, categories=v.categories,
+        rating=v.rating, payment_pref=v.payment_pref, past_deals=v.past_deals,
+        live_bid_count=len(live), quoted_value=round(sum(i.qty * b.unit_price for i, b in live), 2),
+        closed_deals=sum(1 for o in snap.outcomes.values() if o.vendor_id == v.id),
+        history_deals=sum(1 for h in snap.history if h.vendor_id == v.id))
+
+
+def vendor_detail(snap: Snapshot, v: Vendor) -> sch.VendorDetail:
+    history = sorted((h for h in snap.history if h.vendor_id == v.id),
+                     key=lambda h: (h.closed_date, h.id), reverse=True)
+    bids = [sch.VendorBidRow(item_id=i.id, event_id=i.event_id, description=i.description,
+                             unit_price=b.unit_price, qty=i.qty)
+            for bids in snap.bids_by_item.values() for b in bids if b.vendor_id == v.id
+            for i in [snap.item_by_id[b.item_id]]]
+    return sch.VendorDetail(vendor=vendor_view(snap, v), history=[_point(h) for h in history],
+                            recent_bids=bids[:20])
