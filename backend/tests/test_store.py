@@ -74,3 +74,53 @@ def test_file_backed_store_persists_and_seeds_once(tmp_path, seed_dataset: Datas
     r2 = Repo(db)
     assert r2.get("item", "EVT-2026-041-01").state == "points_reviewed"
     assert r2.seed_if_empty(seed_file) is False
+
+
+def test_nested_transactions_commit_together(repo: Repo):
+    with repo.transaction():
+        repo.delete("item", "EVT-2026-041-01")
+        with repo.transaction():
+            repo.delete("item", "EVT-2026-041-02")
+        assert repo.get("item", "EVT-2026-041-02") is None
+    assert repo.get("item", "EVT-2026-041-01") is None
+    assert repo.get("item", "EVT-2026-041-02") is None
+    with repo.transaction():  # depth counter is back to zero, a new outer begins cleanly
+        repo.delete("item", "EVT-2026-041-03")
+    assert repo.get("item", "EVT-2026-041-03") is None
+
+
+def test_exception_in_an_inner_transaction_rolls_back_everything(repo: Repo):
+    with pytest.raises(RuntimeError):
+        with repo.transaction():
+            repo.delete("item", "EVT-2026-041-01")
+            with repo.transaction():
+                repo.delete("item", "EVT-2026-041-02")
+                raise RuntimeError("boom")
+    assert repo.get("item", "EVT-2026-041-01") is not None
+    assert repo.get("item", "EVT-2026-041-02") is not None
+    with repo.transaction():  # still usable afterwards
+        repo.delete("item", "EVT-2026-041-01")
+    assert repo.get("item", "EVT-2026-041-01") is None
+
+
+def test_a_caught_inner_error_still_lets_the_outer_transaction_decide(repo: Repo):
+    with repo.transaction():
+        repo.delete("item", "EVT-2026-041-01")
+        with pytest.raises(RuntimeError):
+            with repo.transaction():
+                raise RuntimeError("inner")
+    assert repo.get("item", "EVT-2026-041-01") is None
+
+
+def test_load_dataset_works_inside_a_transaction(repo: Repo, seed_dataset: Dataset):
+    with repo.transaction():
+        repo.delete("item", "EVT-2026-041-01")
+        repo.load_dataset(seed_dataset)
+    assert repo.dataset() == seed_dataset
+
+
+def test_read_context_is_reentrant_and_usable_inside_a_transaction(repo: Repo):
+    with repo.read():
+        with repo.transaction():
+            with repo.read():
+                assert repo.count("event") == 85

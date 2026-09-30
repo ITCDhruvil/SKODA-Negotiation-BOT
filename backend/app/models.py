@@ -10,6 +10,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
+from app import deal
+
 Direction = Literal["buy", "sell"]
 Unit = Literal["EA", "AU", "KG", "TON", "LOT"]
 Language = Literal["en", "hi", "mr"]
@@ -144,4 +146,4 @@ class Dataset(_Model):
         return [b for b in source if b.item_id == item_id]
 
     def event_value(self, event_id: str) -> float:
-        return round(sum(i.qty * i.reference_price for i in self.event_items(event_id)), 2)
+        return deal.reference_value((i.qty, i.reference_price) for i in self.event_items(event_id))

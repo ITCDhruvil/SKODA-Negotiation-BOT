@@ -4,7 +4,7 @@ from __future__ import annotations
 import random
 from datetime import timedelta
 
-from app import eligibility
+from app import deal, eligibility
 from app.seed.build import Accumulator, add_buy_event, add_sell_event
 from app.seed.carts import make_position
 from app.seed.catalog import BUY_CATEGORIES, REQUESTORS, SCRAP_MATERIALS
@@ -23,7 +23,7 @@ def _buy(rng: random.Random, vendors, event_id: str, n: int, acc: Accumulator) -
         picks = []
         for t in rng.sample(cat.templates, min(2, len(cat.templates))):
             picks.append((t, rng.randint(t.qty_lo, t.qty_hi), rng.randint(t.price_lo, t.price_hi)))
-        total = sum(q * p for _, q, p in picks)
+        total = deal.reference_value((q, p) for _, q, p in picks)
         if eligibility.check_value(total).eligible and total <= 350_000:
             break
     else:
@@ -54,7 +54,7 @@ def simulate_event(repo: Repo, direction: str) -> str:
     rng = random.Random(SEED + 1000 + n)
     vendors = repo.fetch("vendor")
     acc = Accumulator()
-    (_buy if direction == "buy" else _sell)(rng, vendors, event_id, n, acc)
+    {"buy": _buy, "sell": _sell}[direction](rng, vendors, event_id, n, acc)
     with repo.transaction():
         for e in acc.events:
             repo.put("event", e.id, e)

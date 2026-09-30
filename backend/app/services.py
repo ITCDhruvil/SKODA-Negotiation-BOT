@@ -33,47 +33,61 @@ def _direction(repo: Repo, item: Item) -> str:
 
 
 def _reference_value(repo: Repo, event_id: str) -> float:
-    return sum(i.qty * i.reference_price for i in repo.fetch("item", parent=event_id))
+    return deal.reference_value((i.qty, i.reference_price)
+                                for i in repo.fetch("item", parent=event_id))
+
+
+_POINTS_EDITABLE = ("draft", "points_reviewed", "analyzed", "handed_back")
 
 
 def set_points(repo: Repo, item_id: str, *, target: float, limit: float,
                objective: Optional[Objective] = None) -> Item:
-    item = _item(repo, item_id)
-    if item.state not in ("draft", "points_reviewed"):
-        raise Conflict(f"points can no longer be changed in state {item.state}")
-    direction = _direction(repo, item)
-    if not deal.points_valid(direction, target, limit):
-        raise Conflict(
-            f"target {target} and limit {limit} are inconsistent for a {direction} event "
-            f"({'target must not exceed the ceiling' if direction == 'buy' else 'the floor must not exceed the target'})")
-    return _save(repo, item.model_copy(update={"target": target, "limit": limit,
-                                                "objective": objective}))
+    with repo.transaction():
+        item = _item(repo, item_id)
+        if item.state not in _POINTS_EDITABLE:
+            raise Conflict(f"points can no longer be changed in state {item.state}")
+        direction = _direction(repo, item)
+        if not deal.points_valid(direction, target, limit):
+            raise Conflict(
+                f"target {target} and limit {limit} are inconsistent for a {direction} event "
+                f"({deal.points_hint(direction)})")
+        update = {"target": target, "limit": limit, "objective": objective}
+        if item.state == "handed_back":
+            lifecycle.require_transition(item.state, "analyzed")
+            update["state"] = "analyzed"
+        return _save(repo, item.model_copy(update=update))
 
 
 def confirm_points(repo: Repo, item_id: str) -> Item:
-    item = _item(repo, item_id)
-    if item.target is None or item.limit is None:
-        raise Conflict("set target and limit before confirming")
-    check = eligibility.check_value(_reference_value(repo, item.event_id))
-    if not check.eligible:
-        raise Conflict(f"not eligible for negotiation: {check.reason}")
-    lifecycle.require_transition(item.state, "points_reviewed")
-    return _save(repo, item.model_copy(update={"state": "points_reviewed"}))
+    with repo.transaction():
+        item = _item(repo, item_id)
+        if item.state not in ("draft", "points_reviewed"):
+            raise lifecycle.InvalidTransition(
+                f"item cannot move from {item.state} to points_reviewed")
+        if item.target is None or item.limit is None:
+            raise Conflict("set target and limit before confirming")
+        check = eligibility.check_value(_reference_value(repo, item.event_id))
+        if not check.eligible:
+            raise Conflict(f"not eligible for negotiation: {check.reason}")
+        if item.state == "points_reviewed":
+            return item
+        lifecycle.require_transition(item.state, "points_reviewed")
+        return _save(repo, item.model_copy(update={"state": "points_reviewed"}))
 
 
 def release_bids(repo: Repo, item_id: str, vendor_ids: Optional[list[str]] = None) -> Item:
-    item = _item(repo, item_id)
-    if item.state not in ("points_reviewed", "awaiting_bids"):
-        raise Conflict(f"bids cannot be released in state {item.state}")
-    pending = repo.fetch("scripted_bid", parent=item_id)
-    if vendor_ids is not None:
-        unknown = set(vendor_ids) - {b.vendor_id for b in pending}
-        if unknown:
-            raise Conflict(f"no pending response from: {', '.join(sorted(unknown))}")
-    chosen = [b for b in pending if vendor_ids is None or b.vendor_id in vendor_ids]
-    if not chosen:
-        raise Conflict("no pending vendor responses to release")
     with repo.transaction():
+        item = _item(repo, item_id)
+        if item.state not in ("points_reviewed", "awaiting_bids"):
+            raise Conflict(f"bids cannot be released in state {item.state}")
+        pending = repo.fetch("scripted_bid", parent=item_id)
+        if vendor_ids is not None:
+            unknown = set(vendor_ids) - {b.vendor_id for b in pending}
+            if unknown:
+                raise Conflict(f"no pending response from: {', '.join(sorted(unknown))}")
+        chosen = [b for b in pending if vendor_ids is None or b.vendor_id in vendor_ids]
+        if not chosen:
+            raise Conflict("no pending vendor responses to release")
         for b in chosen:
             repo.put("bid", b.id, b, parent=item_id)
             repo.delete("scripted_bid", b.id)
@@ -84,6 +98,7 @@ def release_bids(repo: Repo, item_id: str, vendor_ids: Optional[list[str]] = Non
 
 
 def analyze(repo: Repo, item_id: str) -> Item:
-    item = _item(repo, item_id)
-    lifecycle.require_transition(item.state, "analyzed")
-    return _save(repo, item.model_copy(update={"state": "analyzed"}))
+    with repo.transaction():
+        item = _item(repo, item_id)
+        lifecycle.require_transition(item.state, "analyzed")
+        return _save(repo, item.model_copy(update={"state": "analyzed"}))

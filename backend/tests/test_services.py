@@ -31,17 +31,27 @@ def test_confirm_needs_points_first(repo: Repo):
         sv.confirm_points(repo, BUY)
 
 
-def test_confirm_moves_to_points_reviewed_once(repo: Repo):
+def test_confirm_moves_to_points_reviewed_and_is_then_idempotent(repo: Repo):
     sv.set_points(repo, BUY, target=250, limit=270)
     assert sv.confirm_points(repo, BUY).state == "points_reviewed"
+    assert sv.confirm_points(repo, BUY).state == "points_reviewed"
+
+
+def test_confirm_from_any_later_state_is_an_invalid_transition(repo: Repo):
+    _walk_to_analyzed(repo, BUY, 250, 270)
     with pytest.raises(lifecycle.InvalidTransition):
         sv.confirm_points(repo, BUY)
 
 
-def test_points_cannot_change_after_analysis(repo: Repo):
-    _walk_to_analyzed(repo, BUY, 250, 270)
+def test_points_can_be_edited_after_analysis_but_not_once_bids_are_in(repo: Repo):
+    sv.set_points(repo, BUY, target=250, limit=270)
+    sv.confirm_points(repo, BUY)
+    sv.release_bids(repo, BUY)
     with pytest.raises(sv.Conflict):
-        sv.set_points(repo, BUY, target=251, limit=270)
+        sv.set_points(repo, BUY, target=251, limit=270)  # bids_in
+    sv.analyze(repo, BUY)
+    item = sv.set_points(repo, BUY, target=251, limit=270)
+    assert item.state == "analyzed" and item.target == 251
 
 
 def test_release_before_confirm_is_rejected(repo: Repo):

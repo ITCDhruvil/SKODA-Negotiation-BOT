@@ -29,20 +29,35 @@ class Repo:
     def __init__(self, path: str | Path = ":memory:") -> None:
         self._conn = sqlite3.connect(str(path), check_same_thread=False, isolation_level=None)
         self._lock = threading.RLock()
+        self._depth = 0
         with self._lock:
             self._conn.executescript(_SCHEMA)
 
     @contextmanager
     def transaction(self):
+        """Re-entrant: only the outermost call begins and commits; an error rolls everything back."""
         with self._lock:
-            self._conn.execute("BEGIN")
+            outer = self._depth == 0
+            if outer:
+                self._conn.execute("BEGIN")
+            self._depth += 1
             try:
                 yield self
             except BaseException:
-                self._conn.execute("ROLLBACK")
+                self._depth -= 1
+                if outer:
+                    self._conn.execute("ROLLBACK")
                 raise
             else:
-                self._conn.execute("COMMIT")
+                self._depth -= 1
+                if outer:
+                    self._conn.execute("COMMIT")
+
+    @contextmanager
+    def read(self):
+        """Hold the lock so several fetches see one consistent state."""
+        with self._lock:
+            yield self
 
     @staticmethod
     def _check(kind: str) -> None:

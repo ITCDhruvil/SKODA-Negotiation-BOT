@@ -14,8 +14,15 @@ def test_happy_path_is_allowed_step_by_step():
 def test_continue_negotiation_and_hand_back():
     assert lc.can_transition("result_pending", "negotiating")
     assert lc.can_transition("negotiating", "handed_back")
-    assert lc.can_transition("handed_back", "points_reviewed")
+    assert lc.can_transition("handed_back", "analyzed")
     assert lc.can_transition("handed_back", "closed")
+
+
+def test_nothing_can_strand_an_item_back_at_points_reviewed():
+    assert not lc.can_transition("analyzed", "points_reviewed")
+    assert not lc.can_transition("handed_back", "points_reviewed")
+    assert lc.TRANSITIONS["handed_back"] == frozenset({"analyzed", "closed"})
+    assert lc.TRANSITIONS["analyzed"] == frozenset({"negotiating"})
 
 
 def test_bids_can_trickle_in():
@@ -26,7 +33,8 @@ def test_bids_can_trickle_in():
 
 def test_illegal_transitions_are_rejected():
     for a, b in [("draft", "analyzed"), ("analyzed", "closed"), ("closed", "draft"),
-                 ("bids_in", "negotiating"), ("draft", "negotiating")]:
+                 ("bids_in", "negotiating"), ("draft", "negotiating"),
+                 ("analyzed", "points_reviewed"), ("handed_back", "points_reviewed")]:
         assert not lc.can_transition(a, b)
         with pytest.raises(lc.InvalidTransition):
             lc.require_transition(a, b)

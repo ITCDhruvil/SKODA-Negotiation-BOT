@@ -10,11 +10,11 @@ TRANSITIONS: dict[str, frozenset[str]] = {
     "points_reviewed": frozenset({"awaiting_bids", "bids_in"}),
     "awaiting_bids": frozenset({"awaiting_bids", "bids_in"}),
     "bids_in": frozenset({"analyzed"}),
-    "analyzed": frozenset({"negotiating", "points_reviewed"}),
+    "analyzed": frozenset({"negotiating"}),
     "negotiating": frozenset({"result_pending", "handed_back"}),
     "result_pending": frozenset({"negotiating", "awaiting_approval", "handed_back"}),
     "awaiting_approval": frozenset({"closed", "result_pending"}),
-    "handed_back": frozenset({"points_reviewed", "closed"}),
+    "handed_back": frozenset({"analyzed", "closed"}),
     "closed": frozenset(),
 }
 

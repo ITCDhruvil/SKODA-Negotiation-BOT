@@ -6,7 +6,7 @@ direction "sell": we receive; higher is better; the limit is a floor.
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Literal, Mapping, Sequence
+from typing import Iterable, Literal, Mapping, Sequence
 
 Direction = Literal["buy", "sell"]
 
@@ -18,6 +18,11 @@ def _check(direction: str) -> None:
 
 def value(qty: float, price: float) -> float:
     return round(qty * price, 2)
+
+
+def reference_value(pairs: Iterable[tuple[float, float]]) -> float:
+    """Total reference value of (qty, price) pairs, rounded to 2 decimals."""
+    return round(sum(value(q, p) for q, p in pairs), 2)
 
 
 def best_price(direction: Direction, prices: Sequence[float]) -> float:
@@ -126,6 +131,13 @@ def points_valid(direction: Direction, target: float, limit: float) -> bool:
     if target <= 0 or limit <= 0:
         return False
     return target <= limit if direction == "buy" else limit <= target
+
+
+def points_hint(direction: Direction) -> str:
+    """Plain-language rule behind points_valid, for error messages."""
+    _check(direction)
+    return ("target must not exceed the ceiling" if direction == "buy"
+            else "the floor must not exceed the target")
 
 
 def bid_spread(prices: Sequence[float]) -> float:

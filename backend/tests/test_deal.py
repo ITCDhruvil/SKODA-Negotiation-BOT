@@ -148,3 +148,17 @@ def test_best_first_orders_by_direction_and_is_stable():
     assert deal.best_first("sell", [3, 1, 2]) == [3, 2, 1]
     rows = [("a", 5), ("b", 5), ("c", 4)]
     assert [r[0] for r in deal.best_first("buy", rows, key=lambda r: r[1])] == ["c", "a", "b"]
+
+
+def test_points_hint_names_the_rule_for_each_direction():
+    assert deal.points_hint("buy") == "target must not exceed the ceiling"
+    assert deal.points_hint("sell") == "the floor must not exceed the target"
+    with pytest.raises(ValueError):
+        deal.points_hint("swap")
+
+
+def test_reference_value_sums_rounded_line_values():
+    assert deal.reference_value([]) == 0.0
+    assert deal.reference_value([(3, 10.005), (2, 1.1)]) == round(deal.value(3, 10.005)
+                                                                 + deal.value(2, 1.1), 2)
+    assert deal.reference_value(iter([(600, 280.0)])) == 168000.0
