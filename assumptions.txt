@@ -142,7 +142,7 @@ Append new points at the bottom. Format: number, statement, reason.
 47. Hero BUY total is about INR 3.18 lakh (reference) / 3.24 lakh (best bids), not 2.9 lakh as first stated, because six positions at the chosen prices add up to that. Still inside the Phase 1 band.
     Reason: computed from the hero item prices.
 
-48. To reach 150+ cart positions, each two-template category got a third template (six new templates); history therefore has 294 rows.
+48. To reach 150+ cart positions, each two-template category got a third template (six new templates); history therefore has 305 rows after hand-authored hero history replaced random rows.
     Reason: category size capped cart size in the first draft of the generator.
 
 49. Phase 1 plan code was executed from the plan file in a scratch folder before hand-off: 79 tests pass.
