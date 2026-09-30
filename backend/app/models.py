@@ -13,6 +13,8 @@ from pydantic import BaseModel, ConfigDict
 Direction = Literal["buy", "sell"]
 Unit = Literal["EA", "AU", "KG", "TON", "LOT"]
 Language = Literal["en", "hi", "mr"]
+Objective = Literal["reduce_price", "improve_lead_time", "improve_payment_terms",
+                    "improve_commercial_terms"]
 EventStage = Literal["draft", "awaiting_bids", "analyzed", "negotiating", "closed", "handed_back"]
 ItemState = Literal[
     "draft", "points_reviewed", "awaiting_bids", "bids_in", "analyzed", "negotiating",
@@ -77,10 +79,7 @@ class Item(_Model):
     incoterm: str
     delivery_days: int
     state: ItemState
-    objective: Optional[
-        Literal["reduce_price", "improve_lead_time", "improve_payment_terms",
-                "improve_commercial_terms"]
-    ] = None
+    objective: Optional[Objective] = None
 
 
 class Bid(_Model):

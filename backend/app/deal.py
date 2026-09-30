@@ -118,3 +118,27 @@ def effective_price(
     )
     total = present_value + adjustment if direction == "buy" else present_value - adjustment
     return round(total, 2)
+
+
+def points_valid(direction: Direction, target: float, limit: float) -> bool:
+    """Buyer's negotiation points: BUY target <= ceiling, SELL floor <= target; both positive."""
+    _check(direction)
+    if target <= 0 or limit <= 0:
+        return False
+    return target <= limit if direction == "buy" else limit <= target
+
+
+def bid_spread(prices: Sequence[float]) -> float:
+    """Relative gap between the highest and lowest bid: (max - min) / min."""
+    if len(prices) < 2:
+        return 0.0
+    lo, hi = min(prices), max(prices)
+    if lo <= 0:
+        raise ValueError("prices must be positive")
+    return round((hi - lo) / lo, 4)
+
+
+def best_first(direction: Direction, values: Sequence, key=lambda v: v) -> list:
+    """Sort so the best price for us comes first (lowest for buy, highest for sell)."""
+    _check(direction)
+    return sorted(values, key=key, reverse=direction == "sell")

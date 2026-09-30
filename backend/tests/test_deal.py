@@ -118,3 +118,33 @@ def test_freight_tables_are_immutable():
         deal.DEFAULT_TERMS.freight_pct_buy["EXW"] = 1
     with pytest.raises(TypeError):
         deal.DEFAULT_TERMS.freight_pct_sell["EXW"] = 1
+
+
+def test_points_valid_buy_requires_target_at_or_below_ceiling():
+    assert deal.points_valid("buy", target=250, limit=270)
+    assert deal.points_valid("buy", target=270, limit=270)
+    assert not deal.points_valid("buy", target=280, limit=270)
+
+
+def test_points_valid_sell_requires_floor_at_or_below_target():
+    assert deal.points_valid("sell", target=170, limit=165)
+    assert not deal.points_valid("sell", target=160, limit=165)
+
+
+def test_points_valid_rejects_non_positive():
+    assert not deal.points_valid("buy", target=0, limit=10)
+    assert not deal.points_valid("sell", target=10, limit=-1)
+
+
+def test_bid_spread():
+    assert deal.bid_spread([285, 292, 312]) == 0.0947
+    assert deal.bid_spread([100]) == 0.0
+    with pytest.raises(ValueError):
+        deal.bid_spread([0, 5])
+
+
+def test_best_first_orders_by_direction_and_is_stable():
+    assert deal.best_first("buy", [3, 1, 2]) == [1, 2, 3]
+    assert deal.best_first("sell", [3, 1, 2]) == [3, 2, 1]
+    rows = [("a", 5), ("b", 5), ("c", 4)]
+    assert [r[0] for r in deal.best_first("buy", rows, key=lambda r: r[1])] == ["c", "a", "b"]
