@@ -154,3 +154,21 @@ Append new points at the bottom. Format: number, statement, reason.
 51. Switching to the Phase 1 band makes 22 events ineligible including the hero SELL lot (825,000); the default band stays Phase 2 (A43).
     Reason: final review M9.
 
+52. Phase 2 storage is SQLite with one JSON document table (kind, id, parent, seq), seeded from backend/data/seed/dataset.json and reset via POST /api/admin/reset. File is data/app.db (git-ignored) or NEGOTIATION_DB.
+    Reason: spec says SQLite; document table keeps models as the single schema.
+
+53. Scripted (unreleased) vendor bids are hidden from every API response. The API shows only invitees (vendor, rating, language) until the buyer's story releases bids via POST /items/{id}/release-bids. Vendor reserves are never returned.
+    Reason: A33 and the never-expose-reserve rule.
+
+54. Phase 2 ends at state analyzed. Confirming points requires the event's reference value to be inside the band (A43); the minimum-bids rule decides bids_in vs awaiting_bids at release time (A34).
+    Reason: negotiation, approval and close belong to Phase 4.
+
+55. Dashboard KPI definitions: potential savings/uplift = sum of (gap to target x qty) over open items that have live bids (target = buyer's if set, else the suggested one); realised = outcomes only; total value = sum of event quoted values (best bid x qty where bids exist, else reference price x qty); top vendors = sum of qty x bid price over live bids; completed negotiations = outcomes flagged negotiated.
+    Reason: derived only, never stored; one place (readmodel) so the UI renders API values.
+
+56. Simulate Event builds a fresh draft event (BUY: two templates from the next category; SELL: next scrap material) with the seed generators and a deterministic rng (SEED + 1000 + event number); id is the next EVT-2026-nnn.
+    Reason: A36; deterministic so tests are stable.
+
+57. The API allows CORS from http://localhost:3000 and http://127.0.0.1:3000 only.
+    Reason: Next.js dev server in Phase 3.
+
