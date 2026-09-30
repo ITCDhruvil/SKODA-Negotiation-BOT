@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -106,7 +106,7 @@ function DateRangeMenu() {
             To
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-m border border-line bg-panel px-2 py-1.5 text-sm" />
           </label>
-          {invalid && <p className="text-xs text-red">"From" must not be after "To".</p>}
+          {invalid && <p className="text-xs text-red">“From” must not be after “To”.</p>}
           <div className="flex justify-end gap-2">
             <button
               className="rounded-m px-3 py-1.5 text-xs font-semibold text-muted hover:bg-raise"
