@@ -5,8 +5,9 @@ direction "sell": we receive; higher is better; the limit is a floor.
 """
 from __future__ import annotations
 
+import math
 from types import MappingProxyType
-from typing import Iterable, Literal, Mapping, Sequence
+from typing import Iterable, Literal, Mapping, Optional, Sequence
 
 Direction = Literal["buy", "sell"]
 
@@ -154,3 +155,56 @@ def best_first(direction: Direction, values: Sequence, key=lambda v: v) -> list:
     """Sort so the best price for us comes first (lowest for buy, highest for sell)."""
     _check(direction)
     return sorted(values, key=key, reverse=direction == "sell")
+
+
+# --- negotiation helpers -------------------------------------------------------------------
+
+def opposite(direction: Direction) -> Direction:
+    """The counterparty's direction: a buyer's vendor sells, a seller's vendor buys."""
+    _check(direction)
+    return "sell" if direction == "buy" else "buy"
+
+
+def round_price(x: float) -> float:
+    """Whole rupees from 100 up, paise below; halves round up."""
+    if x >= 100:
+        return float(math.floor(x + 0.5))
+    return math.floor(x * 100 + 0.5) / 100
+
+
+def concede(mover: Direction, current: float, other: float, bound: float, fraction: float) -> float:
+    """Move `current` toward `other` by `fraction`, never past `bound` (the mover's walk-away).
+
+    `mover` is the direction of whoever is moving: a buyer moves up toward the seller's price but
+    never above their ceiling; a seller moves down but never below their floor.
+    """
+    _check(mover)
+    if not 0.0 <= fraction <= 1.0:
+        raise ValueError("fraction must be between 0 and 1")
+    moved = round_price(current + fraction * (other - current))
+    return moved if within_limit(mover, moved, bound) else bound
+
+
+_LADDER = ("ADV", "ZD15", "ZD30", "ZD45", "ZD60")
+
+
+def better_payment(direction: Direction, a: str, b: str) -> bool:
+    """True when payment code `a` is strictly better for us than `b`.
+
+    A buyer prefers to pay later; a seller prefers to be paid sooner.
+    """
+    _check(direction)
+    da, db = payment_days(a), payment_days(b)
+    return da > db if direction == "buy" else da < db
+
+
+def next_better_payment(direction: Direction, code: str) -> Optional[str]:
+    """The next payment tier that is better for us than `code`, or None if already the best."""
+    _check(direction)
+    days = payment_days(code)
+    steps = [(payment_days(c), c) for c in _LADDER]
+    if direction == "buy":
+        better = [c for d, c in steps if d > days]
+        return better[0] if better else None
+    better = [c for d, c in steps if d < days]
+    return better[-1] if better else None

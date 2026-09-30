@@ -22,7 +22,7 @@ def test_nothing_can_strand_an_item_back_at_points_reviewed():
     assert not lc.can_transition("analyzed", "points_reviewed")
     assert not lc.can_transition("handed_back", "points_reviewed")
     assert lc.TRANSITIONS["handed_back"] == frozenset({"analyzed", "closed"})
-    assert lc.TRANSITIONS["analyzed"] == frozenset({"negotiating"})
+    assert lc.TRANSITIONS["analyzed"] == frozenset({"negotiating", "awaiting_approval"})
 
 
 def test_bids_can_trickle_in():
@@ -59,3 +59,8 @@ def test_event_status_is_derived_from_item_states():
 
 def test_seed_item_states_are_all_known(seed_dataset: Dataset):
     assert {i.state for i in seed_dataset.items} <= set(lc.TRANSITIONS)
+
+
+def test_the_best_quote_can_be_accepted_as_is_from_analyzed():
+    assert lc.can_transition("analyzed", "awaiting_approval")
+    assert not lc.can_transition("analyzed", "closed")
