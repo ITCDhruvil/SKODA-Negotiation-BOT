@@ -7,13 +7,10 @@ from app.seed.catalog import BUY_CATEGORIES, FAMILIES
 
 _FIRST = ("Sahyadri", "Deccan", "Konkan", "Vidarbha", "Malwa", "Kaveri", "Godavari", "Narmada",
           "Bharat", "Shivneri", "Rajgad", "Pratap", "Gomti", "Tapi", "Indrayani")
-_SUFFIX = {
-    "25200000": "Caterers", "41120214": "Events", "24321900": "AV Systems",
-    "43211500": "IT Accessories", "44121600": "Stationers", "90101500": "Facility Services",
-    "82121500": "Printers", "78101800": "Logistics", "86101700": "Learning",
-    "40101800": "Industrial Supplies",
-}
-_FORM = ("Pvt Ltd", "Enterprises", "& Co")
+# Suppliers serve two categories each, so their names stay category-neutral: a name like
+# "... Logistics ..." must never bid on catering.
+_TRADE = ("Trading", "Enterprises")
+_FORM = ("Pvt Ltd", "& Co", "LLP")
 _SCRAP_BUYERS = (
     "Sahyadri Metal Recyclers", "Deccan Alloys Traders", "Konkan Scrap Industries",
     "Vidarbha Smelters", "Malwa Metals Pvt Ltd", "Kaveri Reclaim Works",
@@ -30,7 +27,7 @@ def build_vendors(rng: random.Random) -> list[Vendor]:
         categories = [BUY_CATEGORIES[i % 10].code, BUY_CATEGORIES[(i + 3) % 10].code]
         vendors.append(Vendor(
             id=f"V{i + 1:03d}",
-            name=f"{_FIRST[i % 15]} {_SUFFIX[categories[0]]} {_FORM[i % 3]}",
+            name=f"{_FIRST[i % 15]} {_TRADE[i // 15]} {_FORM[i % 3]}",
             sap_no=str(3300100000 + i * 137),
             type="supplier",
             categories=categories,

@@ -2,7 +2,7 @@
  "vendors": [
   {
    "id": "V001",
-   "name": "Sahyadri Caterers Pvt Ltd",
+   "name": "Sahyadri Trading Pvt Ltd",
    "sap_no": "3300100000",
    "type": "supplier",
    "categories": [
@@ -15,7 +15,7 @@
   },
   {
    "id": "V002",
-   "name": "Deccan Events Enterprises",
+   "name": "Deccan Trading & Co",
    "sap_no": "3300100137",
    "type": "supplier",
    "categories": [
@@ -28,7 +28,7 @@
   },
   {
    "id": "V003",
-   "name": "Konkan AV Systems & Co",
+   "name": "Konkan Trading LLP",
    "sap_no": "3300100274",
    "type": "supplier",
    "categories": [
@@ -41,7 +41,7 @@
   },
   {
    "id": "V004",
-   "name": "Vidarbha IT Accessories Pvt Ltd",
+   "name": "Vidarbha Trading Pvt Ltd",
    "sap_no": "3300100411",
    "type": "supplier",
    "categories": [
@@ -54,7 +54,7 @@
   },
   {
    "id": "V005",
-   "name": "Malwa Stationers Enterprises",
+   "name": "Malwa Trading & Co",
    "sap_no": "3300100548",
    "type": "supplier",
    "categories": [
@@ -67,7 +67,7 @@
   },
   {
    "id": "V006",
-   "name": "Kaveri Facility Services & Co",
+   "name": "Kaveri Trading LLP",
    "sap_no": "3300100685",
    "type": "supplier",
    "categories": [
@@ -80,7 +80,7 @@
   },
   {
    "id": "V007",
-   "name": "Godavari Printers Pvt Ltd",
+   "name": "Godavari Trading Pvt Ltd",
    "sap_no": "3300100822",
    "type": "supplier",
    "categories": [
@@ -93,7 +93,7 @@
   },
   {
    "id": "V008",
-   "name": "Narmada Logistics Enterprises",
+   "name": "Narmada Trading & Co",
    "sap_no": "3300100959",
    "type": "supplier",
    "categories": [
@@ -106,7 +106,7 @@
   },
   {
    "id": "V009",
-   "name": "Bharat Learning & Co",
+   "name": "Bharat Trading LLP",
    "sap_no": "3300101096",
    "type": "supplier",
    "categories": [
@@ -119,7 +119,7 @@
   },
   {
    "id": "V010",
-   "name": "Shivneri Industrial Supplies Pvt Ltd",
+   "name": "Shivneri Trading Pvt Ltd",
    "sap_no": "3300101233",
    "type": "supplier",
    "categories": [
@@ -132,7 +132,7 @@
   },
   {
    "id": "V011",
-   "name": "Rajgad Caterers Enterprises",
+   "name": "Rajgad Trading & Co",
    "sap_no": "3300101370",
    "type": "supplier",
    "categories": [
@@ -145,7 +145,7 @@
   },
   {
    "id": "V012",
-   "name": "Pratap Events & Co",
+   "name": "Pratap Trading LLP",
    "sap_no": "3300101507",
    "type": "supplier",
    "categories": [
@@ -158,7 +158,7 @@
   },
   {
    "id": "V013",
-   "name": "Gomti AV Systems Pvt Ltd",
+   "name": "Gomti Trading Pvt Ltd",
    "sap_no": "3300101644",
    "type": "supplier",
    "categories": [
@@ -171,7 +171,7 @@
   },
   {
    "id": "V014",
-   "name": "Tapi IT Accessories Enterprises",
+   "name": "Tapi Trading & Co",
    "sap_no": "3300101781",
    "type": "supplier",
    "categories": [
@@ -184,7 +184,7 @@
   },
   {
    "id": "V015",
-   "name": "Indrayani Stationers & Co",
+   "name": "Indrayani Trading LLP",
    "sap_no": "3300101918",
    "type": "supplier",
    "categories": [
@@ -197,7 +197,7 @@
   },
   {
    "id": "V016",
-   "name": "Sahyadri Facility Services Pvt Ltd",
+   "name": "Sahyadri Enterprises Pvt Ltd",
    "sap_no": "3300102055",
    "type": "supplier",
    "categories": [
@@ -210,7 +210,7 @@
   },
   {
    "id": "V017",
-   "name": "Deccan Printers Enterprises",
+   "name": "Deccan Enterprises & Co",
    "sap_no": "3300102192",
    "type": "supplier",
    "categories": [
@@ -223,7 +223,7 @@
   },
   {
    "id": "V018",
-   "name": "Konkan Logistics & Co",
+   "name": "Konkan Enterprises LLP",
    "sap_no": "3300102329",
    "type": "supplier",
    "categories": [
@@ -236,7 +236,7 @@
   },
   {
    "id": "V019",
-   "name": "Vidarbha Learning Pvt Ltd",
+   "name": "Vidarbha Enterprises Pvt Ltd",
    "sap_no": "3300102466",
    "type": "supplier",
    "categories": [
@@ -249,7 +249,7 @@
   },
   {
    "id": "V020",
-   "name": "Malwa Industrial Supplies Enterprises",
+   "name": "Malwa Enterprises & Co",
    "sap_no": "3300102603",
    "type": "supplier",
    "categories": [
@@ -262,7 +262,7 @@
   },
   {
    "id": "V021",
-   "name": "Kaveri Caterers & Co",
+   "name": "Kaveri Enterprises LLP",
    "sap_no": "3300102740",
    "type": "supplier",
    "categories": [
@@ -275,7 +275,7 @@
   },
   {
    "id": "V022",
-   "name": "Godavari Events Pvt Ltd",
+   "name": "Godavari Enterprises Pvt Ltd",
    "sap_no": "3300102877",
    "type": "supplier",
    "categories": [
@@ -288,7 +288,7 @@
   },
   {
    "id": "V023",
-   "name": "Narmada AV Systems Enterprises",
+   "name": "Narmada Enterprises & Co",
    "sap_no": "3300103014",
    "type": "supplier",
    "categories": [
@@ -301,7 +301,7 @@
   },
   {
    "id": "V024",
-   "name": "Bharat IT Accessories & Co",
+   "name": "Bharat Enterprises LLP",
    "sap_no": "3300103151",
    "type": "supplier",
    "categories": [
@@ -314,7 +314,7 @@
   },
   {
    "id": "V025",
-   "name": "Shivneri Stationers Pvt Ltd",
+   "name": "Shivneri Enterprises Pvt Ltd",
    "sap_no": "3300103288",
    "type": "supplier",
    "categories": [
@@ -327,7 +327,7 @@
   },
   {
    "id": "V026",
-   "name": "Rajgad Facility Services Enterprises",
+   "name": "Rajgad Enterprises & Co",
    "sap_no": "3300103425",
    "type": "supplier",
    "categories": [
@@ -340,7 +340,7 @@
   },
   {
    "id": "V027",
-   "name": "Pratap Printers & Co",
+   "name": "Pratap Enterprises LLP",
    "sap_no": "3300103562",
    "type": "supplier",
    "categories": [
@@ -353,7 +353,7 @@
   },
   {
    "id": "V028",
-   "name": "Gomti Logistics Pvt Ltd",
+   "name": "Gomti Enterprises Pvt Ltd",
    "sap_no": "3300103699",
    "type": "supplier",
    "categories": [
@@ -366,7 +366,7 @@
   },
   {
    "id": "V029",
-   "name": "Tapi Learning Enterprises",
+   "name": "Tapi Enterprises & Co",
    "sap_no": "3300103836",
    "type": "supplier",
    "categories": [
@@ -379,7 +379,7 @@
   },
   {
    "id": "V030",
-   "name": "Indrayani Industrial Supplies & Co",
+   "name": "Indrayani Enterprises LLP",
    "sap_no": "3300103973",
    "type": "supplier",
    "categories": [
