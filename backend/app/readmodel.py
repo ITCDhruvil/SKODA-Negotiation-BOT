@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Optional
 
 from app import deal, eligibility, lifecycle
@@ -31,6 +32,22 @@ class Snapshot:
         for i in self.items:
             self.items_by_event[i.event_id].append(i)
 
+    def between(self, date_from: Optional[date] = None,
+                date_to: Optional[date] = None) -> "Snapshot":
+        """Events created in the inclusive range, with their items, bids and outcomes.
+        Vendors and history are unchanged."""
+        events = [e for e in self.events
+                  if (date_from is None or e.created >= date_from)
+                  and (date_to is None or e.created <= date_to)]
+        keep = {e.id for e in events}
+        items = [i for i in self.items if i.event_id in keep]
+        ids = {i.id for i in items}
+        return Snapshot(
+            vendors=self.vendors, events=events, items=items, history=self.history,
+            bids_by_item={k: v for k, v in self.bids_by_item.items() if k in ids},
+            scripted_by_item={k: v for k, v in self.scripted_by_item.items() if k in ids},
+            outcomes={k: v for k, v in self.outcomes.items() if k in ids})
+
 
 def _group(bids: list[Bid]) -> dict[str, list[Bid]]:
     out: dict[str, list[Bid]] = {}
@@ -40,15 +57,16 @@ def _group(bids: list[Bid]) -> dict[str, list[Bid]]:
 
 
 def snapshot(repo: Repo) -> Snapshot:
-    return Snapshot(
-        vendors={v.id: v for v in repo.fetch("vendor")},
-        events=repo.fetch("event"),
-        items=repo.fetch("item"),
-        history=repo.fetch("history"),
-        bids_by_item=_group(repo.fetch("bid")),
-        scripted_by_item=_group(repo.fetch("scripted_bid")),
-        outcomes={o.item_id: o for o in repo.fetch("outcome")},
-    )
+    with repo.read():
+        return Snapshot(
+            vendors={v.id: v for v in repo.fetch("vendor")},
+            events=repo.fetch("event"),
+            items=repo.fetch("item"),
+            history=repo.fetch("history"),
+            bids_by_item=_group(repo.fetch("bid")),
+            scripted_by_item=_group(repo.fetch("scripted_bid")),
+            outcomes={o.item_id: o for o in repo.fetch("outcome")},
+        )
 
 
 def points(item: Item) -> tuple[float, float]:
@@ -73,7 +91,8 @@ def _best_bid(direction: str, bids: list[Bid]) -> Optional[Bid]:
 
 
 def event_reference_value(snap: Snapshot, event: Event) -> float:
-    return round(sum(i.qty * i.reference_price for i in snap.items_by_event[event.id]), 2)
+    return deal.reference_value((i.qty, i.reference_price)
+                                for i in snap.items_by_event[event.id])
 
 
 def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
@@ -88,12 +107,20 @@ def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
         potential = 0.0
     else:
         potential = deal.potential_delta(d, best.unit_price, target, item.qty)
+    within = deal.within_limit(d, best.unit_price, limit) if best else None
+    outcome = snap.outcomes.get(item.id)
     if item.state == "closed":
         recommendation = "done"
+    elif item.state == "handed_back":
+        recommendation = "review"
     elif best is None:
         recommendation = "waiting"
     else:
-        recommendation = "negotiate" if gap > 0 else "accept"
+        recommendation = "accept" if within else "negotiate"
+    if item.state == "closed" and outcome:
+        shown = outcome.final_price
+    else:
+        shown = best.unit_price if best else item.reference_price
     return sch.ItemView(
         id=item.id, event_id=item.event_id, position=item.position,
         description=item.description, kind=item.kind, qty=item.qty, unit=item.unit,
@@ -107,8 +134,8 @@ def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
         best_bid_vendor=_vendor_name(snap, best.vendor_id) if best else None,
         best_effective_price=(deal.best_price(d, [_effective(d, b) for b in bids])
                               if bids else None),
-        gap=gap, potential_delta=potential,
-        value=deal.value(item.qty, best.unit_price if best else item.reference_price),
+        gap=gap, potential_delta=potential, within_limit=within,
+        value=deal.value(item.qty, shown),
         recommendation=recommendation,
     )
 
@@ -133,6 +160,9 @@ def event_view(snap: Snapshot, event: Event,
     realised = round(sum(
         deal.realised_delta(o.direction, o.original_price, o.final_price, o.qty)
         for i in items if (o := snap.outcomes.get(i.id))), 2)
+    outcomes = [o for i in items if (o := snap.outcomes.get(i.id))]
+    quoted = round(sum(v.value for v in views), 2)
+    status = lifecycle.event_status(v.state for v in views)
     el = eligibility.check_value(reference)
     return sch.EventView(
         id=event.id, type=event.type, direction=event.direction, title=event.title,
@@ -140,12 +170,16 @@ def event_view(snap: Snapshot, event: Event,
         purch_group=event.purch_group, category=event.category, category_key=event.category_key,
         requestor=event.requestor, cost_centre=event.cost_centre, created=event.created,
         approval_date=event.approval_date, due=event.due, source_cart_no=event.source_cart_no,
-        hero=event.hero, status=lifecycle.event_status(v.state for v in views),
+        hero=event.hero, status=status,
         eligibility=sch.EligibilityView(eligible=el.eligible, reason=el.reason),
         item_count=len(items), vendor_count=len(vendor_ids), reference_value=reference,
-        quoted_value=round(sum(v.value for v in views), 2),
+        quoted_value=quoted,
         potential_delta=round(sum(v.potential_delta or 0.0 for v in views), 2),
-        realised_delta=realised)
+        realised_delta=realised,
+        final_value=quoted if status == "closed" else None,
+        items_negotiated=sum(1 for o in outcomes if o.negotiated),
+        vendors_participated=len(vendor_ids),
+        duration_minutes=sum(o.duration_minutes for o in outcomes if o.negotiated))
 
 
 def event_detail(snap: Snapshot, event: Event) -> sch.EventDetail:
@@ -173,7 +207,8 @@ def comparison(snap: Snapshot, item: Item) -> sch.ComparisonView:
             warranty_months=b.warranty_months, penalty_clause=b.penalty_clause,
             language=b.language, gap_to_target=deal.gap_to_target(d, b.unit_price, target),
             is_best_price=b.unit_price == best_price, is_best_effective=eff[b.id] == best_eff))
-    gap = deal.gap_to_target(d, best_price, target) if bids else 0.0
+    closed = item.state == "closed"
+    gap = deal.gap_to_target(d, best_price, target) if bids and not closed else 0.0
     return sch.ComparisonView(
         item_id=item.id, rows=rows,
         summary=sch.ComparisonSummary(
@@ -182,8 +217,8 @@ def comparison(snap: Snapshot, item: Item) -> sch.ComparisonView:
             best_effective_bid_id=next((r.bid_id for r in rows if r.is_best_effective), None),
             spread=deal.bid_spread(prices) if len(prices) >= 2 else None,
             opportunity=gap > 0,
-            potential_delta=deal.potential_delta(d, best_price, target, item.qty) if bids
-            else 0.0))
+            potential_delta=deal.potential_delta(d, best_price, target, item.qty)
+            if bids and not closed else 0.0))
 
 
 def _point(h: HistoryRecord) -> sch.HistoryPoint:
@@ -217,11 +252,14 @@ def history_view(snap: Snapshot, item: Item) -> sch.HistoryView:
 
 def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:
     event = snap.event_by_id[item.event_id]
+    invited = [(b, False) for b in snap.scripted_by_item.get(item.id, [])]
+    invited += [(b, True) for b in snap.bids_by_item.get(item.id, [])]
     invitees = []
-    for b in snap.scripted_by_item.get(item.id, []):
+    for b, responded in sorted(invited, key=lambda pair: pair[0].id):
         v = snap.vendors.get(b.vendor_id)
-        invitees.append(sch.Invitee(vendor_id=b.vendor_id, vendor_name=_vendor_name(snap, b.vendor_id),
-                                    rating=v.rating if v else 0.0, language=b.language))
+        invitees.append(sch.Invitee(
+            vendor_id=b.vendor_id, vendor_name=_vendor_name(snap, b.vendor_id),
+            rating=v.rating if v else 0.0, language=b.language, responded=responded))
     outcome = snap.outcomes.get(item.id)
     val = eligibility.check_value(event_reference_value(snap, event))
     n_bids = eligibility.check_bids(len(snap.bids_by_item.get(item.id, [])))
@@ -236,7 +274,10 @@ def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:
 _IN_PROGRESS = ("negotiating", "result_pending", "awaiting_approval")
 
 
-def dashboard(snap: Snapshot) -> sch.Dashboard:
+def dashboard(snap: Snapshot, date_from: Optional[date] = None,
+              date_to: Optional[date] = None) -> sch.Dashboard:
+    if date_from is not None or date_to is not None:
+        snap = snap.between(date_from, date_to)
     ivs = {i.id: item_view(snap, i) for i in snap.items}
     evs = sorted((event_view(snap, e, ivs) for e in snap.events),
                  key=lambda e: (e.created, e.id), reverse=True)
@@ -274,7 +315,7 @@ def dashboard(snap: Snapshot) -> sch.Dashboard:
     per_vendor: dict[str, float] = defaultdict(float)
     for i in snap.items:
         for b in snap.bids_by_item.get(i.id, []):
-            per_vendor[b.vendor_id] += i.qty * b.unit_price
+            per_vendor[b.vendor_id] += deal.value(i.qty, b.unit_price)
     vendor_total = sum(per_vendor.values())
     top_vendors = [
         sch.VendorValue(vendor_id=vid, vendor_name=_vendor_name(snap, vid), value=round(v, 2),
@@ -326,7 +367,7 @@ def vendor_view(snap: Snapshot, v: Vendor) -> sch.VendorView:
     return sch.VendorView(
         id=v.id, name=v.name, sap_no=v.sap_no, type=v.type, categories=v.categories,
         rating=v.rating, payment_pref=v.payment_pref, past_deals=v.past_deals,
-        live_bid_count=len(live), quoted_value=round(sum(i.qty * b.unit_price for i, b in live), 2),
+        live_bid_count=len(live), quoted_value=deal.reference_value((i.qty, b.unit_price) for i, b in live),
         closed_deals=sum(1 for o in snap.outcomes.values() if o.vendor_id == v.id),
         history_deals=sum(1 for h in snap.history if h.vendor_id == v.id))
 

@@ -113,3 +113,55 @@ def test_vendor_views(repo: Repo):
     assert detail.vendor.id == v.id
     assert all(h.vendor_id == v.id for h in detail.history)
     assert len(detail.recent_bids) <= 20
+
+
+def test_unfiltered_equals_a_range_covering_everything(repo: Repo):
+    snap = rm.snapshot(repo)
+    everything = rm.dashboard(snap)
+    lo = min(e.created for e in snap.events)
+    hi = max(e.created for e in snap.events)
+    assert rm.dashboard(snap, lo, hi) == everything
+    assert rm.dashboard(snap, date_from=lo) == everything
+    assert rm.dashboard(snap, date_to=hi) == everything
+
+
+def test_date_range_kpis_match_an_independent_recomputation(repo: Repo, seed_dataset: Dataset):
+    snap = rm.snapshot(repo)
+    dates = sorted({e.created for e in snap.events})
+    lo, hi = dates[len(dates) // 3], dates[2 * len(dates) // 3]
+    subset = [e for e in seed_dataset.events if lo <= e.created <= hi]
+    ids = {e.id for e in subset}
+    items = [i for i in seed_dataset.items if i.event_id in ids]
+    item_ids = {i.id for i in items}
+    direction = {e.id: e.direction for e in subset}
+    dash = rm.dashboard(snap, lo, hi)
+    k = dash.kpis
+    assert 0 < k.total_events == len(subset) < 85
+    assert len(dash.events) == len(subset) and k.items == len(items)
+    assert k.vendors == 46  # total vendor count, not filtered
+    pot = defaultdict(float)
+    for i in items:
+        bids = seed_dataset.item_bids(i.id)
+        if not bids or i.state == "closed":
+            continue
+        d = direction[i.event_id]
+        target = i.target if i.target is not None else i.suggested_target
+        pot[d] += deal.potential_delta(
+            d, deal.best_price(d, [b.unit_price for b in bids]), target, i.qty)
+    assert k.potential_savings == round(pot["buy"], 2)
+    assert k.potential_uplift == round(pot["sell"], 2)
+    outcomes = [o for o in seed_dataset.outcomes if o.item_id in item_ids]
+    assert k.completed_negotiations == sum(1 for o in outcomes if o.negotiated)
+    assert k.realised_total == round(sum(
+        deal.realised_delta(o.direction, o.original_price, o.final_price, o.qty)
+        for o in outcomes), 2)
+    assert all(lo <= e.created <= hi for e in dash.events)
+    assert all(o.item_id in item_ids for o in dash.opportunities)
+    assert round(sum(c.value for c in dash.value_by_category), 2) == k.total_value
+
+
+def test_status_distribution_after_filter_sums_to_the_subset(repo: Repo):
+    snap = rm.snapshot(repo)
+    day = snap.events[0].created
+    dash = rm.dashboard(snap, day, day)
+    assert sum(dash.status_distribution.values()) == dash.kpis.total_events

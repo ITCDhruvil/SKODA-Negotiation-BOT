@@ -1,12 +1,14 @@
 """FastAPI layer. Response models (app.schemas) are the only shape that leaves the backend."""
 from __future__ import annotations
 
+from datetime import date
 from typing import Optional
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from app import lifecycle, readmodel, services, simulate
 from app import schemas as sch
@@ -15,8 +17,10 @@ from app.store import Repo
 
 
 class PointsIn(BaseModel):
-    target: float
-    limit: float
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    target: float = Field(gt=0)
+    limit: float = Field(gt=0)
     objective: Optional[Objective] = None
 
 
@@ -28,14 +32,26 @@ class SimulateIn(BaseModel):
     direction: Direction
 
 
-def create_app(repo: Repo, seed_dataset: Optional[Dataset] = None) -> FastAPI:
-    """seed_dataset is only used by /api/admin/reset; pass None to reset from the repo's own
-    initial export (captured now)."""
-    initial = seed_dataset or repo.dataset()
+def _range(date_from: Optional[date], date_to: Optional[date]) -> tuple[Optional[date], Optional[date]]:
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(status_code=422, detail="date_from must not be after date_to")
+    return date_from, date_to
+
+
+def create_app(repo: Repo, seed_dataset: Dataset) -> FastAPI:
+    """seed_dataset is what /api/admin/reset restores, even after a restart."""
     app = FastAPI(title="Main Negotiation Bot API")
     app.add_middleware(
         CORSMiddleware, allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
         allow_methods=["*"], allow_headers=["*"])
+
+    @app.exception_handler(RequestValidationError)
+    async def _invalid_request(_: Request, exc: RequestValidationError):
+        # The default handler echoes the offending input, which cannot be JSON-encoded for
+        # Infinity or NaN; report only where and why.
+        detail = [{"loc": list(e["loc"]), "msg": e["msg"], "type": e["type"]}
+                  for e in exc.errors()]
+        return JSONResponse({"detail": detail}, status_code=422)
 
     @app.exception_handler(services.NotFound)
     async def _not_found(_, exc):
@@ -58,18 +74,19 @@ def create_app(repo: Repo, seed_dataset: Optional[Dataset] = None) -> FastAPI:
             raise services.NotFound(f"item {item_id} not found")
         return readmodel.item_detail(s, s.item_by_id[item_id])
 
-    @app.get("/api/health")
+    @app.get("/api/health", response_model=sch.Health)
     def health():
-        return {"status": "ok"}
+        return sch.Health(status="ok")
 
     @app.get("/api/dashboard", response_model=sch.Dashboard)
-    def dashboard():
-        return readmodel.dashboard(snap())
+    def dashboard(date_from: Optional[date] = None, date_to: Optional[date] = None):
+        return readmodel.dashboard(snap(), *_range(date_from, date_to))
 
     @app.get("/api/events", response_model=list[sch.EventView])
     def events(q: Optional[str] = None, direction: Optional[Direction] = None,
-               status: Optional[sch.EventStatus] = None, category_key: Optional[str] = None):
-        s = snap()
+               status: Optional[sch.EventStatus] = None, category_key: Optional[str] = None,
+               date_from: Optional[date] = None, date_to: Optional[date] = None):
+        s = snap().between(*_range(date_from, date_to))
         ivs = {i.id: readmodel.item_view(s, i) for i in s.items}
         out = [readmodel.event_view(s, e, ivs) for e in s.events]
         if direction:
@@ -80,8 +97,11 @@ def create_app(repo: Repo, seed_dataset: Optional[Dataset] = None) -> FastAPI:
             out = [e for e in out if e.category_key == category_key]
         if q:
             needle = q.lower()
+            descriptions = {e.id: " ".join(i.description for i in s.items_by_event[e.id])
+                            for e in s.events}
             out = [e for e in out if needle in " ".join(
-                [e.id, e.title, e.category, e.requestor]).lower()]
+                [e.id, e.title, e.category, e.requestor, e.source_cart_no or "",
+                 descriptions[e.id]]).lower()]
         return sorted(out, key=lambda e: (e.created, e.id), reverse=True)
 
     @app.post("/api/events/simulate", response_model=sch.EventDetail)
@@ -114,8 +134,11 @@ def create_app(repo: Repo, seed_dataset: Optional[Dataset] = None) -> FastAPI:
 
     @app.put("/api/items/{item_id}/points", response_model=sch.ItemDetail)
     def set_points(item_id: str, body: PointsIn):
-        services.set_points(repo, item_id, target=body.target, limit=body.limit,
-                            objective=body.objective)
+        kept = "objective" not in body.model_fields_set
+        with repo.transaction():
+            objective = (services._item(repo, item_id).objective if kept else body.objective)
+            services.set_points(repo, item_id, target=body.target, limit=body.limit,
+                                objective=objective)
         return detail(item_id)
 
     @app.post("/api/items/{item_id}/confirm-points", response_model=sch.ItemDetail)
@@ -124,8 +147,8 @@ def create_app(repo: Repo, seed_dataset: Optional[Dataset] = None) -> FastAPI:
         return detail(item_id)
 
     @app.post("/api/items/{item_id}/release-bids", response_model=sch.ItemDetail)
-    def release_bids(item_id: str, body: ReleaseIn):
-        services.release_bids(repo, item_id, body.vendor_ids)
+    def release_bids(item_id: str, body: Optional[ReleaseIn] = None):
+        services.release_bids(repo, item_id, body.vendor_ids if body else None)
         return detail(item_id)
 
     @app.post("/api/items/{item_id}/analyze", response_model=sch.ItemDetail)
@@ -145,9 +168,9 @@ def create_app(repo: Repo, seed_dataset: Optional[Dataset] = None) -> FastAPI:
             raise services.NotFound(f"vendor {vendor_id} not found")
         return readmodel.vendor_detail(s, s.vendors[vendor_id])
 
-    @app.post("/api/admin/reset")
+    @app.post("/api/admin/reset", response_model=sch.ResetResult)
     def reset():
-        repo.load_dataset(initial)
-        return {"events": repo.count("event")}
+        repo.load_dataset(seed_dataset)
+        return sch.ResetResult(events=repo.count("event"))
 
     return app

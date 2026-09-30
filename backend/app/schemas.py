@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from app.models import Direction, ItemState, Language, Objective, Unit
 
 EventStatus = Literal["received", "in_progress", "closed"]
-Recommendation = Literal["waiting", "negotiate", "accept", "done"]
+Recommendation = Literal["waiting", "negotiate", "accept", "review", "done"]
 
 
 class EligibilityView(BaseModel):
@@ -41,6 +41,7 @@ class ItemView(BaseModel):
     best_effective_price: Optional[float]
     gap: Optional[float]
     potential_delta: Optional[float]
+    within_limit: Optional[bool]
     value: float
     recommendation: Recommendation
 
@@ -71,6 +72,10 @@ class EventView(BaseModel):
     quoted_value: float
     potential_delta: float
     realised_delta: float
+    final_value: Optional[float]
+    items_negotiated: int
+    vendors_participated: int
+    duration_minutes: int
 
 
 class EventDetail(BaseModel):
@@ -164,6 +169,7 @@ class Invitee(BaseModel):
     vendor_name: str
     rating: float
     language: Language
+    responded: bool
 
 
 class ItemDetail(BaseModel):
@@ -274,3 +280,11 @@ class VendorDetail(BaseModel):
     vendor: VendorView
     history: list[HistoryPoint]
     recent_bids: list[VendorBidRow]
+
+
+class Health(BaseModel):
+    status: str
+
+
+class ResetResult(BaseModel):
+    events: int
