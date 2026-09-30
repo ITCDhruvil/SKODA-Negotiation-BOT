@@ -193,3 +193,21 @@ Append new points at the bottom. Format: number, statement, reason.
 64. Item detail lists every invited vendor: those with a scripted (unreleased) bid have responded False, those with a live bid have responded True; no prices are included. Points objective is kept when the request omits it and cleared by an explicit null.
     Reason: final review M6 and M10.
 
+65. Frontend is a client-rendered Next.js 14 app fetching the API from the browser; no server components with data.
+    Reason: Phase 3 scope.
+
+66. The frontend never computes money; chart geometry is the only arithmetic. The category donut shows the top five categories using the API's shares; the remainder stays as the track.
+    Reason: money maths stays in the backend.
+
+67. "Start negotiation" is disabled until the negotiation phase; "Collect vendor responses (demo)" loads the scripted replies and stands in for the supplier invite, consent and OTP story.
+    Reason: frontend story is a demo placeholder for Phase 4 backend integration.
+
+68. Date range filters events by their creation date and is stored in the browser (localStorage) only.
+    Reason: filter state is transient UI preference.
+
+69. API origin allow-list defaults to localhost:3000 and is extended with `NEGOTIATION_CORS_ORIGINS`; port 3000 was found in use by an unrelated project on the developer machine.
+    Reason: Next.js dev server default; CORS configuration allows test on alternate ports.
+
+70. Response types are generated from `backend/openapi.json`; a backend test fails when the file is stale.
+    Reason: schema drift detection and type safety.
+
