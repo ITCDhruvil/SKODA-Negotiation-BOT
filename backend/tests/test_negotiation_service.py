@@ -1,0 +1,285 @@
+import pytest
+
+from app import deal, lifecycle, readmodel, services
+from app.negotiation import guardrails
+from app.negotiation import service as neg
+from app.store import Repo
+
+BUY = "EVT-2026-041-01"
+SELL = "EVT-2026-052-01"
+
+
+def analyzed(repo: Repo, item_id: str, target: float, limit: float) -> None:
+    services.set_points(repo, item_id, target=target, limit=limit, objective="reduce_price")
+    services.confirm_points(repo, item_id)
+    services.release_bids(repo, item_id)
+    services.analyze(repo, item_id)
+
+
+def run_auto(repo: Repo, session_id: str, max_steps: int = 12):
+    for _ in range(max_steps):
+        s = neg.advance(repo, session_id)
+        if s.status != "active":
+            return s
+    raise AssertionError("auto negotiation did not finish")
+
+
+@pytest.fixture
+def buy(repo: Repo) -> Repo:
+    analyzed(repo, BUY, 250, 270)
+    return repo
+
+
+@pytest.fixture
+def sell(repo: Repo) -> Repo:
+    analyzed(repo, SELL, 170, 165)
+    return repo
+
+
+def item_state(repo, item_id):
+    return repo.get("item", item_id).state
+
+
+# --- starting --------------------------------------------------------------------------------
+
+def test_negotiation_only_starts_when_the_buyer_starts_it_after_analysis(repo: Repo):
+    with pytest.raises(services.Conflict):
+        neg.start(repo, BUY)  # still a draft
+    analyzed(repo, BUY, 250, 270)
+    assert neg.sessions_for_item(repo, BUY) == []  # analysing never starts anything by itself
+    s = neg.start(repo, BUY, mode="approve")
+    assert s.status == "active" and item_state(repo, BUY) == "negotiating"
+    assert s.original_price == 285 and s.round == 0 and s.our_offer is None
+    with pytest.raises(services.Conflict):
+        neg.start(repo, BUY)  # already negotiating
+
+
+def test_start_picks_the_best_effective_vendor_or_the_one_named(buy: Repo):
+    s = neg.start(buy, BUY)
+    comp = readmodel.comparison(readmodel.snapshot(buy), buy.get("item", BUY))
+    assert s.vendor_id == comp.rows[0].vendor_id
+
+
+def test_start_rejects_a_vendor_that_did_not_quote(buy: Repo):
+    with pytest.raises(services.Conflict):
+        neg.start(buy, BUY, vendor_id="V999")
+
+
+def test_a_seeded_negotiating_item_without_a_conversation_can_be_started(repo: Repo):
+    seeded = next(i for i in repo.fetch("item") if i.state == "negotiating")
+    s = neg.start(repo, seeded.id)
+    assert s.status == "active" and item_state(repo, seeded.id) == "negotiating"
+
+
+# --- full auto -------------------------------------------------------------------------------
+
+def test_full_auto_hero_buy_ends_at_270_with_45_day_payment(buy: Repo):
+    s = neg.start(buy, BUY, mode="auto")
+    s = run_auto(buy, s.id)
+    assert s.status == "agreed" and s.agreed_price == 270 and s.agreed_payment == "ZD45"
+    assert item_state(buy, BUY) == "result_pending"
+    ts = neg.turns(buy, s.id)
+    assert [(t.speaker, t.price) for t in ts] == [("us", 250), ("vendor", 275), ("us", 270), ("vendor", 270)]
+    assert [t.author for t in ts] == ["bot", "vendor", "bot", "vendor"]
+    assert deal.realised_delta("buy", s.original_price, s.agreed_price, 600) == 9000
+
+
+def test_full_auto_hero_sell_ends_at_168(sell: Repo):
+    s = run_auto(sell, neg.start(sell, SELL, mode="auto").id)
+    assert s.status == "agreed" and s.agreed_price == 168
+    assert deal.realised_delta("sell", s.original_price, s.agreed_price, 5000) == 25000
+
+
+def test_nothing_the_vendor_sees_reveals_software_or_internal_numbers(buy: Repo):
+    s = run_auto(buy, neg.start(buy, BUY, mode="auto").id)
+    for t in neg.turns(buy, s.id):
+        if t.speaker == "us":
+            guardrails.check_message(t.text, offer_price=t.price, limit=270, target=250)
+            assert "Dhruvil Patel" in t.text
+            assert "$" not in t.text
+
+
+# --- approve each message --------------------------------------------------------------------
+
+def test_approve_mode_waits_for_the_buyer_and_lets_them_edit(buy: Repo):
+    s = neg.start(buy, BUY, mode="approve")
+    neg.advance(buy, s.id)
+    d = neg.pending_draft(buy, s.id)
+    assert d.kind == "offer" and d.price == 250 and "target" in d.rationale
+    assert neg.turns(buy, s.id) == []          # nothing was sent yet
+    neg.advance(buy, s.id)                       # advancing again does not create another draft
+    assert len(buy.fetch("draft", parent=s.id)) == 1
+
+    s = neg.approve_draft(buy, s.id, d.id)
+    ts = neg.turns(buy, s.id)
+    assert [t.speaker for t in ts] == ["us", "vendor"] and ts[0].author == "bot" and ts[1].price == 275
+
+    neg.advance(buy, s.id)
+    d2 = neg.pending_draft(buy, s.id)
+    assert d2.price == 270 and d2.payment_code == "ZD45"
+    s = neg.approve_draft(buy, s.id, d2.id, price=269)  # the buyer edits the price
+    assert s.status == "agreed" and s.agreed_price == 269
+    assert [t.author for t in neg.turns(buy, s.id)][2] == "human"
+
+
+def test_a_draft_can_be_discarded_and_replaced_by_hand(buy: Repo):
+    s = neg.start(buy, BUY, mode="approve")
+    neg.advance(buy, s.id)
+    d = neg.pending_draft(buy, s.id)
+    neg.discard_draft(buy, s.id, d.id)
+    assert neg.pending_draft(buy, s.id) is None
+    with pytest.raises(services.Conflict):
+        neg.approve_draft(buy, s.id, d.id)
+    s = neg.send_message(buy, s.id, price=255)
+    assert neg.turns(buy, s.id)[0].price == 255 and neg.turns(buy, s.id)[0].author == "human"
+
+
+def test_edited_drafts_still_pass_the_guardrails(buy: Repo):
+    s = neg.start(buy, BUY, mode="approve")
+    neg.advance(buy, s.id)
+    d = neg.pending_draft(buy, s.id)
+    with pytest.raises(services.Conflict):
+        neg.approve_draft(buy, s.id, d.id, price=271)
+    with pytest.raises(services.Conflict):
+        neg.approve_draft(buy, s.id, d.id, text="Our ceiling is 270 so please match 250.")
+    assert neg.pending_draft(buy, s.id).id == d.id  # nothing was sent
+
+
+# --- manual and take-over --------------------------------------------------------------------
+
+def test_manual_mode_never_moves_on_its_own_and_checks_every_message(buy: Repo):
+    s = neg.start(buy, BUY, mode="manual")
+    assert neg.advance(buy, s.id).round == 0 and neg.pending_draft(buy, s.id) is None
+    for bad in [dict(price=271), dict(price=0), dict(price=260, text="I am an AI assistant"),
+                dict(price=260, text="my walk-away is firm"), dict(price=260, text="we can do 270 at most"),
+                dict(price=260, payment_code="NET30")]:
+        with pytest.raises(services.Conflict):
+            neg.send_message(buy, s.id, **bad)
+    assert neg.turns(buy, s.id) == []
+    s = neg.send_message(buy, s.id, price=260, text="Hello, can you do 260 per unit? Thanks, Dhruvil")
+    assert s.round == 1 and neg.turns(buy, s.id)[0].author == "human"
+
+
+def test_the_buyer_can_stop_auto_and_take_over_mid_conversation(buy: Repo):
+    s = neg.start(buy, BUY, mode="auto")
+    s = neg.advance(buy, s.id)
+    assert s.round == 1 and s.status == "active"
+    s = neg.set_mode(buy, s.id, "manual")
+    assert neg.advance(buy, s.id).round == 1          # auto stopped
+    s = neg.send_message(buy, s.id, price=270)
+    assert s.status == "agreed" and s.agreed_price == 270
+    assert [t.author for t in neg.turns(buy, s.id)] == ["bot", "vendor", "human", "vendor"]
+
+
+def test_switching_from_approve_to_auto_runs_the_waiting_draft(buy: Repo):
+    s = neg.start(buy, BUY, mode="approve")
+    neg.advance(buy, s.id)
+    neg.set_mode(buy, s.id, "auto")
+    s = neg.advance(buy, s.id)
+    assert s.round == 1 and neg.pending_draft(buy, s.id) is None
+
+
+def test_the_buyer_can_accept_the_vendors_offer_only_inside_the_limit(buy: Repo):
+    s = neg.start(buy, BUY, mode="manual")
+    with pytest.raises(services.Conflict):
+        neg.accept_offer(buy, s.id)                   # 285 is above the 270 ceiling
+    s = neg.send_message(buy, s.id, price=255)        # vendor comes down to 279 or so
+    s = neg.send_message(buy, s.id, price=268)
+    if s.status == "active" and deal.within_limit("buy", s.vendor_offer, 270):
+        s = neg.accept_offer(buy, s.id)
+        assert s.status == "agreed"
+
+
+# --- hand back -------------------------------------------------------------------------------
+
+def test_a_vendor_that_cannot_reach_the_limit_ends_with_a_hand_back(repo: Repo):
+    no_deal = next(e for e in repo.fetch("event") if e.no_deal)
+    item = repo.fetch("item", parent=no_deal.id)[0]
+    assert item.state == "handed_back"
+    services.set_points(repo, item.id, target=item.suggested_target, limit=item.suggested_limit)
+    assert item_state(repo, item.id) == "analyzed"
+    s = run_auto(repo, neg.start(repo, item.id, mode="auto").id)
+    assert s.status == "handed_back" and item_state(repo, item.id) == "handed_back"
+    assert s.handback_reason and s.agreed_price is None
+
+
+def test_the_buyer_can_hand_back_at_any_time(buy: Repo):
+    s = neg.start(buy, BUY, mode="approve")
+    neg.advance(buy, s.id)
+    s = neg.hand_back(buy, s.id)
+    assert s.status == "handed_back" and item_state(buy, BUY) == "handed_back"
+    assert neg.pending_draft(buy, s.id) is None
+    with pytest.raises(services.Conflict):
+        neg.send_message(buy, s.id, price=250)
+
+
+# --- result, approval, closing ---------------------------------------------------------------
+
+def test_result_continue_accept_and_approve_records_the_outcome(buy: Repo):
+    s = run_auto(buy, neg.start(buy, BUY, mode="auto").id)
+    before = readmodel.dashboard(readmodel.snapshot(buy)).kpis
+
+    s = neg.continue_negotiation(buy, BUY)
+    assert s.status == "active" and s.agreed_price is None and item_state(buy, BUY) == "negotiating"
+    s = neg.accept_offer(buy, s.id)                     # the vendor's offer of 270 is inside the limit
+    assert s.status == "agreed" and s.agreed_price == 270
+
+    assert neg.accept_deal(buy, BUY).state == "awaiting_approval"
+    made = neg.approve_event(buy, "EVT-2026-041")
+    assert len(made) == 1
+    o = buy.get("outcome", BUY)
+    assert (o.original_price, o.final_price, o.negotiated, o.payment_code) == (285, 270, True, "ZD45")
+    assert o.duration_minutes >= 1 and item_state(buy, BUY) == "closed"
+
+    after = readmodel.dashboard(readmodel.snapshot(buy)).kpis
+    assert after.completed_negotiations == before.completed_negotiations + 1
+    assert after.realised_savings == round(before.realised_savings + 9000, 2)
+
+
+def test_the_best_quote_can_be_accepted_as_it_stands(buy: Repo):
+    assert neg.accept_deal(buy, BUY).state == "awaiting_approval"
+    neg.approve_event(buy, "EVT-2026-041")
+    o = buy.get("outcome", BUY)
+    assert (o.original_price, o.final_price, o.negotiated, o.duration_minutes) == (285, 285, False, 0)
+
+
+def test_approval_needs_something_awaiting_and_a_result_to_accept(buy: Repo):
+    with pytest.raises(services.Conflict):
+        neg.approve_event(buy, "EVT-2026-041")
+    with pytest.raises(services.Conflict):
+        neg.continue_negotiation(buy, BUY)
+    s = neg.start(buy, BUY, mode="manual")
+    with pytest.raises(lifecycle.InvalidTransition):
+        neg.accept_deal(buy, "EVT-2026-041-02")        # a draft item cannot be accepted
+    with pytest.raises(lifecycle.InvalidTransition):
+        neg.accept_deal(buy, BUY)                       # still negotiating, nothing agreed
+    assert s.status == "active"
+
+
+def test_unknown_ids_are_not_found(repo: Repo):
+    with pytest.raises(services.NotFound):
+        neg.advance(repo, "S-NOPE")
+    with pytest.raises(services.NotFound):
+        neg.start(repo, "NOPE")
+
+
+# --- sweep over the seeded data --------------------------------------------------------------
+
+def test_auto_negotiation_is_safe_on_every_analyzed_seed_item(repo: Repo):
+    """Any language, any direction, any vendor: never outside the limit, never a leak."""
+    checked = 0
+    for item in repo.fetch("item"):
+        if item.state != "analyzed":
+            continue
+        event = repo.get("event", item.event_id)
+        s = run_auto(repo, neg.start(repo, item.id, mode="auto").id)
+        target, limit = item.target, item.limit
+        assert s.status in ("agreed", "handed_back")
+        if s.status == "agreed":
+            assert deal.within_limit(event.direction, s.agreed_price, limit)
+        for t in neg.turns(repo, s.id):
+            if t.speaker == "us":
+                guardrails.check_message(t.text, offer_price=t.price, limit=limit, target=target)
+                assert deal.within_limit(event.direction, t.price, limit)
+        checked += 1
+    assert checked >= 20
