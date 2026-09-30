@@ -10,11 +10,12 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
-from app.models import Bid, Dataset, Event, HistoryRecord, Item, Outcome, Vendor
+from app.models import Bid, Dataset, Draft, Event, HistoryRecord, Item, Outcome, Session, Turn, Vendor
 
 KINDS: dict[str, Any] = {
     "vendor": Vendor, "event": Event, "item": Item, "bid": Bid, "scripted_bid": Bid,
     "outcome": Outcome, "history": HistoryRecord, "reserve": None,
+    "session": Session, "turn": Turn, "draft": Draft,
 }
 
 _SCHEMA = """

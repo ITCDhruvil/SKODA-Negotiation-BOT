@@ -5,7 +5,7 @@ simulator-only and must never be returned by an API; Bid deliberately has no res
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
@@ -147,3 +147,62 @@ class Dataset(_Model):
 
     def event_value(self, event_id: str) -> float:
         return deal.reference_value((i.qty, i.reference_price) for i in self.event_items(event_id))
+
+
+# --- negotiation ---------------------------------------------------------------------------
+
+Mode = Literal["auto", "approve", "manual"]
+SessionStatus = Literal["active", "agreed", "handed_back"]
+DraftKind = Literal["offer", "accept", "handback"]
+
+
+class Session(_Model):
+    """One negotiation with one vendor on one item."""
+
+    id: str
+    item_id: str
+    vendor_id: str
+    bid_id: str
+    mode: Mode
+    status: SessionStatus
+    language: Language
+    round: int  # vendor replies received so far
+    original_price: float  # the vendor's own quote when the session started
+    original_payment: str
+    our_offer: Optional[float]
+    our_payment: Optional[str]
+    vendor_offer: float
+    previous_vendor_offer: float
+    vendor_payment: str
+    vendor_final: bool
+    agreed_price: Optional[float]
+    agreed_payment: Optional[str]
+    handback_reason: Optional[str]
+    started_at: datetime
+    ended_at: Optional[datetime]
+
+
+class Turn(_Model):
+    id: str
+    session_id: str
+    seq: int
+    speaker: Literal["us", "vendor"]
+    author: Literal["bot", "human", "vendor"]  # internal audit only; never shown to the vendor
+    text: str
+    price: Optional[float]
+    payment_code: Optional[str]
+    at: datetime
+
+
+class Draft(_Model):
+    """A move prepared for the buyer to approve, edit or discard."""
+
+    id: str
+    session_id: str
+    kind: DraftKind
+    price: Optional[float]
+    payment_code: Optional[str]
+    text: str
+    rationale: str  # buyer-only reasoning; never sent to the vendor
+    created: datetime
+    status: Literal["pending", "sent", "discarded"]
