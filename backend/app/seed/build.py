@@ -25,7 +25,7 @@ SELL_COUNTS = (("closed", 2), ("negotiating", 1), ("handed_back", 1), ("acceptab
                ("analyzed", 8), ("awaiting_bids", 5))
 
 
-class _Acc:
+class Accumulator:
     def __init__(self) -> None:
         self.events: list[Event] = []
         self.items: list[Item] = []
@@ -117,7 +117,7 @@ def _item_state(stage: str, idx: int) -> str:
 
 def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, kind: str,
               qty: float, unit: str, ref: float, incoterm: str, delivery_days: int,
-              acc: _Acc, hero: dict | None = None) -> None:
+              acc: Accumulator, hero: dict | None = None) -> None:
     d = event.direction
     item_id = f"{event.id}-{idx:02d}"
     vendor_pool = pool(vendors, event.category_key)
@@ -180,8 +180,8 @@ def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, 
         ))
 
 
-def _add_buy_event(rng, vendors, event_id: str, ps: list[CartPosition], stage: str,
-                   acc: _Acc, hero: bool = False) -> None:
+def add_buy_event(rng, vendors, event_id: str, ps: list[CartPosition], stage: str,
+                   acc: Accumulator, hero: bool = False) -> None:
     acceptable = stage == "acceptable"
     p0 = ps[0]
     title = heroes.HERO_BUY_TITLE if hero else (
@@ -216,15 +216,18 @@ def _build_buy(rng, vendors, positions, free_ids, acc) -> None:
     ok = [eligibility.check_value(_cart_value(ps)).eligible for ps in procedural]
     plan = iter(_stage_plan(rng, sum(ok), BUY_COUNTS))
     for ps, eligible in zip(procedural, ok):
-        _add_buy_event(rng, vendors, free_ids.pop(0), ps, next(plan) if eligible else "draft", acc)
-    _add_buy_event(rng, vendors, heroes.HERO_BUY_ID, carts[heroes.HERO_BUY_CART], "draft", acc,
+        add_buy_event(rng, vendors, free_ids.pop(0), ps, next(plan) if eligible else "draft", acc)
+    add_buy_event(rng, vendors, heroes.HERO_BUY_ID, carts[heroes.HERO_BUY_CART], "draft", acc,
                    hero=True)
 
 
-def _add_sell_event(rng, vendors, event_id: str, *, i: int, material, qty: int, ref: float,
-                    stage: str, acc: _Acc, hero: dict | None = None) -> None:
+def add_sell_event(rng, vendors, event_id: str, *, i: int, material, qty: int, ref: float,
+                   stage: str, acc: Accumulator, hero: dict | None = None,
+                   created_days_ago: int | None = None) -> None:
     acceptable = stage == "acceptable"
-    created = TODAY - timedelta(days=2 if hero else 23 + (i * 13) % 42)
+    days_ago = created_days_ago if created_days_ago is not None else (
+        2 if hero else 23 + (i * 13) % 42)
+    created = TODAY - timedelta(days=days_ago)
     event = Event(
         id=event_id, type="scrap_sale", direction="sell",
         title=hero["title"] if hero else f"{material.description} Lot - {qty:,} kg",
@@ -248,13 +251,13 @@ def _build_sell(rng, vendors, free_ids, acc) -> None:
     ok = [eligibility.check_value(l.qty * l.ref).eligible for l in lots]
     plan = iter(_stage_plan(rng, sum(ok), SELL_COUNTS))
     for i, (lot, eligible) in enumerate(zip(lots, ok)):
-        _add_sell_event(rng, vendors, free_ids.pop(0), i=i, material=lot.material, qty=lot.qty,
+        add_sell_event(rng, vendors, free_ids.pop(0), i=i, material=lot.material, qty=lot.qty,
                         ref=lot.ref, stage=next(plan) if eligible else "draft", acc=acc)
     from app.seed.catalog import SCRAP_MATERIALS
 
     h = heroes.HERO_SELL
     material = next(m for m in SCRAP_MATERIALS if m.description == h["description"])
-    _add_sell_event(rng, vendors, heroes.HERO_SELL_ID, i=0, material=material, qty=h["qty"],
+    add_sell_event(rng, vendors, heroes.HERO_SELL_ID, i=0, material=material, qty=h["qty"],
                     ref=float(h["ref"]), stage="draft", acc=acc, hero=h)
 
 
@@ -267,7 +270,7 @@ def build_dataset() -> Dataset:
     rng = random.Random(SEED + 3)
     ids = [f"EVT-2026-{n:03d}" for n in range(1, 86)]
     free = [i for i in ids if i not in (heroes.HERO_BUY_ID, heroes.HERO_SELL_ID)]
-    acc = _Acc()
+    acc = Accumulator()
     _build_buy(rng, vendors, positions, free, acc)
     _build_sell(rng, vendors, free, acc)
     return Dataset(
