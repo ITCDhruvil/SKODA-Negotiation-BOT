@@ -211,3 +211,17 @@ Append new points at the bottom. Format: number, statement, reason.
 70. Response types are generated from `backend/openapi.json`; a backend test fails when the file is stale.
     Reason: schema drift detection and type safety.
 
+71. A closed event's summary shows the original value (sum of quantity x original quote, or the item value where there is no outcome), then the final value, then the savings or uplift achieved. EventView.original_value is set for closed events only; a closed item's gap and potential delta are both zero.
+    Reason: final review, closed summary needed a before figure.
+
+72. The date range applies to items as well as events and the dashboard: /api/items takes date_from and date_to (inclusive, on the event creation date, 422 when from is after to), the Comparison page passes the range, and Reports wording says "created in this period". A range stored in the browser is dropped on load when a date is malformed or from is after to; a small notice on each affected page shows the active range with a Clear link.
+    Reason: final review, range must be visible and consistent.
+
+73. Buy and sell wording for quotes lives in lib/labels.ts (quoteLabel, quotesLabel, leadLabel: Quote/Bid, Quotes/Bids, Lead time/Pickup time). Unit prices say "per <unit>" in the item subtitle and the comparison table. The cross-event Comparison page uses the neutral "Quotes" headers unless the type filter is set.
+    Reason: one place for direction wording; prices without a unit are ambiguous.
+
+74. Eligibility reasons show amounts with Indian digit grouping (12,34,567), matching the rupee formatting in the UI. History points carry the vendor name so tables need no second lookup.
+    Reason: consistent number format and fewer round trips.
+
+75. Fonts still load from Google Fonts at runtime; an offline demo falls back to the system font. Self-hosting the font (next/font) is deferred.
+    Reason: known offline limitation, out of scope for this wave.

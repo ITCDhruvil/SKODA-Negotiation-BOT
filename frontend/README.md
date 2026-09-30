@@ -18,10 +18,17 @@ npm run dev            # http://localhost:3000
 If port 3000 is busy, run the frontend elsewhere and allow that origin on the API:
 
 ```bash
-# API
+# API (bash)
 NEGOTIATION_CORS_ORIGINS=http://localhost:3100 python -m uvicorn app.main:app --port 8000
 # web
 npm run dev -- -p 3100
+```
+
+In PowerShell set the variable first:
+
+```powershell
+$env:NEGOTIATION_CORS_ORIGINS="http://localhost:3100"
+python -m uvicorn app.main:app --port 8000
 ```
 
 Set `NEXT_PUBLIC_API_URL` (see `.env.example`) if the API is not at `http://localhost:8000`.
@@ -30,6 +37,7 @@ Set `NEXT_PUBLIC_API_URL` (see `.env.example`) if the API is not at `http://loca
 
 ```bash
 npm run typecheck
+npm run check:types    # fails when lib/api-types.ts is out of date with backend/openapi.json
 npm run build
 ```
 

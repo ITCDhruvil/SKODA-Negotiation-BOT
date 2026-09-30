@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3000",
     "typecheck": "tsc --noEmit",
-    "gen:types": "openapi-typescript ../backend/openapi.json -o lib/api-types.ts"
+    "gen:types": "openapi-typescript ../backend/openapi.json -o lib/api-types.ts",
+    "check:types": "node scripts/check-types.mjs"
   },
   "dependencies": {
     "next": "14.2.35",
