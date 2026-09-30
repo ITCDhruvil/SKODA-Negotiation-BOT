@@ -381,3 +381,53 @@ def vendor_detail(snap: Snapshot, v: Vendor) -> sch.VendorDetail:
             for i in [snap.item_by_id[b.item_id]]]
     return sch.VendorDetail(vendor=vendor_view(snap, v), history=[_point(h) for h in history],
                             recent_bids=bids[:20])
+
+
+def item_rows(snap: Snapshot, *, event_id: Optional[str] = None, has_bids: Optional[bool] = None,
+              recommendation: Optional[str] = None, direction: Optional[str] = None,
+              q: Optional[str] = None) -> list[sch.ItemRow]:
+    ivs = {i.id: item_view(snap, i) for i in snap.items}
+    status = {e.id: lifecycle.event_status(ivs[i.id].state for i in snap.items_by_event[e.id])
+              for e in snap.events}
+    needle = q.lower() if q else None
+    rows = []
+    for item in snap.items:
+        e, iv = snap.event_by_id[item.event_id], ivs[item.id]
+        if event_id and item.event_id != event_id:
+            continue
+        if has_bids is not None and (iv.bid_count > 0) != has_bids:
+            continue
+        if recommendation and iv.recommendation != recommendation:
+            continue
+        if direction and e.direction != direction:
+            continue
+        if needle and needle not in " ".join(
+                [item.id, item.description, e.title, e.category]).lower():
+            continue
+        rows.append(sch.ItemRow(
+            **iv.model_dump(), event_title=e.title, direction=e.direction, category=e.category,
+            category_key=e.category_key, event_status=status[e.id]))
+    return sorted(rows, key=lambda r: (-(r.potential_delta or 0.0), r.id))
+
+
+def history_rows(snap: Snapshot, *, direction: Optional[str] = None,
+                 category_key: Optional[str] = None, q: Optional[str] = None,
+                 negotiated: Optional[bool] = None,
+                 limit: Optional[int] = None) -> list[sch.HistoryRow]:
+    needle = q.lower() if q else None
+    out = []
+    for h in sorted(snap.history, key=lambda h: (h.closed_date, h.id), reverse=True):
+        if direction and h.direction != direction:
+            continue
+        if category_key and h.category_key != category_key:
+            continue
+        if negotiated is not None and h.negotiated != negotiated:
+            continue
+        if needle and needle not in h.description.lower():
+            continue
+        delta = (deal.realised_delta(h.direction, h.original_price, h.unit_price, h.qty)
+                 if h.negotiated and h.original_price is not None else None)
+        out.append(sch.HistoryRow(
+            **_point(h).model_dump(), vendor_name=_vendor_name(snap, h.vendor_id),
+            direction=h.direction, category_key=h.category_key, unit=h.unit, value_delta=delta))
+    return out[:limit] if limit else out

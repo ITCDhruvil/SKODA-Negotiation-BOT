@@ -288,3 +288,21 @@ class Health(BaseModel):
 
 class ResetResult(BaseModel):
     events: int
+
+
+class ItemRow(ItemView):
+    """An item with just enough event context for cross-event lists."""
+
+    event_title: str
+    direction: Direction
+    category: str
+    category_key: str
+    event_status: EventStatus
+
+
+class HistoryRow(HistoryPoint):
+    vendor_name: str
+    direction: Direction
+    category_key: str
+    unit: Unit
+    value_delta: Optional[float]

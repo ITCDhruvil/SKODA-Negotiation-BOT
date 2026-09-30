@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -116,6 +116,20 @@ def create_app(repo: Repo, seed_dataset: Dataset) -> FastAPI:
         if event_id not in s.event_by_id:
             raise services.NotFound(f"event {event_id} not found")
         return readmodel.event_detail(s, s.event_by_id[event_id])
+
+    @app.get("/api/items", response_model=list[sch.ItemRow])
+    def items(event_id: Optional[str] = None, has_bids: Optional[bool] = None,
+              recommendation: Optional[sch.Recommendation] = None,
+              direction: Optional[Direction] = None, q: Optional[str] = None):
+        return readmodel.item_rows(snap(), event_id=event_id, has_bids=has_bids,
+                                   recommendation=recommendation, direction=direction, q=q)
+
+    @app.get("/api/history", response_model=list[sch.HistoryRow])
+    def history(direction: Optional[Direction] = None, category_key: Optional[str] = None,
+                q: Optional[str] = None, negotiated: Optional[bool] = None,
+                limit: int = Query(500, ge=1, le=1000)):
+        return readmodel.history_rows(snap(), direction=direction, category_key=category_key,
+                                      q=q, negotiated=negotiated, limit=limit)
 
     @app.get("/api/items/{item_id}", response_model=sch.ItemDetail)
     def item(item_id: str):
