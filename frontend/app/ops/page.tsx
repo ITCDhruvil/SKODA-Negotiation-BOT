@@ -9,6 +9,8 @@ import { useApi } from "@/lib/hooks";
 
 export default function OpsPage() {
   const health = useApi(() => api.health(), []);
+  // One status; a failed check wins over data from an earlier successful one.
+  const status = health.error ? "unreachable" : health.data ? "healthy" : "checking";
   const [message, setMessage] = useState<{ tone: "ok" | "red"; text: React.ReactNode } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -52,9 +54,9 @@ export default function OpsPage() {
             <div className="flex justify-between gap-3">
               <dt className="text-muted">Health</dt>
               <dd>
-                {health.loading && !health.data && <Pill tone="muted">Checking…</Pill>}
-                {health.data && <Pill tone="ok">Healthy</Pill>}
-                {health.error && <Pill tone="red">Unreachable</Pill>}
+                {status === "checking" && <Pill tone="muted">Checking…</Pill>}
+                {status === "healthy" && <Pill tone="ok">Healthy</Pill>}
+                {status === "unreachable" && <Pill tone="red">Unreachable</Pill>}
               </dd>
             </div>
           </dl>

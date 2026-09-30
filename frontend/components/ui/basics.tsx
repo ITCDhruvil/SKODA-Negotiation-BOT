@@ -64,9 +64,10 @@ const BUTTON_VARIANT = {
   danger: "bg-red-soft text-red border-transparent hover:opacity-90",
 } as const;
 
-export function Button({ variant = "secondary", size = "md", className = "", ...rest }: ButtonProps) {
+export function Button({ variant = "secondary", size = "md", className = "", type = "button", ...rest }: ButtonProps) {
   return (
     <button
+      type={type}
       {...rest}
       className={`inline-flex items-center justify-center gap-2 rounded-m border font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
         size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"

@@ -21,6 +21,7 @@ export function Stepper({ state }: { state: ItemState }) {
               {done ? "✓" : i + 1}
             </span>
             <span className={`text-sm ${active ? "font-bold text-ink" : done ? "font-medium text-text" : "text-muted"}`}>{s.label}</span>
+            {(done || active) && <span className="sr-only">{done ? "(completed)" : "(current)"}</span>}
             {i < STEPS.length - 1 && <span className="mx-1 hidden h-px w-6 bg-line sm:block" />}
           </li>
         );

@@ -34,11 +34,11 @@ export function Donut({
     <svg viewBox="0 0 120 120" role="img" aria-label={label} className="mx-auto h-40 w-40">
       <circle cx="60" cy="60" r={r} fill="none" stroke="var(--line2)" strokeWidth="16" />
       {total > 0 &&
-        segments.map((s) => {
+        segments.map((s, i) => {
           const len = (s.value / total) * c;
           const el = (
             <circle
-              key={s.label}
+              key={i}
               cx="60"
               cy="60"
               r={r}
@@ -85,13 +85,13 @@ export function StackBar({ segments, label }: { segments: Segment[]; label: stri
         {total > 0 &&
           segments
             .filter((s) => s.value > 0)
-            .map((s) => (
-              <div key={s.label} style={{ width: `${(s.value / total) * 100}%`, background: s.color }} title={`${s.label}: ${s.value}`} />
+            .map((s, i) => (
+              <div key={i} style={{ width: `${(s.value / total) * 100}%`, background: s.color }} title={`${s.label}: ${s.value}`} />
             ))}
       </div>
       <ul className="mt-3 grid gap-1.5 text-sm">
-        {segments.map((s) => (
-          <li key={s.label} className="flex items-center gap-2">
+        {segments.map((s, i) => (
+          <li key={i} className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
             <span className="flex-1 text-text">{s.label}</span>
             <span className="font-semibold text-ink tabular-nums">{s.value}</span>
@@ -139,16 +139,16 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
   const ticks = [yMin + pad, (yMin + yMax) / 2, yMax - pad];
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} className="h-auto w-full">
-      {ticks.map((t) => (
-        <g key={t}>
+      {ticks.map((t, i) => (
+        <g key={i}>
           <line x1={m.l} x2={W - m.r} y1={y(t)} y2={y(t)} stroke="var(--line2)" />
           <text x={m.l - 8} y={y(t) + 4} textAnchor="end" className="fill-muted" style={{ fontSize: 11 }}>
             {num(Math.round(t * 100) / 100)}
           </text>
         </g>
       ))}
-      {refLines.map((r) => (
-        <g key={r.label}>
+      {refLines.map((r, i) => (
+        <g key={i}>
           <line x1={m.l} x2={W - m.r} y1={y(r.value)} y2={y(r.value)} stroke={r.color} strokeDasharray="5 4" strokeWidth={1.5} />
           <text x={W - m.r} y={y(r.value) - 4} textAnchor="end" style={{ fontSize: 11, fill: r.color, fontWeight: 600 }}>
             {r.label}
@@ -156,9 +156,9 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
         </g>
       ))}
       <path d={path} fill="none" stroke="var(--muted)" strokeWidth={1.5} />
-      {ordered.map((p) => (
+      {ordered.map((p, i) => (
         <circle
-          key={`${p.date}-${p.price}`}
+          key={i}
           cx={x(p.t)}
           cy={y(p.price)}
           r={4.5}

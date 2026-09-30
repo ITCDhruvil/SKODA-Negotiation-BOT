@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { dateShort, initials } from "@/lib/format";
+import { useDismissDetails } from "@/lib/hooks";
 import { useRange, useTheme } from "@/lib/providers";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
@@ -88,9 +89,12 @@ function DateRangeMenu() {
       ? `${range.from ? dateShort(range.from) : "…"} – ${range.to ? dateShort(range.to) : "…"}`
       : "All dates";
   const invalid = Boolean(from && to && from > to);
+  const menuRef = useDismissDetails();
   return (
-    <details className="relative">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-m border border-line bg-panel px-3 py-2 text-sm font-medium text-ink hover:border-brand">
+    <details className="relative" ref={menuRef}>
+      <summary
+        aria-label={`Date range: ${label}`}
+        className="flex cursor-pointer list-none items-center gap-2 rounded-m border border-line bg-panel px-3 py-2 text-sm font-medium text-ink hover:border-brand">
         <Icon name="calendar" size={16} />
         <span className="hidden sm:inline">{label}</span>
         <Icon name="down" size={14} />
@@ -106,7 +110,7 @@ function DateRangeMenu() {
             To
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-m border border-line bg-panel px-2 py-1.5 text-sm" />
           </label>
-          {invalid && <p className="text-xs text-red">“From” must not be after “To”.</p>}
+          {invalid && <p role="alert" className="text-xs text-red">“From” must not be after “To”.</p>}
           <div className="flex justify-end gap-2">
             <button
               className="rounded-m px-3 py-1.5 text-xs font-semibold text-muted hover:bg-raise"
@@ -134,7 +138,7 @@ function DateRangeMenu() {
   );
 }
 
-function Topbar({ onMenu }: { onMenu: () => void }) {
+function Topbar({ onMenu, menuRef }: { onMenu: () => void; menuRef: RefObject<HTMLButtonElement> }) {
   const router = useRouter();
   const { theme, toggle } = useTheme();
   const [q, setQ] = useState("");
@@ -145,6 +149,8 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   return (
     <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-line2 bg-bg/90 px-4 py-2.5 backdrop-blur md:px-6">
       <button
+        ref={menuRef}
+        type="button"
         className="grid h-10 w-10 place-items-center rounded-m text-ink hover:bg-raise lg:hidden"
         onClick={onMenu}
         aria-label="Open navigation"
@@ -181,22 +187,57 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const wasOpen = useRef(false);
   useEffect(() => setOpen(false), [pathname]);
+
+  // Focus moves into the drawer when it opens and back to the menu button when it closes.
+  useEffect(() => {
+    if (open) {
+      drawerRef.current?.querySelector<HTMLElement>("a[href]")?.focus();
+    } else if (wasOpen.current) {
+      menuRef.current?.focus();
+    }
+    wasOpen.current = open;
+  }, [open]);
+
+  const onDrawerKey = (e: ReactKeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      setOpen(false);
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const items = Array.from(
+      e.currentTarget.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+    );
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
   return (
     <div className="lg:grid lg:min-h-screen lg:grid-cols-[252px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-screen lg:block">
         <Sidebar pathname={pathname} onNavigate={() => {}} />
       </aside>
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation" onKeyDown={onDrawerKey}>
           <button className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-label="Close navigation" />
-          <div className="absolute inset-y-0 left-0 w-[268px]">
+          <div ref={drawerRef} className="absolute inset-y-0 left-0 w-[268px]">
             <Sidebar pathname={pathname} onNavigate={() => setOpen(false)} />
           </div>
         </div>
       )}
       <div className="flex min-w-0 flex-col">
-        <Topbar onMenu={() => setOpen(true)} />
+        <Topbar onMenu={() => setOpen(true)} menuRef={menuRef} />
         <main className="min-w-0 flex-1 px-4 py-5 md:px-6">{children}</main>
       </div>
     </div>

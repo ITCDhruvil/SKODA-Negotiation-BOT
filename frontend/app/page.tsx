@@ -6,10 +6,11 @@ import { EventsTable } from "@/components/events/EventsTable";
 import { Delta, DirectionBadge, KpiCard, Panel } from "@/components/ui/basics";
 import { Avatar, Donut, Legend, SERIES, StackBar } from "@/components/ui/charts";
 import { Icon } from "@/components/ui/Icon";
+import { RangeNotice } from "@/components/ui/RangeNotice";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { api, type Dashboard, type Direction } from "@/lib/api";
 import { moneyCompact, money, pct } from "@/lib/format";
-import { useApi } from "@/lib/hooks";
+import { useApi, useDismissDetails } from "@/lib/hooks";
 import { useRange } from "@/lib/providers";
 
 type Filter = "all" | "buy" | "sell" | "open" | "closed";
@@ -29,16 +30,18 @@ function greeting(): string {
 
 export default function DashboardPage() {
   const { range } = useRange();
-  const { data, error, loading, reload } = useApi(() => api.dashboard(range), [range.from, range.to]);
+  const { data, error, errorStatus, loading, reload } = useApi(() => api.dashboard(range), [range.from, range.to]);
   const [hello, setHello] = useState("Welcome");
   const [filter, setFilter] = useState<Filter>("all");
   const [created, setCreated] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const menuRef = useDismissDetails();
   useEffect(() => setHello(greeting()), []);
 
-  const simulate = async (direction: Direction, menu: HTMLDetailsElement | null) => {
-    menu?.removeAttribute("open");
+  const simulate = async (direction: Direction) => {
+    if (busy) return;
+    menuRef.current?.removeAttribute("open");
     setBusy(true);
     setActionError(null);
     try {
@@ -58,23 +61,27 @@ export default function DashboardPage() {
         title={`${hello}, Dhruvil`}
         subtitle="Here is an overview of your sourcing events and negotiation progress."
         actions={
-          <details className="relative">
+          <details className="relative" ref={menuRef}>
             <summary
-              className={`inline-flex cursor-pointer list-none items-center gap-2 rounded-m bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f] ${busy ? "opacity-60" : ""}`}
+              aria-disabled={busy}
+              onClick={(e) => {
+                if (busy) e.preventDefault();
+              }}
+              className={`inline-flex list-none items-center gap-2 rounded-m bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f] ${busy ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
             >
               <Icon name="plus" size={16} /> Simulate event
             </summary>
             <div className="absolute right-0 z-30 mt-2 grid w-56 gap-1 rounded-l border border-line bg-panel p-2 shadow-pop">
               <button
                 className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise"
-                onClick={(e) => simulate("buy", e.currentTarget.closest("details"))}
+                onClick={() => simulate("buy")}
               >
                 New BUY cart
                 <span className="block text-xs font-normal text-muted">Services or goods from suppliers</span>
               </button>
               <button
                 className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise"
-                onClick={(e) => simulate("sell", e.currentTarget.closest("details"))}
+                onClick={() => simulate("sell")}
               >
                 New SELL scrap lot
                 <span className="block text-xs font-normal text-muted">Scrap for bidding buyers</span>
@@ -83,6 +90,8 @@ export default function DashboardPage() {
           </details>
         }
       />
+
+      <RangeNotice />
 
       {created && (
         <div className="mb-4">
@@ -98,7 +107,7 @@ export default function DashboardPage() {
       )}
 
       {loading && !data && <Loading label="Loading dashboard" />}
-      {error && <ErrorBox message={error} onRetry={reload} />}
+      {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}
       {data && <DashboardBody data={data} filter={filter} setFilter={setFilter} />}
     </>
   );
@@ -117,7 +126,7 @@ function DashboardBody({ data, filter, setFilter }: { data: Dashboard; filter: F
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <KpiCard icon="events" tone="info" label="Total events" value={k.total_events} sub={`${k.open_events} still open`} />
       <KpiCard icon="cube" tone="brand" label="Items & lots" value={k.items} sub={`${k.vendors} vendors on record`} />
-      <KpiCard icon="coin" tone="amber" label="Total value" value={moneyCompact(k.total_value)} sub="Quoted where bids exist, else reference" />
+      <KpiCard icon="coin" tone="amber" label="Total value" value={moneyCompact(k.total_value)} sub="Quoted where bids exist (final price when closed), else reference" />
       <KpiCard
         icon="trend"
         tone="ok"
@@ -210,7 +219,7 @@ function DashboardBody({ data, filter, setFilter }: { data: Dashboard; filter: F
           </ol>
         </Panel>
 
-        <Panel title="Negotiation opportunities" subtitle="Best quote is still short of your target">
+        <Panel title="Negotiation opportunities" subtitle="Best quote is still outside your limit">
           {data.opportunities.length === 0 ? (
             <p className="text-sm text-muted">No open opportunities yet. Analyze quotes on an event to see them here.</p>
           ) : (

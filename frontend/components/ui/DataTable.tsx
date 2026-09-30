@@ -35,6 +35,7 @@ export function DataTable<T>({
             {columns.map((c) => (
               <th
                 key={c.key}
+                scope="col"
                 className={`${pad} ${align(c.align)} whitespace-nowrap ${c.hideOnMobile ? "hidden md:table-cell" : ""} ${c.className ?? ""}`}
               >
                 {c.header}
@@ -54,6 +55,19 @@ export function DataTable<T>({
             <tr
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (e) => {
+                      // Keys pressed on an inner link or button belong to that control.
+                      if (e.target !== e.currentTarget) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onRowClick(row);
+                      }
+                    }
+                  : undefined
+              }
               className={`border-b border-line2 last:border-0 ${onRowClick ? "cursor-pointer hover:bg-raise" : ""}`}
             >
               {columns.map((c) => (

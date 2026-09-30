@@ -30,8 +30,10 @@ export function PointsPanel({
     setTarget(String(item.target));
     setLimit(String(item.limit));
     setObjective(item.objective ?? "");
-    setSaved(false);
   }, [item.id, item.target, item.limit, item.objective]);
+
+  // "Points saved." stays until another item is opened or the user edits a field.
+  useEffect(() => setSaved(false), [item.id]);
 
   const editable = EDITABLE.includes(item.state);
   const canConfirm = item.state === "draft";
@@ -39,19 +41,36 @@ export function PointsPanel({
   const lim = limitLabel(eventDirection);
 
   const parsed = (v: string) => (v.trim() === "" ? NaN : Number(v));
-  const valid = parsed(target) > 0 && parsed(limit) > 0;
+  const targetOk = parsed(target) > 0;
+  const limitOk = parsed(limit) > 0;
+  const valid = targetOk && limitOk;
+  const lockedMessage =
+    item.state === "awaiting_bids" || item.state === "bids_in"
+      ? "Points cannot be edited at this stage."
+      : "Points are locked once negotiation has started.";
+  const edit = (set: (v: string) => void) => (e: { target: { value: string } }) => {
+    set(e.target.value);
+    setSaved(false);
+  };
+  const problem = <span className="text-red">Enter a positive number</span>;
 
   const run = async (confirm: boolean) => {
     setBusy(true);
     setError(null);
     setSaved(false);
+    let persisted = false;
     try {
       await api.setPoints(item.id, { target: parsed(target), limit: parsed(limit), objective: objective || null });
+      persisted = true;
       if (confirm) await api.confirmPoints(item.id);
       setSaved(true);
-      await onChanged();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      setError(persisted ? `Points were saved, but could not be confirmed: ${message}` : message);
+    }
+    try {
+      // The saved points are on the server even when confirming failed: show them.
+      if (persisted) await onChanged();
     } finally {
       setBusy(false);
     }
@@ -62,38 +81,44 @@ export function PointsPanel({
       <div className="grid gap-4">
         {!item.points_set && (
           <Notice tone="info">
-            Suggested from history: target {money(item.target)}, {lim.toLowerCase()} {money(item.limit)}. Adjust and confirm.
+            Suggested starting points: target {money(item.target)}, {lim.toLowerCase()} {money(item.limit)}. Adjust and confirm.
           </Notice>
         )}
         {!eligible && <Notice tone="amber">{detail.value_eligibility.reason}. Points cannot be confirmed for this event.</Notice>}
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Target price" hint="Per unit">
+          <Field label="Target price" hint={targetOk ? "Per unit" : problem}>
             <input
               inputMode="decimal"
               value={target}
-              onChange={(e) => setTarget(e.target.value)}
+              onChange={edit(setTarget)}
               disabled={!editable || busy}
               className={inputClass}
               aria-label="Target price"
+              aria-invalid={!targetOk}
             />
           </Field>
-          <Field label={`${lim} (walk-away)`} hint="Never shown to vendors">
+          <Field label={`${lim} (walk-away)`} hint={limitOk ? "Never shown to vendors" : problem}>
             <input
               inputMode="decimal"
               value={limit}
-              onChange={(e) => setLimit(e.target.value)}
+              onChange={edit(setLimit)}
               disabled={!editable || busy}
               className={inputClass}
-              aria-label={`${lim} price`}
+              aria-label={`${lim} (walk-away)`}
+              aria-invalid={!limitOk}
             />
           </Field>
         </div>
         <Field label="Negotiation objective">
           <select
             value={objective}
-            onChange={(e) => setObjective(e.target.value as Objective | "")}
+            onChange={(e) => {
+              setObjective(e.target.value as Objective | "");
+              setSaved(false);
+            }}
             disabled={!editable || busy}
             className={inputClass}
+            aria-label="Negotiation objective"
           >
             <option value="">No preference</option>
             {objectiveOptions(eventDirection).map((o) => (
@@ -115,7 +140,7 @@ export function PointsPanel({
             Save points
           </Button>
         </div>
-        {!editable && <p className="text-xs text-muted">Points are locked once negotiation has started.</p>}
+        {!editable && <p className="text-xs text-muted">{lockedMessage}</p>}
       </div>
     </Panel>
   );

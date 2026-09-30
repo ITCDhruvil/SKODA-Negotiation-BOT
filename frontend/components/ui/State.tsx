@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "./basics";
 
@@ -12,13 +13,32 @@ export function Loading({ label = "Loading…" }: { label?: string }) {
   );
 }
 
-export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorBox({
+  message,
+  status,
+  onRetry,
+}: {
+  message: string;
+  /** HTTP status of the failed request; leave out (or null) for a network failure. */
+  status?: number | null;
+  onRetry?: () => void;
+}) {
+  const notFound = status === 404;
   return (
     <div role="alert" className="rounded-m border border-transparent bg-red-soft p-4 text-sm text-red">
-      <p className="font-semibold">Could not load data</p>
+      <p className="font-semibold">{notFound ? "Not found" : "Could not load data"}</p>
       <p className="mt-1 break-words">{message}</p>
-      <p className="mt-1 text-xs opacity-80">Is the API running? Start it with: python -m uvicorn app.main:app --port 8000</p>
-      {onRetry && (
+      {notFound && (
+        <p className="mt-2">
+          <Link href="/events" className="font-semibold underline">
+            Back to events
+          </Link>
+        </p>
+      )}
+      {status == null && (
+        <p className="mt-1 text-xs opacity-80">Is the API running? Start it with: python -m uvicorn app.main:app --port 8000</p>
+      )}
+      {onRetry && !notFound && (
         <Button size="sm" className="mt-3" onClick={onRetry}>
           Try again
         </Button>

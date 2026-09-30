@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
-import { ErrorBox, Loading, PageHeader } from "@/components/ui/State";
+import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { api, type HistoryPoint, type VendorDetail } from "@/lib/api";
 import { dateShort, money, moneyCompact, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
@@ -37,7 +37,7 @@ function Body({ data }: { data: VendorDetail }) {
   return (
     <>
       <PageHeader
-        crumbs={<><Link href="/vendors" className="hover:underline">Vendors</Link> / {v.id}</>}
+        crumbs={<><Link href="/vendors" className="hover:underline">Vendors</Link> / {v.name}</>}
         title={
           <span className="flex flex-wrap items-center gap-3">
             {v.name}
@@ -53,7 +53,11 @@ function Body({ data }: { data: VendorDetail }) {
         <KpiCard icon="history" tone="amber" label="Past deals" value={v.past_deals} sub={`${v.history_deals} in the history log`} />
       </div>
       <div className="grid gap-5 xl:grid-cols-2">
-        <Panel title="Current quotes" flush>
+        <Panel
+          title="Current quotes"
+          subtitle={data.recent_bids.length === 20 ? "Showing the 20 most recent quotes" : undefined}
+          flush
+        >
           <DataTable columns={bidColumns} rows={data.recent_bids} rowKey={(b) => `${b.item_id}`} empty="No live quotes." dense />
         </Panel>
         <Panel title="Past deals" flush>
@@ -66,8 +70,18 @@ function Body({ data }: { data: VendorDetail }) {
 
 export default function VendorPage() {
   const { id } = useParams<{ id: string }>();
-  const { data, error, loading, reload } = useApi(() => api.vendor(id), [id]);
+  const { data, error, errorStatus, loading, reload } = useApi(() => api.vendor(id), [id]);
   if (loading && !data) return <Loading label="Loading vendor" />;
-  if (error && !data) return <ErrorBox message={error} onRetry={reload} />;
-  return data ? <Body data={data} /> : null;
+  if (error && !data) return <ErrorBox message={error} status={errorStatus} onRetry={reload} />;
+  if (!data) return null;
+  return (
+    <>
+      {error && (
+        <div className="mb-4">
+          <Notice tone="red">Could not refresh: {error}</Notice>
+        </div>
+      )}
+      <Body data={data} />
+    </>
+  );
 }

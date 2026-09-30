@@ -4,7 +4,7 @@ import Link from "next/link";
 import { api, type ItemDetail } from "@/lib/api";
 import { dateShort, money } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import { limitLabel } from "@/lib/labels";
+import { limitLabel, quoteLabel } from "@/lib/labels";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Pill } from "@/components/ui/basics";
 import { TrendChart } from "@/components/ui/charts";
@@ -13,21 +13,21 @@ import type { HistoryPoint } from "@/lib/api";
 
 export function HistoryTab({ detail }: { detail: ItemDetail }) {
   const id = detail.item.id;
-  const { data, error, loading, reload } = useApi(() => api.itemHistory(id), [id]);
+  const { data, error, errorStatus, loading, reload } = useApi(() => api.itemHistory(id), [id]);
   if (loading && !data) return <Loading label="Loading history" />;
-  if (error && !data) return <ErrorBox message={error} onRetry={reload} />;
+  if (error && !data) return <ErrorBox message={error} status={errorStatus} onRetry={reload} />;
   if (!data) return null;
   if (data.records.length === 0) return <p className="text-sm text-muted">No past deals for this item or category.</p>;
 
   const s = data.stats!;
   const d = detail.event.direction;
   const refs = [{ value: detail.item.target, label: "Target", color: "var(--ok)" }, { value: detail.item.limit, label: limitLabel(d), color: "var(--amber)" }];
-  if (detail.item.best_bid != null) refs.push({ value: detail.item.best_bid, label: "Best quote", color: "var(--info)" });
+  if (detail.item.best_bid != null) refs.push({ value: detail.item.best_bid, label: `Best ${quoteLabel(d).toLowerCase()}`, color: "var(--info)" });
 
   const columns: Column<HistoryPoint>[] = [
     { key: "date", header: "Date", cell: (h) => dateShort(h.date) },
     { key: "desc", header: "Item", hideOnMobile: true, cell: (h) => h.description },
-    { key: "vendor", header: "Vendor", cell: (h) => <Link href={`/vendors/${h.vendor_id}`} className="text-brand hover:underline">{h.vendor_id}</Link> },
+    { key: "vendor", header: "Vendor", cell: (h) => <Link href={`/vendors/${h.vendor_id}`} className="text-brand hover:underline">{h.vendor_name}</Link> },
     { key: "qty", header: "Qty", align: "right", hideOnMobile: true, cell: (h) => h.qty },
     { key: "price", header: "Price", align: "right", cell: (h) => <span className="tabular-nums font-semibold">{money(h.unit_price)}</span> },
     { key: "orig", header: "Before negotiation", align: "right", hideOnMobile: true, cell: (h) => (h.original_price == null ? "—" : <span className="tabular-nums">{money(h.original_price)}</span>) },

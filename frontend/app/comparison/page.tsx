@@ -5,20 +5,25 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Delta, DirectionBadge, inputClass, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { RangeNotice } from "@/components/ui/RangeNotice";
 import { ErrorBox, Loading, PageHeader } from "@/components/ui/State";
-import { api, type ItemRow } from "@/lib/api";
+import { api, type Direction, type ItemRow } from "@/lib/api";
 import { money, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import { RECOMMENDATION_LABEL, RECOMMENDATION_TONE, STATE_LABEL, STATE_TONE } from "@/lib/labels";
+import { useRange } from "@/lib/providers";
+import { RECOMMENDATION_LABEL, RECOMMENDATION_TONE, STATE_LABEL, STATE_TONE, quoteLabel, quotesLabel } from "@/lib/labels";
 
 export default function ComparisonPage() {
   const router = useRouter();
   const [direction, setDirection] = useState("");
   const [recommendation, setRecommendation] = useState("");
-  const { data, error, loading, reload } = useApi(
-    () => api.items({ has_bids: true, direction, recommendation }),
-    [direction, recommendation],
+  const { range } = useRange();
+  const { data, error, errorStatus, loading, reload } = useApi(
+    () => api.items({ has_bids: true, direction, recommendation, date_from: range.from, date_to: range.to }),
+    [direction, recommendation, range.from, range.to],
   );
+  // Quote or bid wording follows the type filter; with both types shown the neutral word is used.
+  const only: Direction | null = direction === "buy" || direction === "sell" ? direction : null;
 
   const columns: Column<ItemRow>[] = [
     {
@@ -35,8 +40,8 @@ export default function ComparisonPage() {
     },
     { key: "type", header: "Type", cell: (i) => <DirectionBadge direction={i.direction} /> },
     { key: "qty", header: "Qty", align: "right", hideOnMobile: true, cell: (i) => `${num(i.qty)} ${i.unit}` },
-    { key: "bids", header: "Quotes", align: "right", hideOnMobile: true, cell: (i) => i.bid_count },
-    { key: "best", header: "Best quote", align: "right", cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
+    { key: "bids", header: only ? quotesLabel(only) : "Quotes", align: "right", hideOnMobile: true, cell: (i) => i.bid_count },
+    { key: "best", header: only ? `Best ${quoteLabel(only).toLowerCase()}` : "Best quote", align: "right", cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
     { key: "target", header: "Target", align: "right", hideOnMobile: true, cell: (i) => <span className="tabular-nums">{money(i.target)}</span> },
     { key: "gap", header: "Gap", align: "right", hideOnMobile: true, cell: (i) => <span className="tabular-nums">{i.gap == null ? "—" : money(i.gap)}</span> },
     { key: "delta", header: "Potential", align: "right", cell: (i) => <Delta value={i.potential_delta} direction={i.direction} /> },
@@ -47,6 +52,7 @@ export default function ComparisonPage() {
   return (
     <>
       <PageHeader title="Comparison" subtitle="Every item with vendor quotes, biggest opportunity first. Open one to compare vendors side by side." />
+      <RangeNotice />
       <Panel flush>
         <div className="flex flex-wrap items-center gap-3 px-5 pb-3">
           <select value={direction} onChange={(e) => setDirection(e.target.value)} aria-label="Type" className={`${inputClass} w-auto`}>
@@ -66,7 +72,7 @@ export default function ComparisonPage() {
         {loading && !data && <Loading label="Loading comparison" />}
         {error && (
           <div className="px-5 pb-5">
-            <ErrorBox message={error} onRetry={reload} />
+            <ErrorBox message={error} status={errorStatus} onRetry={reload} />
           </div>
         )}
         {data && <DataTable columns={columns} rows={data} rowKey={(i) => i.id} onRowClick={(i) => router.push(`/items/${i.id}`)} empty="No items match." dense />}

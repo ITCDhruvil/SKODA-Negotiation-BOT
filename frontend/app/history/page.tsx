@@ -14,7 +14,7 @@ export default function HistoryPage() {
   const [q, setQ] = useState("");
   const [direction, setDirection] = useState("");
   const [negotiated, setNegotiated] = useState("");
-  const { data, error, loading, reload } = useApi(
+  const { data, error, errorStatus, loading, reload } = useApi(
     () => api.history({ q, direction, negotiated: negotiated === "" ? undefined : negotiated === "yes", limit: 500 }),
     [q, direction, negotiated],
   );
@@ -76,7 +76,7 @@ export default function HistoryPage() {
         {loading && !data && <Loading label="Loading history" />}
         {error && (
           <div className="px-5 pb-5">
-            <ErrorBox message={error} onRetry={reload} />
+            <ErrorBox message={error} status={errorStatus} onRetry={reload} />
           </div>
         )}
         {data && <DataTable columns={columns} rows={data} rowKey={(h) => h.id} empty="No deals match." dense />}

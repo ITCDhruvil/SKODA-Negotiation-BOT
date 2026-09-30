@@ -1,13 +1,14 @@
 import Link from "next/link";
 import type { ComparisonView, Direction } from "@/lib/api";
-import { money } from "@/lib/format";
-import { bestLabel, deltaLabel, limitLabel } from "@/lib/labels";
+import { money, pct } from "@/lib/format";
+import { bestLabel, deltaLabel, leadLabel, limitLabel, quoteLabel } from "@/lib/labels";
 import { Pill } from "@/components/ui/basics";
 
 const LANG: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi" };
 
-export function ComparisonMatrix({ view, direction }: { view: ComparisonView; direction: Direction }) {
+export function ComparisonMatrix({ view, direction, unit }: { view: ComparisonView; direction: Direction; unit: string }) {
   const { rows, summary } = view;
+  const quote = quoteLabel(direction).toLowerCase();
   const cell = "px-4 py-2.5 align-top whitespace-nowrap tabular-nums";
   const label = "sticky left-0 z-10 bg-panel px-4 py-2.5 text-left text-xs font-semibold text-muted whitespace-nowrap";
   const tint = (best: boolean, bestEff: boolean) =>
@@ -16,11 +17,11 @@ export function ComparisonMatrix({ view, direction }: { view: ComparisonView; di
     <div>
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          ["Best quote", money(summary.best_price)],
+          [`Best ${quote}`, money(summary.best_price)],
           ["Best overall", money(summary.best_effective_price)],
           ["Target", money(summary.target)],
           [limitLabel(direction), money(summary.limit)],
-          ["Bid spread", summary.spread == null ? "—" : `${(summary.spread * 100).toFixed(1)}%`],
+          ["Bid spread", pct(summary.spread)],
           [`Potential ${deltaLabel(direction).toLowerCase()}`, money(summary.potential_delta)],
         ].map(([k, v]) => (
           <div key={k} className="rounded-m border border-line2 bg-raise px-3 py-2">
@@ -46,13 +47,13 @@ export function ComparisonMatrix({ view, direction }: { view: ComparisonView; di
           </thead>
           <tbody className="[&>tr]:border-b [&>tr]:border-line2 [&>tr:last-child]:border-0">
             <tr>
-              <th className={label}>Unit price</th>
+              <th className={label}>Unit price (per {unit})</th>
               {rows.map((r) => (
                 <td key={r.bid_id} className={`${cell} ${tint(r.is_best_price, false)} font-bold text-ink`}>
                   {money(r.unit_price)}
                   {r.is_best_price && (
                     <div className="mt-1">
-                      <Pill tone="ok">{bestLabel(direction)} quote</Pill>
+                      <Pill tone="ok">{bestLabel(direction)} {quote}</Pill>
                     </div>
                   )}
                 </td>
@@ -92,7 +93,7 @@ export function ComparisonMatrix({ view, direction }: { view: ComparisonView; di
               ))}
             </tr>
             <tr>
-              <th className={label}>{direction === "buy" ? "Lead time" : "Pickup time"}</th>
+              <th className={label}>{leadLabel(direction)}</th>
               {rows.map((r) => (
                 <td key={r.bid_id} className={cell}>{r.delivery_days} days</td>
               ))}

@@ -7,6 +7,9 @@ export const deltaLabel = (d: Direction): string => (d === "buy" ? "Savings" : "
 export const limitLabel = (d: Direction): string => (d === "buy" ? "Ceiling" : "Floor");
 export const bestLabel = (d: Direction): string => (d === "buy" ? "Lowest" : "Highest");
 export const partyLabel = (d: Direction): string => (d === "buy" ? "Supplier" : "Scrap buyer");
+export const quoteLabel = (d: Direction): string => (d === "buy" ? "Quote" : "Bid");
+export const quotesLabel = (d: Direction): string => (d === "buy" ? "Quotes" : "Bids");
+export const leadLabel = (d: Direction): string => (d === "buy" ? "Lead time" : "Pickup time");
 export const directionText = (d: Direction): string => (d === "buy" ? "BUY" : "SELL");
 
 export const STATE_LABEL: Record<ItemState, string> = {

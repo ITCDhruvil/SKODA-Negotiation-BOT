@@ -4,6 +4,7 @@ import Link from "next/link";
 import { EventsTable } from "@/components/events/EventsTable";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { KpiCard, Panel } from "@/components/ui/basics";
+import { RangeNotice } from "@/components/ui/RangeNotice";
 import { ErrorBox, Loading, PageHeader } from "@/components/ui/State";
 import { api, type Dashboard } from "@/lib/api";
 import { moneyCompact, pct } from "@/lib/format";
@@ -14,7 +15,7 @@ type Cat = Dashboard["value_by_category"][number];
 
 export default function ReportsPage() {
   const { range } = useRange();
-  const { data, error, loading, reload } = useApi(() => api.dashboard(range), [range.from, range.to]);
+  const { data, error, errorStatus, loading, reload } = useApi(() => api.dashboard(range), [range.from, range.to]);
 
   const columns: Column<Cat>[] = [
     { key: "cat", header: "Category", cell: (c) => c.category },
@@ -24,9 +25,10 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reports" subtitle="What negotiation has delivered so far, for the selected dates." />
+      <PageHeader title="Reports" subtitle="What negotiation has delivered so far, for events created in this period." />
+      <RangeNotice />
       {loading && !data && <Loading label="Loading reports" />}
-      {error && <ErrorBox message={error} onRetry={reload} />}
+      {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}
       {data && (
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -35,8 +37,8 @@ export default function ReportsPage() {
             <KpiCard icon="check" tone="brand" label="Completed negotiations" value={data.kpis.completed_negotiations} />
             <KpiCard icon="chat" tone="amber" label="Still on the table" value={moneyCompact(data.kpis.potential_total)} sub="Potential across open items" />
           </div>
-          <Panel title="Closed events" subtitle="Events finished in this period." flush>
-            <EventsTable events={data.events.filter((e) => e.status === "closed")} empty="No closed events in this period." />
+          <Panel title="Closed events" subtitle="Events created in this period that are now closed." flush>
+            <EventsTable events={data.events.filter((e) => e.status === "closed")} empty="No closed events created in this period." />
           </Panel>
           <Panel title="Value by category" flush>
             <DataTable columns={columns} rows={data.value_by_category} rowKey={(c) => c.category_key} dense />

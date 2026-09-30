@@ -49,7 +49,7 @@ function describe(detail: unknown, fallback: string): string {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: { ...(init?.body != null ? { "Content-Type": "application/json" } : {}), ...(init?.headers ?? {}) },
     cache: "no-store",
   });
   if (!res.ok) {
@@ -90,7 +90,15 @@ export const api = {
     ),
   event: (id: string) => request<EventDetail>(`/api/events/${id}`),
   simulate: (direction: Direction) => post<EventDetail>("/api/events/simulate", { direction }),
-  items: (p: { event_id?: string; has_bids?: boolean; recommendation?: string; direction?: string; q?: string }) =>
+  items: (p: {
+    event_id?: string;
+    has_bids?: boolean;
+    recommendation?: string;
+    direction?: string;
+    q?: string;
+    date_from?: string;
+    date_to?: string;
+  }) =>
     request<ItemRow[]>(`/api/items${qs(p)}`),
   item: (id: string) => request<ItemDetail>(`/api/items/${id}`),
   itemHistory: (id: string) => request<HistoryView>(`/api/items/${id}/history`),

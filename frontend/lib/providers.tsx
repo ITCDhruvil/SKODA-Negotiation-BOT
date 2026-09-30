@@ -5,8 +5,9 @@ import type { DateRange } from "./api";
 
 type Theme = "light" | "dark";
 
-type ThemeCtx = { theme: Theme; toggle: () => void };
-const ThemeContext = createContext<ThemeCtx>({ theme: "light", toggle: () => {} });
+/** `theme` is null until the stored or OS preference is known. */
+type ThemeCtx = { theme: Theme | null; toggle: () => void };
+const ThemeContext = createContext<ThemeCtx>({ theme: null, toggle: () => {} });
 export const useTheme = () => useContext(ThemeContext);
 
 type RangeCtx = { range: DateRange; setRange: (r: DateRange) => void };
@@ -29,8 +30,29 @@ function safeSet(key: string, value: string): void {
   }
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function isRealDay(v: string): boolean {
+  const t = Date.parse(`${v}T00:00:00Z`);
+  return ISO_DATE.test(v) && !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === v;
+}
+
+const validDay = (v: unknown): v is string => typeof v === "string" && (v === "" || isRealDay(v));
+
+/** A stored range is used only when both ends are empty or real dates and from is not after to. */
+function parseRange(raw: string | null): DateRange | null {
+  try {
+    const saved = JSON.parse(raw ?? "null");
+    if (!saved || !validDay(saved.from) || !validDay(saved.to)) return null;
+    if (saved.from && saved.to && saved.from > saved.to) return null;
+    return { from: saved.from, to: saved.to };
+  } catch {
+    return null;
+  }
+}
+
 export function Providers({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme | null>(null);
   const [range, setRangeState] = useState<DateRange>({ from: "", to: "" });
 
   useEffect(() => {
@@ -42,25 +64,20 @@ export function Providers({ children }: { children: ReactNode }) {
           ? "dark"
           : "light";
     setTheme(initial);
-    try {
-      const saved = JSON.parse(safeGet("range") ?? "null");
-      if (saved && typeof saved.from === "string" && typeof saved.to === "string") setRangeState(saved);
-    } catch {
-      /* ignore a corrupt value */
-    }
+    const saved = parseRange(safeGet("range"));
+    if (saved) setRangeState(saved);
   }, []);
 
+  // Until the preference is resolved nothing is written, so the CSS media query keeps deciding.
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    if (theme) document.documentElement.dataset.theme = theme;
   }, [theme]);
 
   const toggle = useCallback(() => {
-    setTheme((t) => {
-      const next: Theme = t === "dark" ? "light" : "dark";
-      safeSet("theme", next);
-      return next;
-    });
-  }, []);
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    safeSet("theme", next);
+  }, [theme]);
 
   const setRange = useCallback((r: DateRange) => {
     setRangeState(r);

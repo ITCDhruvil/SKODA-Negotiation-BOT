@@ -12,7 +12,7 @@ import { useApi } from "@/lib/hooks";
 
 export default function VendorsPage() {
   const router = useRouter();
-  const { data, error, loading, reload } = useApi(() => api.vendors(), []);
+  const { data, error, errorStatus, loading, reload } = useApi(() => api.vendors(), []);
   const [q, setQ] = useState("");
   const [type, setType] = useState("");
 
@@ -59,7 +59,7 @@ export default function VendorsPage() {
         {loading && !data && <Loading label="Loading vendors" />}
         {error && (
           <div className="px-5 pb-5">
-            <ErrorBox message={error} onRetry={reload} />
+            <ErrorBox message={error} status={errorStatus} onRetry={reload} />
           </div>
         )}
         {data && <DataTable columns={columns} rows={rows} rowKey={(v) => v.id} onRowClick={(v) => router.push(`/vendors/${v.id}`)} empty="No vendors match." />}

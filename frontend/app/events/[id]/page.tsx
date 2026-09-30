@@ -16,6 +16,8 @@ import {
   STATUS_LABEL,
   STATUS_TONE,
   deltaLabel,
+  quoteLabel,
+  quotesLabel,
 } from "@/lib/labels";
 
 function Meta({ label, value }: { label: string; value: string }) {
@@ -41,8 +43,8 @@ function Body({ data }: { data: EventDetail }) {
       ),
     },
     { key: "qty", header: "Qty", align: "right", cell: (i) => `${num(i.qty)} ${i.unit}` },
-    { key: "bids", header: "Quotes", align: "right", hideOnMobile: true, cell: (i) => i.bid_count },
-    { key: "best", header: "Best quote", align: "right", cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
+    { key: "bids", header: quotesLabel(e.direction), align: "right", hideOnMobile: true, cell: (i) => i.bid_count },
+    { key: "best", header: `Best ${quoteLabel(e.direction).toLowerCase()}`, align: "right", cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
     { key: "target", header: "Target", align: "right", hideOnMobile: true, cell: (i) => <span className="tabular-nums">{money(i.target)}</span> },
     { key: "gap", header: "Gap / unit", align: "right", hideOnMobile: true, cell: (i) => <span className="tabular-nums">{i.gap == null ? "—" : money(i.gap)}</span> },
     {
@@ -99,7 +101,7 @@ function Body({ data }: { data: EventDetail }) {
       <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon="cube" tone="brand" label="Items" value={e.item_count} />
         <KpiCard icon="vendors" tone="info" label="Vendors" value={e.vendor_count} sub="Invited or responded" />
-        <KpiCard icon="coin" tone="amber" label={closed ? "Final value" : "Quoted value"} value={moneyCompact(closed ? (e.final_value ?? e.quoted_value) : e.quoted_value)} sub={`Reference ${moneyCompact(e.reference_value)}`} />
+        <KpiCard icon="coin" tone="amber" label={closed ? "Final value" : "Quoted value"} value={moneyCompact(closed ? (e.final_value ?? e.quoted_value) : e.quoted_value)} sub={closed ? `Original ${moneyCompact(e.original_value)}` : `Reference ${moneyCompact(e.reference_value)}`} />
         <KpiCard
           icon="trend"
           tone="ok"
@@ -112,7 +114,7 @@ function Body({ data }: { data: EventDetail }) {
         <div className="mb-5">
           <Panel title="Closed summary" subtitle="What this event delivered">
             <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
-              <Meta label="Reference value" value={money(e.reference_value)} />
+              <Meta label="Original value" value={money(e.original_value)} />
               <Meta label="Final value" value={money(e.final_value)} />
               <Meta label={`${deltaLabel(e.direction)} achieved`} value={money(e.realised_delta)} />
               <Meta label="Items negotiated" value={`${e.items_negotiated} / ${e.item_count}`} />
@@ -128,6 +130,7 @@ function Body({ data }: { data: EventDetail }) {
         </Panel>
         <Panel title="Details">
           <dl className="grid gap-3 text-sm">
+            <Meta label="Reference value" value={money(e.reference_value)} />
             <Meta label="Plant / company" value={`${e.plant} · ${e.company}`} />
             <Meta label="Purchasing" value={`${e.purch_org} · ${e.purch_group}`} />
             <Meta label="Requestor" value={e.requestor} />
@@ -145,8 +148,18 @@ function Body({ data }: { data: EventDetail }) {
 
 export default function EventPage() {
   const { id } = useParams<{ id: string }>();
-  const { data, error, loading, reload } = useApi(() => api.event(id), [id]);
+  const { data, error, errorStatus, loading, reload } = useApi(() => api.event(id), [id]);
   if (loading && !data) return <Loading label="Loading event" />;
-  if (error && !data) return <ErrorBox message={error} onRetry={reload} />;
-  return data ? <Body data={data} /> : null;
+  if (error && !data) return <ErrorBox message={error} status={errorStatus} onRetry={reload} />;
+  if (!data) return null;
+  return (
+    <>
+      {error && (
+        <div className="mb-4">
+          <Notice tone="red">Could not refresh: {error}</Notice>
+        </div>
+      )}
+      <Body data={data} />
+    </>
+  );
 }
