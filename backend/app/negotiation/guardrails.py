@@ -100,6 +100,8 @@ def check_message(
     for n in nums:
         if offer_price is not None and deal.same_amount(n, offer_price):
             continue
+        if allowed_numbers is not None and any(deal.same_amount(n, a) for a in allowed_numbers):
+            continue  # the vendor already has this number, or it is a plain count: not a leak
         for secret in (limit, target):
             if deal.same_amount(n, secret):
                 raise GuardrailError("The message contains a number that matches an internal target or limit.")

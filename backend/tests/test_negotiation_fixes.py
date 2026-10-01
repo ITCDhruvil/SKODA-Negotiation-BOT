@@ -71,8 +71,8 @@ def test_check_message_allowed_numbers():
     with pytest.raises(guardrails.GuardrailError):
         check("We can do 260 for 700 units.", allowed_numbers=[600])
     check("Anything 999 goes", allowed_numbers=None)  # not enforced unless the caller gives numbers
-    with pytest.raises(guardrails.GuardrailError):  # internal numbers stay forbidden even if "allowed"
-        check("We can do 270.", allowed_numbers=[270])
+    with pytest.raises(guardrails.GuardrailError):  # an internal number that is not allowed stays banned
+        check("We can do 270.", allowed_numbers=[600])
 
 
 @pytest.mark.parametrize("lang", messages.LANGS)
@@ -533,3 +533,52 @@ def test_every_template_text_is_free_of_new_banned_words():
         guardrails.check_message(text, offer_price=10, limit=12, target=9,
                                  allowed_numbers=[10, 11, 45])
 
+
+
+# --- numbers the vendor already knows are not leaks ------------------------------------------
+
+@pytest.mark.parametrize("mode", ["auto", "approve"])
+def test_an_opening_that_names_a_quote_equal_to_the_limit_is_not_stuck(repo: Repo, mode):
+    analyzed(repo, BUY, 250, 285)              # the vendor's quote of 285 is exactly our limit
+    s = neg.start(repo, BUY, mode=mode)
+    assert s.vendor_offer == 285
+    if mode == "approve":
+        s = neg.approve_draft(repo, s.id, neg.pending_draft(repo, s.id).id)
+    else:
+        s = neg.advance(repo, s.id)
+    assert s.round == 1 and "285" in neg.turns(repo, s.id)[0].text
+    s = run_auto(repo, neg.set_mode(repo, s.id, "auto").id) if s.status == "active" else s
+    assert s.status in ("agreed", "handed_back")
+
+
+def test_a_plain_count_equal_to_the_target_or_limit_is_allowed():
+    check("For 600 units we can do 260.", target=600, allowed_numbers=[600])
+    check("Payment in 270 days, 260 per unit.", limit=270, allowed_numbers=[270])
+    with pytest.raises(guardrails.GuardrailError):
+        check("For 600 units we can do 260.", target=600, allowed_numbers=[100])
+
+
+def test_a_typed_number_equal_to_the_limit_is_still_refused(buy: Repo):
+    s = neg.start(buy, BUY, mode="manual")
+    with pytest.raises(services.Conflict):
+        neg.send_message(buy, s.id, price=260, text="we can do 270 at most")
+    with pytest.raises(services.Conflict):
+        neg.send_message(buy, s.id, price=260, text="हम 270 तक आ सकते हैं")
+    with pytest.raises(services.Conflict):
+        neg.send_message(buy, s.id, price=260, text="आम्ही 270 पर्यंत येऊ शकतो")
+    assert neg.turns(buy, s.id) == []
+
+
+@pytest.mark.parametrize("lang", messages.LANGS)
+@pytest.mark.parametrize("direction", ["buy", "sell"])
+@pytest.mark.parametrize("kind", ["open", "counter", "close", "accept"])
+def test_templates_naming_a_quote_equal_to_the_limit_pass(lang, direction, kind):
+    text = messages.our_message(kind, direction=direction, lang=lang, vendor_name="Acme", item="Bolts",
+                                qty=600, unit="EA", quote=270, price=260, payment_ask="ZD45",
+                                agreed_payment="ZD45")
+    guardrails.check_message(text, offer_price=260, limit=270, target=250,
+                             allowed_numbers=[600, 270, 260, 45])
+    if kind == "open":                               # only the opening names the vendor's quote
+        with pytest.raises(guardrails.GuardrailError):   # without that number allowed it is a leak
+            guardrails.check_message(text, offer_price=260, limit=270, target=250,
+                                     allowed_numbers=[600, 45])
