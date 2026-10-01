@@ -366,12 +366,6 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
             );
           })}
 
-          <g>
-            <rect x={W - m.r + 2} y={y(last.price) - 11} width={m.r - 4} height={22} rx={5} fill="var(--c2)" />
-            <text x={W - m.r + 2 + (m.r - 4) / 2} y={y(last.price) + 4} textAnchor="middle" style={{ fontSize: 11, fontWeight: 800, fill: "#fff" }}>
-              {num(last.price)}
-            </text>
-          </g>
 
           {hover != null && (
             <g pointerEvents="none">
