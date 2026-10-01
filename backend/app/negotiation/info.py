@@ -129,6 +129,12 @@ _NO_WARRANTY = {
     "en": "There is no separate warranty period on this, but we stand by the quality.",
     "hi": "इस पर अलग से वारंटी अवधि नहीं है, लेकिन गुणवत्ता की हमारी ज़िम्मेदारी है।",
     "mr": "यावर वेगळा वॉरंटी कालावधी नाही, पण गुणवत्तेची जबाबदारी आमची आहे."}
+_PRICE_WORDS = [r"price", r"rate", r"discount", r"cheaper", r"reduce", r"improve", r"better", r"कीमत", r"दर", r"भाव",
+                r"किंमत", r"सवलत"]
+_PRICE_REPLY = {
+    "en": "Tell me the price you have in mind and I will see what I can do.",
+    "hi": "आप जो कीमत सोच रहे हैं वह बताइए, मैं देखता हूँ कि क्या हो सकता है।",
+    "mr": "तुमच्या मनातील किंमत सांगा, मी काय करता येईल ते पाहतो."}
 _VENDOR_GENERIC = {
     "en": "Let me check on that and get back to you.",
     "hi": "मैं इसे देखकर आपको बताता हूँ।",
@@ -248,5 +254,8 @@ def vendor_answers(question_text: str, f: Facts, *, include_payment: bool = True
     """The vendor's reply to a typed question; a generic holding line when nothing is recognised."""
     found = topics_in(question_text, include_payment=include_payment)
     if not found:
+        lowered = question_text.lower()
+        if any(re.search(w, lowered) for w in _PRICE_WORDS):
+            return _PRICE_REPLY[f.lang]  # a request to do better on price: ask for a number
         return _VENDOR_GENERIC[f.lang]
     return " ".join(vendor_answer(t, f) for t in found)

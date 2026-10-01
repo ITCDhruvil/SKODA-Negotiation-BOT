@@ -303,3 +303,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 101. The conversation language can be switched in the workspace at any time (English, Hindi, Marathi). It applies to the messages that follow, and a waiting draft is rewritten; what was already said is not translated. Text the buyer types is sent as typed. Only the standard wording is translated; the extra reasons and varied phrasings exist in English only.
     Reason: translation of free text is out of scope for the POC.
+
+102. Messages are chat messages, not emails: no "Regards", no sign-off and no signature block (this replaces assumption 88; the NEGOTIATION_SIGNATURE setting is gone). The opening still greets the vendor by name. In the workspace the buyer sees a chat-style message bar: a "+" menu (add a price offer, suggested messages), the text field and a send button that becomes a stop button while the conversation runs on its own. Pressing stop switches to manual and enables typing. Typed text with no price is sent as a question and answered from the quote; a request to do better on price is answered by asking for a number.
+    Reason: the buyer asked for a messaging feel and a visible way for a person watching to take over at any moment.

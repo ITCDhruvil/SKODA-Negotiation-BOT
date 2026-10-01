@@ -1,23 +1,15 @@
 """Message wording for both sides, in English, Hindi and Marathi.
 
-Messages from our side read like a person at the company wrote them and are signed with a name;
-they never mention software, assistants or automation (see guardrails.check_message).
+Messages from our side read like a short chat message from a person at the company: no email
+salutations or signature blocks. They never mention software, assistants or automation (see guardrails.check_message).
 """
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 from app import deal
 
 LANGS = ("en", "hi", "mr")
-DEFAULT_SIGNATURE = "Dhruvil Patel\nSKODA Auto VW India, Pune"
-
-
-def signature() -> str:
-    """The name at the foot of our messages: NEGOTIATION_SIGNATURE (a literal \n is a line break)."""
-    configured = os.environ.get("NEGOTIATION_SIGNATURE", "").strip()
-    return configured.replace("\\n", "\n") if configured else DEFAULT_SIGNATURE
 
 _UNIT = {
     "en": {"EA": "unit", "AU": "lot", "KG": "kg", "TON": "ton", "LOT": "lot"},
@@ -39,9 +31,6 @@ def _group(n: int) -> str:
             parts.insert(0, head)
         s = ",".join(parts + [tail])
     return ("-" if n < 0 else "") + s
-
-
-_signature = signature  # our_message has a parameter of the same name
 
 
 def _paise(x: float) -> int:
@@ -117,78 +106,69 @@ _OURS: dict[tuple[str, str, str], str] = {
     ("open", "buy", "en"): (
         "Hello{vendor} team, thank you for your quotation of {quote} per {unit} for {qty} {qty_unit} of "
         "{item}. For this quantity we were looking at around {price} per {unit}. Could you please "
-        "revisit your price?{pay}\n\nRegards,\n{sign}"),
+        "revisit your price?{pay}"),
     ("open", "buy", "hi"): (
         "नमस्कार{vendor} टीम, {item} ({qty} {unit}) के लिए {quote} प्रति {unit} का कोटेशन देने के लिए "
         "धन्यवाद। इस मात्रा के लिए हम लगभग {price} प्रति {unit} की उम्मीद कर रहे थे। क्या आप कृपया "
-        "अपनी कीमत पर पुनर्विचार कर सकते हैं?{pay}\n\nधन्यवाद,\n{sign}"),
+        "अपनी कीमत पर पुनर्विचार कर सकते हैं?{pay}"),
     ("open", "buy", "mr"): (
         "नमस्कार{vendor} टीम, {item} ({qty} {unit}) साठी {quote} प्रति {unit} दराने कोटेशन दिल्याबद्दल "
         "धन्यवाद. या प्रमाणासाठी आम्हाला साधारण {price} प्रति {unit} अपेक्षित होते. कृपया आपल्या "
-        "किमतीचा पुनर्विचार कराल का?{pay}\n\nधन्यवाद,\n{sign}"),
+        "किमतीचा पुनर्विचार कराल का?{pay}"),
     ("counter", "buy", "en"): (
         "Thanks for coming back to us. We can move to {price} per {unit}.{pay} Would that work for "
-        "you?\n\nRegards,\n{sign}"),
+        "you?"),
     ("counter", "buy", "hi"): (
         "आपके जवाब के लिए धन्यवाद। हम {price} प्रति {unit} तक आ सकते हैं।{pay} क्या यह आपको मंज़ूर "
-        "होगा?\n\nधन्यवाद,\n{sign}"),
+        "होगा?"),
     ("counter", "buy", "mr"): (
         "उत्तर दिल्याबद्दल धन्यवाद. आम्ही {price} प्रति {unit} या दरापर्यंत येऊ शकतो.{pay} हे आपल्याला "
-        "मान्य आहे का?\n\nधन्यवाद,\n{sign}"),
+        "मान्य आहे का?"),
     ("close", "buy", "en"): (
-        "Thank you. If you can do {price} per {unit}, we can go ahead with the order today.{pay}"
-        "\n\nRegards,\n{sign}"),
+        "Thank you. If you can do {price} per {unit}, we can go ahead with the order today.{pay}"),
     ("close", "buy", "hi"): (
-        "धन्यवाद। अगर आप {price} प्रति {unit} कर दें तो हम आज ही ऑर्डर आगे बढ़ा सकते हैं।{pay}"
-        "\n\nधन्यवाद,\n{sign}"),
+        "धन्यवाद। अगर आप {price} प्रति {unit} कर दें तो हम आज ही ऑर्डर आगे बढ़ा सकते हैं।{pay}"),
     ("close", "buy", "mr"): (
-        "धन्यवाद. जर आपण {price} प्रति {unit} केले तर आम्ही ऑर्डर आजच निश्चित करू शकतो.{pay}"
-        "\n\nधन्यवाद,\n{sign}"),
+        "धन्यवाद. जर आपण {price} प्रति {unit} केले तर आम्ही ऑर्डर आजच निश्चित करू शकतो.{pay}"),
     ("accept", "buy", "en"): (
-        "Alright, {price} per {unit} is fine with us.{pay} Thank you for working with us on this."
-        "\n\nRegards,\n{sign}"),
+        "Alright, {price} per {unit} is fine with us.{pay} Thank you for working with us on this."),
     ("accept", "buy", "hi"): (
-        "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} इसमें सहयोग के लिए धन्यवाद।"
-        "\n\nसादर,\n{sign}"),
+        "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} इसमें सहयोग के लिए धन्यवाद।"),
     ("accept", "buy", "mr"): (
-        "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} सहकार्याबद्दल धन्यवाद."
-        "\n\nकळावे,\n{sign}"),
+        "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} सहकार्याबद्दल धन्यवाद."),
     ("open", "sell", "en"): (
         "Hello{vendor} team, thank you for your bid of {quote} per {unit} for {qty} {qty_unit} of "
         "{item}. Going by current market levels we were expecting around {price} per {unit}. Could "
-        "you please revisit your bid?{pay}\n\nRegards,\n{sign}"),
+        "you please revisit your bid?{pay}"),
     ("open", "sell", "hi"): (
         "नमस्कार{vendor} टीम, {item} ({qty} {unit}) के लिए {quote} प्रति {unit} की बोली के लिए "
         "धन्यवाद। मौजूदा बाज़ार भाव को देखते हुए हम लगभग {price} प्रति {unit} की उम्मीद कर रहे थे। "
-        "क्या आप अपनी बोली पर पुनर्विचार कर सकते हैं?{pay}\n\nधन्यवाद,\n{sign}"),
+        "क्या आप अपनी बोली पर पुनर्विचार कर सकते हैं?{pay}"),
     ("open", "sell", "mr"): (
         "नमस्कार{vendor} टीम, {item} ({qty} {unit}) साठी {quote} प्रति {unit} बोली दिल्याबद्दल "
         "धन्यवाद. सध्याच्या बाजारभावानुसार आम्हाला साधारण {price} प्रति {unit} अपेक्षित होते. कृपया "
-        "आपल्या बोलीचा पुनर्विचार कराल का?{pay}\n\nधन्यवाद,\n{sign}"),
+        "आपल्या बोलीचा पुनर्विचार कराल का?{pay}"),
     ("counter", "sell", "en"): (
         "Thanks for the revised bid. We can come down to {price} per {unit}.{pay} Would that work "
-        "for you?\n\nRegards,\n{sign}"),
+        "for you?"),
     ("counter", "sell", "hi"): (
         "संशोधित बोली के लिए धन्यवाद। हम {price} प्रति {unit} तक आ सकते हैं।{pay} क्या यह आपको "
-        "मंज़ूर होगा?\n\nधन्यवाद,\n{sign}"),
+        "मंज़ूर होगा?"),
     ("counter", "sell", "mr"): (
         "सुधारित बोलीबद्दल धन्यवाद. आम्ही {price} प्रति {unit} या दरापर्यंत खाली येऊ शकतो.{pay} हे "
-        "आपल्याला मान्य आहे का?\n\nधन्यवाद,\n{sign}"),
+        "आपल्याला मान्य आहे का?"),
     ("close", "sell", "en"): (
-        "Thank you. If you can do {price} per {unit}, we can release the lot to you this week.{pay}"
-        "\n\nRegards,\n{sign}"),
+        "Thank you. If you can do {price} per {unit}, we can release the lot to you this week.{pay}"),
     ("close", "sell", "hi"): (
-        "धन्यवाद। अगर आप {price} प्रति {unit} कर दें तो हम इसी हफ़्ते माल आपको दे सकते हैं।{pay}"
-        "\n\nधन्यवाद,\n{sign}"),
+        "धन्यवाद। अगर आप {price} प्रति {unit} कर दें तो हम इसी हफ़्ते माल आपको दे सकते हैं।{pay}"),
     ("close", "sell", "mr"): (
-        "धन्यवाद. जर आपण {price} प्रति {unit} केले तर आम्ही याच आठवड्यात माल आपल्याला देऊ शकतो.{pay}"
-        "\n\nधन्यवाद,\n{sign}"),
+        "धन्यवाद. जर आपण {price} प्रति {unit} केले तर आम्ही याच आठवड्यात माल आपल्याला देऊ शकतो.{pay}"),
     ("accept", "sell", "en"): (
-        "Alright, {price} per {unit} is fine with us.{pay} Thank you.\n\nRegards,\n{sign}"),
+        "Alright, {price} per {unit} is fine with us.{pay} Thank you."),
     ("accept", "sell", "hi"): (
-        "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} धन्यवाद।\n\nसादर,\n{sign}"),
+        "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} धन्यवाद।"),
     ("accept", "sell", "mr"): (
-        "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} धन्यवाद.\n\nकळावे,\n{sign}"),
+        "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} धन्यवाद."),
 }
 
 # (kind, event direction, language). In a buy event the vendor sells; in a sell event the vendor buys.
@@ -224,33 +204,30 @@ _VENDOR: dict[tuple[str, str, str], str] = {
 _OURS_ALT: dict[tuple[str, str], list[str]] = {
     ("counter", "buy"): [
         "Appreciate the quick reply. Could you stretch to {price} per {unit}?{pay} That would help us "
-        "a lot.\n\nThanks,\n{sign}",
+        "a lot.",
         "Understood. From our side {price} per {unit} is where we can get to.{pay} Let me know if that "
-        "works.\n\nBest regards,\n{sign}",
+        "works.",
     ],
     ("close", "buy"): [
         "I do see your point. If {price} per {unit} is possible, I can confirm the order right away."
-        "{pay}\n\nThanks,\n{sign}",
-        "We would like to finalise this with you. At {price} per {unit} we can proceed today.{pay}"
-        "\n\nBest regards,\n{sign}",
+        "{pay}",
+        "We would like to finalise this with you. At {price} per {unit} we can proceed today.{pay}",
     ],
     ("accept", "buy"): [
-        "Good, {price} per {unit} it is.{pay} Thanks for being flexible.\n\nThanks,\n{sign}",
-        "That works for us, {price} per {unit}.{pay} Glad we could close this.\n\nBest regards,\n{sign}",
+        "Good, {price} per {unit} it is.{pay} Thanks for being flexible.",
+        "That works for us, {price} per {unit}.{pay} Glad we could close this.",
     ],
     ("counter", "sell"): [
-        "Thanks for getting back. We can do {price} per {unit}.{pay} Please let me know.\n\nThanks,\n{sign}",
-        "Understood. For the material on offer, {price} per {unit} is where we can settle.{pay}"
-        "\n\nBest regards,\n{sign}",
+        "Thanks for getting back. We can do {price} per {unit}.{pay} Please let me know.",
+        "Understood. For the material on offer, {price} per {unit} is where we can settle.{pay}",
     ],
     ("close", "sell"): [
-        "If you can match {price} per {unit}, we can give you the lot this week.{pay}\n\nThanks,\n{sign}",
-        "We would like to close this with you. At {price} per {unit} we can proceed right away.{pay}"
-        "\n\nBest regards,\n{sign}",
+        "If you can match {price} per {unit}, we can give you the lot this week.{pay}",
+        "We would like to close this with you. At {price} per {unit} we can proceed right away.{pay}",
     ],
     ("accept", "sell"): [
-        "Good, {price} per {unit} it is.{pay} Thanks for your flexibility.\n\nThanks,\n{sign}",
-        "That works, {price} per {unit}.{pay} Glad we could agree.\n\nBest regards,\n{sign}",
+        "Good, {price} per {unit} it is.{pay} Thanks for your flexibility.",
+        "That works, {price} per {unit}.{pay} Glad we could agree.",
     ],
 }
 _VENDOR_ALT: dict[tuple[str, str], list[str]] = {
@@ -348,7 +325,6 @@ _ASKS = {
         "At {price} per {unit} we can proceed right away.{pay}",
     ],
 }
-_CLOSINGS = ["Thanks", "Regards", "Best regards"]
 
 _HONORIFICS = {"m/s", "mr", "mr.", "shree", "sri", "the"}
 
@@ -364,7 +340,7 @@ def short_name(vendor_name: str) -> str:
 def our_message(
     kind: str, *, direction: str, lang: str, vendor_name: str, item: str, qty: float, unit: str,
     quote: float, price: float, payment_ask: Optional[str] = None, agreed_payment: Optional[str] = None,
-    signature: Optional[str] = None, variant: int = 0, answers: Optional[list[str]] = None,
+    variant: int = 0, answers: Optional[list[str]] = None,
     ask: Optional[str] = None,
 ) -> str:
     """The text we send. `quote` is the vendor's current price; `price` is what we propose."""
@@ -372,15 +348,12 @@ def our_message(
     alts = _OURS_ALT.get((kind, direction), []) if lang == "en" else []
     if alts and variant % (len(alts) + 1):
         template = alts[variant % (len(alts) + 1) - 1]
-    sign = signature if signature is not None else _signature()
-    if signature is None and kind in ("counter", "close"):
-        sign = sign.split("\n")[0]  # mid-conversation: just the name, like a real chat
     pay = payment_phrase(lang, direction, payment_ask) if kind != "accept" else _agreed_payment(lang, agreed_payment)
     name = short_name(vendor_name)
     fields = dict(
         vendor=f" {name}" if name else "", item=item, qty=_qty(qty),
         unit=_UNIT[lang].get(unit, unit), qty_unit=_qty_unit(lang, unit, qty),
-        quote=money(quote), price=money(price), pay=pay, sign=sign)
+        quote=money(quote), price=money(price), pay=pay)
     if lang == "en" and kind in ("counter", "close") and variant > 0:
         # Later rounds are written from parts: an acknowledgement, a reason, then the ask.
         leads, asks = _LEADS[kind], _ASKS[(kind, direction)]
@@ -388,21 +361,16 @@ def our_message(
         text = " ".join([
             leads[variant % len(leads)], reasons[(variant - 1) % len(reasons)],
             asks[(variant // 2) % len(asks)].format(**fields)])
-        closing = _CLOSINGS[variant % len(_CLOSINGS)]
-        return _decorate(text + "\n\n" + closing + ",\n" + sign, answers, ask)
+        return _decorate(text, answers, ask)
     return _decorate(template.format(**fields), answers if kind != "open" else None, ask)
 
 
 def _decorate(text: str, answers: Optional[list[str]], ask: Optional[str]) -> str:
-    """Answers to the vendor's questions go first; a question of ours goes just before the sign-off."""
+    """Answers to the vendor's questions go first; a question of ours goes last."""
     if answers:
         text = " ".join(answers) + " " + text
     if ask:
-        if "\n\n" in text:
-            body, closing = text.rsplit("\n\n", 1)
-            text = body + " " + ask + "\n\n" + closing
-        else:
-            text = text + " " + ask
+        text = text + " " + ask
     return text
 
 

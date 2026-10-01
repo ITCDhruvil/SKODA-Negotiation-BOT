@@ -126,7 +126,7 @@ def test_every_template_renders_and_passes_the_guardrails(lang, direction, kind)
                                 item="Aluminium Turnings", qty=5000, unit="KG", quote=163, price=168,
                                 payment_ask="ZD15", agreed_payment="ZD30")
     assert "{" not in text and "}" not in text
-    assert "Dhruvil Patel" in text
+    assert "\n" not in text
     guardrails.check_message(text, offer_price=168, limit=165, target=170)
     for vk in ("counter", "firm", "accept"):
         vt = messages.vendor_message(vk, direction=direction, lang=lang, price=166, unit="KG", payment="ZD30")

@@ -24,6 +24,7 @@ const PATHS = {
   trend: "M3 17l6-6 4 4 8-8M15 7h6v6",
   chat: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
   check: "M5 12l5 5L20 7",
+  send: "M12 19V5M5 12l7-7 7 7",
   filter: "M3 5h18l-7 8v6l-4 2v-8z",
 } as const;
 

@@ -391,7 +391,7 @@ def test_money_edges():
 
 def test_english_units_pluralise_and_quantities_group_the_indian_way():
     kw = dict(direction="buy", lang="en", vendor_name="Acme Co", item="Bolts", unit="EA", quote=10,
-              price=9, signature="X")
+              price=9)
     assert "for 600 units of" in messages.our_message("open", qty=600, **kw)
     assert "for 1 unit of" in messages.our_message("open", qty=1, **kw)
     assert "for 12,345.50 units of" in messages.our_message("open", qty=12345.5, **kw)
@@ -412,31 +412,27 @@ def test_greeting_drops_honorifics_and_copes_with_an_empty_name():
 
 def test_hindi_and_marathi_sign_offs_after_thanks_and_marathi_phrasing():
     kw = dict(direction="buy", item="Bolts", qty=1, unit="EA", quote=10, price=9, vendor_name="Acme")
-    assert "\n\nसादर,\n" in messages.our_message("accept", lang="hi", **kw)
-    assert "\n\nकळावे,\n" in messages.our_message("accept", lang="mr", **kw)
+    for lang in ("hi", "mr"):
+        assert "\n" not in messages.our_message("accept", lang=lang, **kw)
     assert "या दरापर्यंत" in messages.our_message("counter", lang="mr", **kw)
     assert "ऑर्डर आजच निश्चित करू शकतो" in messages.our_message("close", lang="mr", **kw)
     assert "प्रतिसादाबद्दल" in messages.vendor_message("counter", direction="buy", lang="mr",
                                                          price=9, unit="EA")
 
 
-# --- C3 signature ----------------------------------------------------------------------------
+# --- C3 no email furniture ---------------------------------------------------------------------
 
-def test_signature_comes_from_configuration(monkeypatch):
-    monkeypatch.delenv("NEGOTIATION_SIGNATURE", raising=False)
-    assert messages.signature() == "Dhruvil Patel\nSKODA Auto VW India, Pune"
-    monkeypatch.setenv("NEGOTIATION_SIGNATURE", "Asha Rao\\nProcurement, Pune")
-    assert messages.signature() == "Asha Rao\nProcurement, Pune"
-    kw = dict(direction="buy", lang="en", vendor_name="Acme", item="Bolts", qty=1, unit="EA",
-              quote=10, price=9)
-    text = messages.our_message("open", **kw)
-    assert text.endswith("Asha Rao\nProcurement, Pune") and "Dhruvil" not in text
-    assert messages.our_message("open", signature="Given", **kw).endswith("Given")
-    monkeypatch.setenv("NEGOTIATION_SIGNATURE", "   ")
-    assert messages.signature().startswith("Dhruvil Patel")
+@pytest.mark.parametrize("lang", messages.LANGS)
+@pytest.mark.parametrize("direction", ["buy", "sell"])
+@pytest.mark.parametrize("kind", ["open", "counter", "close", "accept"])
+def test_messages_are_short_chat_text_without_salutations_or_signatures(lang, direction, kind):
+    for variant in range(4):
+        text = messages.our_message(kind, direction=direction, lang=lang, vendor_name="Acme", item="Bolts",
+                                    qty=10, unit="EA", quote=11, price=10, variant=variant)
+        assert "\n" not in text
+        for word in ("Regards", "Best regards", "Sincerely", "Dhruvil", "SKODA", "सादर", "कळावे"):
+            assert word not in text
 
-
-# --- C4 IST date -----------------------------------------------------------------------------
 
 def test_today_is_the_indian_calendar_date(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: datetime(2026, 9, 30, 20, 0, tzinfo=timezone.utc))
@@ -598,12 +594,7 @@ def test_every_wording_variant_passes_the_guardrails_and_names_no_software(direc
     assert len(texts) >= (1 if kind == "open" else 3)
 
 
-def test_mid_conversation_messages_carry_only_the_name_while_opening_and_closing_carry_the_full_signature():
-    kw = dict(direction="buy", lang="en", vendor_name="Acme", item="Bolts", qty=10, unit="EA", quote=11, price=10)
-    assert messages.our_message("counter", **kw).endswith("Dhruvil Patel")
-    assert messages.our_message("close", **kw).endswith("Dhruvil Patel")
-    assert messages.our_message("open", **kw).endswith("Pune")
-    assert messages.our_message("accept", **kw).endswith("Pune")
+def test_vendor_reply_variants_all_quote_the_price():
     for variant in range(3):
         v = messages.vendor_message("counter", direction="buy", lang="en", price=10, unit="EA", variant=variant)
         assert "per unit" in v

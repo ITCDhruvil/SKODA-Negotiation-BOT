@@ -98,7 +98,7 @@ def test_nothing_the_vendor_sees_reveals_software_or_internal_numbers(buy: Repo)
     for t in neg.turns(buy, s.id):
         if t.speaker == "us":
             guardrails.check_message(t.text, offer_price=t.price, limit=270, target=250)
-            assert "Dhruvil Patel" in t.text
+            assert "Regards" not in t.text and "\n" not in t.text
             assert "$" not in t.text
 
 

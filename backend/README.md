@@ -39,4 +39,3 @@ python scripts/seed.py
 - **Manual messages are priced offers.** Every message the buyer sends carries a price; there are no text-only questions yet. The price must be inside the limit and strictly better than the vendor's current price, and any number in the text must belong to the offer.
 - **After a hand-back.** To negotiate again, set the points again with `PUT /api/items/{id}/points` even if they are unchanged (that returns the item to `analyzed`), then start a new session. An item can instead be closed with `POST /api/items/{id}/close-without-deal`, which records no outcome.
 - **Restarts.** A restarted session starts again from the vendor's original quote; earlier concessions are not remembered.
-- **Signature.** The name at the foot of our messages comes from `NEGOTIATION_SIGNATURE` (see `.env.example`).

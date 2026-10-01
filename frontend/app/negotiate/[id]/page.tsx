@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatLog } from "@/components/negotiation/ChatLog";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
-import { QuestionBox } from "@/components/negotiation/QuestionBox";
+import { ChatComposer } from "@/components/negotiation/ChatComposer";
 import { Select } from "@/components/ui/Select";
 import { Button, DirectionBadge, Field, Panel, Pill, inputClass } from "@/components/ui/basics";
 import { Dialog } from "@/components/ui/Dialog";
@@ -107,48 +107,6 @@ function DraftCard({ s, onResult, onError }: { s: SessionView } & Handlers) {
   );
 }
 
-function Composer({ s, onResult, onError }: { s: SessionView } & Handlers) {
-  const [price, setPrice] = useState("");
-  const [payment, setPayment] = useState("");
-  const [text, setText] = useState("");
-  const [busy, setBusy] = useState(false);
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      onResult(await api.sendMessage(s.id, { price: Number(price), payment_code: payment || null, text: text || null }));
-      setPrice("");
-      setPayment("");
-      setText("");
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <form onSubmit={submit} className="grid gap-3 rounded-l border border-line bg-raise p-4">
-      <h3 className="text-sm font-bold text-ink">Your offer</h3>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Price per unit">
-          <input required className={`${inputClass} min-h-[44px]`} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
-        </Field>
-        <Field label="Payment terms (optional)">
-          <input className={`${inputClass} min-h-[44px]`} value={payment} onChange={(e) => setPayment(e.target.value)} placeholder="e.g. ZD45" />
-        </Field>
-      </div>
-      <Field label="Message (optional)" hint="Leave empty to use the standard wording in the vendor's language.">
-        <textarea className={inputClass} rows={3} value={text} onChange={(e) => setText(e.target.value)} />
-      </Field>
-      <div>
-        <Button type="submit" variant="primary" disabled={busy || price.trim() === ""}>
-          Send offer
-        </Button>
-      </div>
-    </form>
-  );
-}
-
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-line2 py-2 last:border-0">
@@ -167,6 +125,11 @@ function Workspace({ initial }: { initial: SessionView }) {
   const [reason, setReason] = useState("");
   const [accepted, setAccepted] = useState(false);
   const stop = useRef(false);
+  const scroller = useRef<HTMLDivElement>(null);
+  // Keep the newest message in view.
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
+  }, [s.turns.length, typing]);
 
   const apply = useCallback((next: SessionView) => {
     setError(null);
@@ -253,18 +216,13 @@ function Workspace({ initial }: { initial: SessionView }) {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Panel
           title="Conversation"
-          subtitle={autoOn ? "Running automatically." : undefined}
-          actions={
-            autoOn ? (
-              <Button variant="danger" size="sm" disabled={busy} onClick={() => changeMode("manual")}>
-                Stop &amp; take over
-              </Button>
-            ) : undefined
-          }
+          subtitle={autoOn ? "Running automatically. Press stop to take over." : undefined}
         >
           <div className="grid gap-4">
             {error && <Notice tone="red">{error}</Notice>}
-            <ChatLog turns={s.turns} typing={typing} vendorName={s.vendor_name} />
+            <div ref={scroller} className="max-h-[55vh] min-h-[16rem] overflow-y-auto pr-1">
+              <ChatLog turns={s.turns} typing={typing} vendorName={s.vendor_name} />
+            </div>
 
             {s.status === "active" && s.pending_draft && <DraftCard s={s} onResult={apply} onError={setError} />}
 
@@ -276,11 +234,16 @@ function Workspace({ initial }: { initial: SessionView }) {
               </div>
             )}
 
-            {s.status === "active" && s.mode === "manual" && s.actions.can_send && (
-              <Composer s={s} onResult={apply} onError={setError} />
+            {s.status === "active" && (
+              <ChatComposer
+                session={s}
+                running={autoOn}
+                busy={busy}
+                onStop={() => changeMode("manual")}
+                onResult={apply}
+                onError={setError}
+              />
             )}
-
-            {s.status === "active" && <QuestionBox sessionId={s.id} onResult={apply} onError={setError} />}
 
             {s.status === "agreed" && (
               <div className="rounded-l border border-transparent bg-ok-soft p-4 text-sm text-ok" role="status">
