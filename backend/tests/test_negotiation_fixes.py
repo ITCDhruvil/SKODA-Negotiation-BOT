@@ -582,3 +582,30 @@ def test_templates_naming_a_quote_equal_to_the_limit_pass(lang, direction, kind)
         with pytest.raises(guardrails.GuardrailError):   # without that number allowed it is a leak
             guardrails.check_message(text, offer_price=260, limit=270, target=250,
                                      allowed_numbers=[600, 45])
+
+
+# --- wording variants ------------------------------------------------------------------------
+
+@pytest.mark.parametrize("direction", ["buy", "sell"])
+@pytest.mark.parametrize("kind", ["open", "counter", "close", "accept"])
+def test_every_wording_variant_passes_the_guardrails_and_names_no_software(direction, kind):
+    texts = set()
+    for variant in range(6):
+        text = messages.our_message(kind, direction=direction, lang="en", vendor_name="Acme", item="Bolts",
+                                    qty=10, unit="EA", quote=11, price=10, payment_ask="ZD45",
+                                    agreed_payment="ZD45", variant=variant)
+        guardrails.check_message(text, offer_price=10, limit=12, target=9, allowed_numbers=[10, 11, 45],
+                                 mask=("Acme", "Bolts"))
+        texts.add(text)
+    assert len(texts) == (1 if kind == "open" else 3)
+
+
+def test_mid_conversation_messages_carry_only_the_name_while_opening_and_closing_carry_the_full_signature():
+    kw = dict(direction="buy", lang="en", vendor_name="Acme", item="Bolts", qty=10, unit="EA", quote=11, price=10)
+    assert messages.our_message("counter", **kw).endswith("Dhruvil Patel")
+    assert messages.our_message("close", **kw).endswith("Dhruvil Patel")
+    assert messages.our_message("open", **kw).endswith("Pune")
+    assert messages.our_message("accept", **kw).endswith("Pune")
+    for variant in range(3):
+        v = messages.vendor_message("counter", direction="buy", lang="en", price=10, unit="EA", variant=variant)
+        assert "per unit" in v

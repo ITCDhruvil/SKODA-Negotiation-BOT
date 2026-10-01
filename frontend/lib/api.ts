@@ -136,5 +136,6 @@ export const api = {
   acceptDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/accept-deal`),
   closeWithoutDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/close-without-deal`),
   approveEvent: (eventId: string) => post<EventDetail>(`/api/events/${eventId}/approve`),
+  exportUrl: (eventId: string) => `${API_BASE}/api/events/${eventId}/export`,
   reset: () => post<S["ResetResult"]>("/api/admin/reset"),
 };

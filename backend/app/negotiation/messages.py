@@ -213,6 +213,67 @@ _VENDOR: dict[tuple[str, str, str], str] = {
     ("accept", "sell", "mr"): "ठीक आहे, {price} प्रति {unit} मान्य आहे.{pay} या अटींवर आम्ही माल उचलू.",
 }
 
+# Extra English wordings so a long conversation does not repeat itself. Variant 0 is the main
+# template above; callers pass the round number so the choice is repeatable.
+_OURS_ALT: dict[tuple[str, str], list[str]] = {
+    ("counter", "buy"): [
+        "Appreciate the quick reply. Could you stretch to {price} per {unit}?{pay} That would help us "
+        "a lot.\n\nThanks,\n{sign}",
+        "Understood. From our side {price} per {unit} is where we can get to.{pay} Let me know if that "
+        "works.\n\nBest regards,\n{sign}",
+    ],
+    ("close", "buy"): [
+        "I do see your point. If {price} per {unit} is possible, I can confirm the order right away."
+        "{pay}\n\nThanks,\n{sign}",
+        "We would like to finalise this with you. At {price} per {unit} we can proceed today.{pay}"
+        "\n\nBest regards,\n{sign}",
+    ],
+    ("accept", "buy"): [
+        "Good, {price} per {unit} it is.{pay} Thanks for being flexible.\n\nThanks,\n{sign}",
+        "That works for us, {price} per {unit}.{pay} Glad we could close this.\n\nBest regards,\n{sign}",
+    ],
+    ("counter", "sell"): [
+        "Thanks for getting back. We can do {price} per {unit}.{pay} Please let me know.\n\nThanks,\n{sign}",
+        "Understood. For the material on offer, {price} per {unit} is where we can settle.{pay}"
+        "\n\nBest regards,\n{sign}",
+    ],
+    ("close", "sell"): [
+        "If you can match {price} per {unit}, we can give you the lot this week.{pay}\n\nThanks,\n{sign}",
+        "We would like to close this with you. At {price} per {unit} we can proceed right away.{pay}"
+        "\n\nBest regards,\n{sign}",
+    ],
+    ("accept", "sell"): [
+        "Good, {price} per {unit} it is.{pay} Thanks for your flexibility.\n\nThanks,\n{sign}",
+        "That works, {price} per {unit}.{pay} Glad we could agree.\n\nBest regards,\n{sign}",
+    ],
+}
+_VENDOR_ALT: dict[tuple[str, str], list[str]] = {
+    ("counter", "buy"): [
+        "Okay, let me see what I can do. {price} per {unit} is possible.",
+        "I can come down a little, to {price} per {unit}.",
+    ],
+    ("firm", "buy"): [
+        "Sorry, there is not much room left. {price} per {unit} is my last price.",
+        "I have already stretched a lot. {price} per {unit} is final from my side.",
+    ],
+    ("accept", "buy"): [
+        "Fine, {price} per {unit} is okay.{pay} Please send the order on these terms.",
+        "Okay, we have a deal at {price} per {unit}.{pay} I will wait for the order.",
+    ],
+    ("counter", "sell"): [
+        "Okay, I can go up to {price} per {unit}.",
+        "Let me improve it a little, {price} per {unit}.",
+    ],
+    ("firm", "sell"): [
+        "Sorry, {price} per {unit} is the best I can offer. That is final.",
+        "I cannot go beyond {price} per {unit}. My final bid.",
+    ],
+    ("accept", "sell"): [
+        "Fine, {price} per {unit} is okay.{pay} I will arrange the pickup.",
+        "Okay, deal at {price} per {unit}.{pay} Tell me when we can lift the material.",
+    ],
+}
+
 
 _HONORIFICS = {"m/s", "mr", "mr.", "shree", "sri", "the"}
 
@@ -228,24 +289,34 @@ def short_name(vendor_name: str) -> str:
 def our_message(
     kind: str, *, direction: str, lang: str, vendor_name: str, item: str, qty: float, unit: str,
     quote: float, price: float, payment_ask: Optional[str] = None, agreed_payment: Optional[str] = None,
-    signature: Optional[str] = None,
+    signature: Optional[str] = None, variant: int = 0,
 ) -> str:
     """The text we send. `quote` is the vendor's current price; `price` is what we propose."""
     template = _OURS[(kind, direction, lang)]
+    alts = _OURS_ALT.get((kind, direction), []) if lang == "en" else []
+    if alts and variant % (len(alts) + 1):
+        template = alts[variant % (len(alts) + 1) - 1]
+    sign = signature if signature is not None else _signature()
+    if signature is None and kind in ("counter", "close"):
+        sign = sign.split("\n")[0]  # mid-conversation: just the name, like a real chat
     pay = payment_phrase(lang, direction, payment_ask) if kind != "accept" else _agreed_payment(lang, agreed_payment)
     name = short_name(vendor_name)
     return template.format(
         vendor=f" {name}" if name else "", item=item, qty=_qty(qty),
         unit=_UNIT[lang].get(unit, unit), qty_unit=_qty_unit(lang, unit, qty),
         quote=money(quote), price=money(price), pay=pay,
-        sign=signature if signature is not None else _signature())
+        sign=sign)
 
 
 def vendor_message(
     kind: str, *, direction: str, lang: str, price: float, unit: str, payment: Optional[str] = None,
+    variant: int = 0,
 ) -> str:
     """The simulated vendor's reply text."""
     template = _VENDOR[(kind, direction, lang)]
+    alts = _VENDOR_ALT.get((kind, direction), []) if lang == "en" else []
+    if alts and variant % (len(alts) + 1):
+        template = alts[variant % (len(alts) + 1) - 1]
     return template.format(
         price=money(price), unit=_UNIT[lang].get(unit, unit),
         pay=_agreed_payment(lang, payment) if payment else "")

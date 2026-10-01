@@ -97,7 +97,7 @@ def _our_text(kind: str, s: Session, item: Item, event: Event, vendor_name: str,
     return messages.our_message(
         kind, direction=event.direction, lang=s.language, vendor_name=vendor_name,
         item=item.description, qty=item.qty, unit=item.unit, quote=s.vendor_offer, price=price,
-        payment_ask=payment_ask, agreed_payment=agreed_payment)
+        payment_ask=payment_ask, agreed_payment=agreed_payment, variant=s.round)
 
 
 def vendor_name(repo: Repo, vendor_id: str) -> str:
@@ -224,7 +224,7 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
     changed_payment = reply.payment if reply.payment != s.vendor_payment else None
     _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
-        unit=item.unit, payment=changed_payment), reply.price, reply.payment)
+        unit=item.unit, payment=changed_payment, variant=s.round), reply.price, reply.payment)
     s = s.model_copy(update={
         "our_offer": price, "our_payment": payment, "round": s.round + 1,
         "previous_vendor_offer": s.vendor_offer, "vendor_offer": reply.price,

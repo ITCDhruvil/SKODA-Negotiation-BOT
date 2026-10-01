@@ -77,7 +77,7 @@ export function PointsPanel({
   };
 
   return (
-    <Panel title="Negotiation points" subtitle="You set the targets. The bot never goes beyond your limit.">
+    <Panel title="Negotiation points" subtitle="You set the targets. No offer ever goes beyond your limit.">
       <div className="grid gap-4">
         {!item.points_set && (
           <Notice tone="info">

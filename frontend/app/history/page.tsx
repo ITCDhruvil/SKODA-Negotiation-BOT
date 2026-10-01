@@ -57,7 +57,7 @@ export default function HistoryPage() {
 
   return (
     <>
-      <PageHeader title="History" subtitle="Closed deals from the last eighteen months. The bot may only cite figures found here." />
+      <PageHeader title="History" subtitle="Closed deals from the last eighteen months. Negotiation messages may only cite figures found here." />
       <Panel flush>
         <div className="flex flex-wrap items-center gap-3 px-5 pb-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search item…" aria-label="Search history" className={`${inputClass} max-w-sm`} />

@@ -34,7 +34,7 @@ function Sidebar({ pathname, onNavigate }: { pathname: string; onNavigate: () =>
           NB
         </span>
         <div>
-          <b className="block text-base text-white">Negotiation Bot</b>
+          <b className="block text-base text-white">Negotiation Desk</b>
           <span className="block text-[11.5px] text-side-m">SKODA Auto VW India · POC</span>
         </div>
       </div>

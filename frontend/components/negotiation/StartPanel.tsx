@@ -62,7 +62,7 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
           ))}
         </select>
       </Field>
-      <Field label="How much should the assistant do?">
+      <Field label="Who sends the messages?">
         <ModeSelect id="start-mode" value={mode} onChange={setMode} />
       </Field>
       {mode === "auto" && <Notice tone="amber">{MODE_LABEL.auto}: {MODE_HINT.auto}</Notice>}

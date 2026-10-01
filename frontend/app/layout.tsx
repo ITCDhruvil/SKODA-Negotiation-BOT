@@ -5,7 +5,7 @@ import { Providers } from "@/lib/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Negotiation Bot",
+  title: "Negotiation Desk",
   description: "Buyer workspace for BUY and SELL negotiation events (POC)",
 };
 

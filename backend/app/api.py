@@ -7,10 +7,10 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import lifecycle, readmodel, services, simulate
+from app import export, lifecycle, readmodel, services, simulate
 from app import schemas as sch
 from app.models import Dataset, Direction, Mode, Objective
 from app.negotiation import service as neg
@@ -306,5 +306,12 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         neg.approve_event(repo, event_id)
         s = snap()
         return readmodel.event_detail(s, s.event_by_id[event_id])
+
+    @app.get("/api/events/{event_id}/export", response_class=Response,
+             responses={200: {"content": {"text/csv": {}}}})
+    def export_event(event_id: str):
+        name, text = export.export_event(snap(), event_id)
+        return Response(text.encode("utf-8"), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
     return app

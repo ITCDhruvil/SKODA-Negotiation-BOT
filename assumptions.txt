@@ -279,3 +279,15 @@ Append new points at the bottom. Format: number, statement, reason.
 
 93. In full auto the browser calls the advance route once per round with a short pause and a typing indicator. Switching mode, any error or a status change stops the loop. The pause is cosmetic and is not a backend delay.
     Reason: keeps the backend stateless between calls and gives the buyer a stop control.
+
+94. Shopping Cart template export (closed BUY events): one row per closed item. Supplier is the vendor's SAP number, Gross Price/Unit the final price, Delivery Date the closing date plus the item's delivery days, Incoterm Location "SAVWIPL", Product Category the leading code of the event category, Currency INR. Tax Code 5L and HSN/SAC 9983 are filled only for service items (taken from the sample template); every other column with no source is left blank. Items closed without a deal are not exported.
+    Reason: the input data has no tax or invoice fields; blank is safer than invented values.
+
+95. "Best Bid (considering all line items)" is written as 1 (assumption 44 still unconfirmed). The Internal Note column records "Negotiated from X to Y" or "Best quote accepted as it stood".
+    Reason: the sample value 10 has no known meaning.
+
+96. Closed SELL events export a deal summary (event, item, buyer, quantity, original bid, final price, uplift, payment terms, closed date). Export is refused with a clear message until the event is closed.
+    Reason: no SAP template exists for scrap sales.
+
+97. To read like a person, our English messages rotate through a few wordings by round number, and only the opening and the final acceptance carry the full signature block; mid-conversation messages end with the name only. The interface says "Negotiation Desk" and never calls the sender a bot or assistant. The delay before a vendor reply is a short random pause in the browser.
+    Reason: the counterparty must never be able to tell it is software, and repeated identical wording would give it away.

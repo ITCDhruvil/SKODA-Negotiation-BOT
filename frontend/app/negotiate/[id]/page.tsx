@@ -12,7 +12,8 @@ import { ApiError, api, type DraftView, type Mode, type SessionView } from "@/li
 import { money, num } from "@/lib/format";
 import { deltaLabel, limitLabel } from "@/lib/labels";
 
-const STEP_DELAY_MS = 1400;
+// Replies arrive after a short, uneven pause, the way a person would write back.
+const stepDelay = () => 1400 + Math.floor(Math.random() * 1600);
 
 function useSession(id: string) {
   const [session, setSession] = useState<SessionView | null>(null);
@@ -187,7 +188,7 @@ function Workspace({ initial }: { initial: SessionView }) {
       } finally {
         if (!cancelled) setTyping(null);
       }
-    }, STEP_DELAY_MS);
+    }, stepDelay());
     return () => {
       cancelled = true;
       clearTimeout(t);
@@ -314,7 +315,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             {s.status === "handed_back" && (
               <div className="rounded-l border border-transparent bg-red-soft p-4 text-sm text-red" role="status">
                 <p className="font-bold">Handed back to you</p>
-                <p className="mt-1">{s.handback_reason ?? "The assistant could not reach an acceptable deal."}</p>
+                <p className="mt-1">{s.handback_reason ?? "No acceptable deal could be reached within your limits."}</p>
                 <div className="mt-3">
                   <Link href={`/items/${s.item_id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink">
                     Back to item

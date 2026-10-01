@@ -33,8 +33,6 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
             <div className={`max-w-[85%] rounded-l px-4 py-3 text-sm ${ours ? "rounded-br-s bg-brand-soft text-ink" : "rounded-bl-s border border-line bg-raise text-ink"}`}>
               <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span className="font-semibold">{ours ? "You" : vendorName}</span>
-                {ours && t.author === "bot" && <span className="rounded-full bg-panel px-2 py-0.5">drafted for you</span>}
-                {ours && t.author === "human" && <span className="rounded-full bg-panel px-2 py-0.5">written by you</span>}
                 <span>{time(t.at)}</span>
               </div>
               <p className="whitespace-pre-wrap break-words">{t.text}</p>

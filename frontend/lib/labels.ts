@@ -93,7 +93,7 @@ export const MODE_LABEL: Record<"auto" | "approve" | "manual", string> = {
 };
 
 export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
-  auto: "The assistant runs the whole conversation. You can stop and take over at any time.",
-  approve: "The assistant drafts each message; you review, edit and send it.",
+  auto: "Messages go out on their own, round by round. You can stop and take over at any time.",
+  approve: "Each message is drafted for you; you review, edit and send it.",
   manual: "You write every message yourself.",
 };
