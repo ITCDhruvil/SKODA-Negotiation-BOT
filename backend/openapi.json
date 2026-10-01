@@ -280,6 +280,85 @@
     }
    }
   },
+  "/api/vendor-suggestions": {
+   "get": {
+    "summary": "Vendor Suggestions",
+    "operationId": "vendor_suggestions_api_vendor_suggestions_get",
+    "parameters": [
+     {
+      "name": "direction",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "enum": [
+        "buy",
+        "sell"
+       ],
+       "type": "string",
+       "title": "Direction"
+      }
+     },
+     {
+      "name": "category_key",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Category Key"
+      }
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "default": [],
+       "title": "Q"
+      }
+     },
+     {
+      "name": "category_label",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Category Label"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/events/simulate": {
    "post": {
     "summary": "Simulate Event",
@@ -3715,6 +3794,18 @@
      "category_key": {
       "type": "string",
       "title": "Category Key"
+     },
+     "category_label": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 60
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category Label"
      },
      "company_id": {
       "type": "string",

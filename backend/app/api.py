@@ -158,8 +158,9 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         return new_event.options(repo)
 
     @app.get("/api/vendor-suggestions")
-    def vendor_suggestions(direction: Direction, category_key: str, q: list[str] = Query(default=[])):
-        return new_event.suggest_vendors(repo, direction, category_key, q)
+    def vendor_suggestions(direction: Direction, category_key: str, q: list[str] = Query(default=[]),
+                           category_label: Optional[str] = None):
+        return new_event.suggest_vendors(repo, direction, category_key, q, category_label)
 
     @app.post("/api/events", response_model=sch.EventDetail)
     def add_event(body: new_event.NewEvent):

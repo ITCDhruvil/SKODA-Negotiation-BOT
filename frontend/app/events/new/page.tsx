@@ -68,7 +68,21 @@ function Form({ options }: { options: EventOptions }) {
   const [direction, setDirection] = useState<Direction>(params.get("type") === "sell" ? "sell" : "buy");
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
-  const cats = useMemo(() => options.categories.filter((c) => c.direction === direction), [options, direction]);
+  const [customCats, setCustomCats] = useState<EventOptions["categories"]>([]);
+  const cats = useMemo(() => [...options.categories.filter((c) => c.direction === direction), ...customCats.filter((c) => c.direction === direction)], [options, direction, customCats]);
+  // The vendors a typed-in category can invite: every vendor already listed for that kind of event.
+  const everyVendor = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; rating: number }>();
+    options.categories.filter((c) => c.direction === direction).forEach((c) => c.vendors.forEach((v) => seen.set(v.id, v)));
+    return [...seen.values()].sort((a, b) => a.id.localeCompare(b.id));
+  }, [options, direction]);
+  const addCategory = (label: string) => {
+    const key = `custom:${label}`;
+    if (!cats.some((c) => c.key === key)) {
+      setCustomCats((rows) => [...rows, { key, label: direction === "sell" ? `Scrap - ${label}` : `Custom - ${label}`, direction, kind: direction === "sell" ? "scrap" : "goods", samples: [], vendors: everyVendor }]);
+    }
+    setCategoryKey(key);
+  };
   const orgs = useMemo(() => options.organisations.filter((o) => o.direction === direction), [options, direction]);
   const [categoryKey, setCategoryKey] = useState("");
   const [orgIdx, setOrgIdx] = useState("0");
@@ -88,7 +102,7 @@ function Form({ options }: { options: EventOptions }) {
 
   // A new type starts the form over with that type's defaults.
   useEffect(() => {
-    setCategoryKey(cats[0]?.key ?? "");
+    setCategoryKey(options.categories.find((c) => c.direction === direction)?.key ?? "");
     setOrgIdx("0");
     setItems([blankItem(direction)]);
     setPicked([]);
@@ -96,7 +110,7 @@ function Form({ options }: { options: EventOptions }) {
     setAttempted(false);
     setCustomised(false);
     setSuggestions(null);
-  }, [direction, cats]);
+  }, [direction, options]);
   const org = orgs[Number(orgIdx)] ?? orgs[0];
   useEffect(() => setCostCentre(org?.cost_centre ?? ""), [org]);
   const category = cats.find((c) => c.key === categoryKey);
@@ -112,7 +126,7 @@ function Form({ options }: { options: EventOptions }) {
     if (!categoryKey) return;
     let live = true;
     api
-      .vendorSuggestions(direction, categoryKey, items.map((i) => i.description))
+      .vendorSuggestions(direction, categoryKey.startsWith("custom:") ? "custom" : categoryKey, items.map((i) => i.description), categoryKey.startsWith("custom:") ? categoryKey.slice(7) : undefined)
       .then((r) => {
         if (!live) return;
         setSuggestions(r);
@@ -160,7 +174,7 @@ function Form({ options }: { options: EventOptions }) {
 
   // Fill the whole form with a believable example and jump to the review.
   const autoFill = () => {
-    const cat = pickOne(cats);
+    const cat = pickOne(cats.filter((c) => c.samples.length > 0));
     if (!cat) return;
     const orgChoice = Math.floor(Math.random() * Math.max(orgs.length, 1));
     const chosen = direction === "buy" ? shuffled(cat.samples).slice(0, Math.min(cat.samples.length, 1 + Math.floor(Math.random() * 3))) : [pickOne(cat.samples)];
@@ -192,7 +206,8 @@ function Form({ options }: { options: EventOptions }) {
     const body: NewEvent = {
       direction,
       title: title.trim() || null,
-      category_key: category.key,
+      category_key: category.key.startsWith("custom:") ? "custom" : category.key,
+      category_label: category.key.startsWith("custom:") ? category.key.slice(7) : null,
       company_id: org.company_id,
       company: org.company,
       plant: org.plant,
@@ -279,7 +294,7 @@ function Form({ options }: { options: EventOptions }) {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Labeled label="Category" required>
-                    <Select value={categoryKey} onChange={setCategoryKey} ariaLabel="Category" options={cats.map((c) => ({ value: c.key, label: c.label }))} />
+                    <Select value={categoryKey} onChange={setCategoryKey} ariaLabel="Category" scroll={false} addLabel="Add category" onAdd={addCategory} options={cats.map((c) => ({ value: c.key, label: c.label }))} />
                   </Labeled>
                   <Labeled label="Event title" hint="Optional. Left empty, the first item names the event.">
                     <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder={eventTitle || "For example, Training lunch for batch 12"} />
@@ -525,7 +540,7 @@ function Form({ options }: { options: EventOptions }) {
             <div className="mb-2 truncate text-base font-extrabold text-ink">{eventTitle || "Untitled event"}</div>
             <ul className="grid gap-1.5 text-sm">
               {summary.map(([k, v, done]) => (
-                <li key={k} className="flex items-center gap-2">
+                <li key={k} className="flex items-center gap-2 border-b border-line2 pb-1.5 last:border-0 last:pb-0">
                   <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full ${done ? "bg-ok text-white" : "border border-line text-transparent"}`} aria-hidden="true">
                     <Icon name="check" size={10} />
                   </span>

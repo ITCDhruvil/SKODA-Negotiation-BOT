@@ -7,6 +7,7 @@ the buyer "collects" later, exactly as for the seeded events.
 from __future__ import annotations
 
 import random
+import re
 from datetime import date, timedelta
 from typing import Optional
 
@@ -49,7 +50,8 @@ class NewEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
     direction: Direction
     title: Optional[str] = Field(default=None, max_length=120)
-    category_key: str
+    category_key: str  # a key from the options, or "custom" together with category_label
+    category_label: Optional[str] = Field(default=None, max_length=60)
     company_id: str
     company: str
     plant: str
@@ -107,7 +109,32 @@ def options(repo: Repo) -> dict:
 RECOMMENDED = 5  # how many vendors are suggested by default
 
 
-def suggest_vendors(repo: Repo, direction: str, category_key: str, descriptions: list[str]) -> list[dict]:
+def custom_category(repo: Repo, direction: str, label: str) -> dict:
+    """A category the buyer typed in. With no history behind it, every vendor of the right kind can be invited."""
+    label = " ".join((label or "").split())
+    if len(label) < 2:
+        raise Conflict("give the new category a name")
+    slug = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_") or "other"
+    kind = "supplier" if direction == "buy" else "scrap_buyer"
+    pool_ = sorted((v for v in repo.fetch("vendor") if v.type == kind), key=lambda v: v.id)
+    return {
+        "key": f"custom_{slug}", "label": f"Scrap - {label}" if direction == "sell" else f"Custom - {label}",
+        "direction": direction, "kind": "scrap" if direction == "sell" else "goods", "samples": [],
+        "vendors": [{"id": v.id, "name": v.name, "rating": v.rating, "language": "en"} for v in pool_],
+    }
+
+
+def _category(repo: Repo, direction: str, key: str, label: Optional[str]) -> dict:
+    if key == "custom":
+        return custom_category(repo, direction, label or "")
+    found = next((c for c in options(repo)["categories"] if c["key"] == key and c["direction"] == direction), None)
+    if found is None:
+        raise Conflict("choose a category that matches the event type")
+    return found
+
+
+def suggest_vendors(repo: Repo, direction: str, category_key: str, descriptions: list[str],
+                    category_label: Optional[str] = None) -> list[dict]:
     """Rank the vendors of a category for a request, best first, each with the reasons it was suggested.
 
     A vendor scores for its rating, how much it has done with us, past deals on the same items or the same
@@ -115,9 +142,8 @@ def suggest_vendors(repo: Repo, direction: str, category_key: str, descriptions:
     """
     from app import readmodel
 
-    category = next((c for c in options(repo)["categories"] if c["key"] == category_key and c["direction"] == direction), None)
-    if category is None:
-        raise Conflict("choose a category that matches the event type")
+    category = _category(repo, direction, category_key, category_label)
+    category_key = category["key"]
     vendors = {v.id: v for v in repo.fetch("vendor")}
     history = repo.fetch("history")
     wanted = [d.strip().lower() for d in descriptions if d and d.strip()]
@@ -164,10 +190,8 @@ def create_event(repo: Repo, body: NewEvent) -> str:
     chosen = [v for v in vendors if v.id in set(body.vendor_ids)]
     if len(chosen) != len(set(body.vendor_ids)):
         raise Conflict("one of the selected vendors does not exist")
-    category = next((c for c in options(repo)["categories"] if c["key"] == body.category_key
-                     and c["direction"] == body.direction), None)
-    if category is None:
-        raise Conflict("choose a category that matches the event type")
+    category = _category(repo, body.direction, body.category_key, body.category_label)
+    category_key = category["key"]
     allowed = {v["id"] for v in category["vendors"]}
     if not set(body.vendor_ids) <= allowed:
         raise Conflict("every invited vendor must deal in the chosen category")
@@ -190,17 +214,19 @@ def create_event(repo: Repo, body: NewEvent) -> str:
         id=event_id, type="shopping_cart" if body.direction == "buy" else "scrap_sale", direction=body.direction,
         title=title, company_id=body.company_id, company=body.company, plant=body.plant,
         purch_org=body.purch_org, purch_group=body.purch_group,
-        category=category["label"], category_key=body.category_key, requestor=body.requestor.strip().upper(),
+        category=category["label"], category_key=category_key, requestor=body.requestor.strip().upper(),
         cost_centre=body.cost_centre.strip(), created=today, approval_date=today, due=body.due,
         source_cart_no=((body.source_cart_no or "").strip() or (f"10124{n:05d}" if body.direction == "buy" else None)),
         hero=False, acceptable=False, no_deal=False, stage="draft",
     )
     acc = Accumulator()
     acc.events.append(event)
+    if body.category_key == "custom":  # the vendor pool is chosen by hand, so the copies used to build bids carry the key
+        chosen = [v.model_copy(update={"categories": [*v.categories, category_key]}) for v in chosen]
     kind_default = category["kind"]
     for idx, it in enumerate(body.items, start=1):
         kind = "scrap" if body.direction == "sell" else (
-            "service" if it.unit == "AU" or body.category_key in _SERVICE_CODES else kind_default)
+            "service" if it.unit == "AU" or category_key in _SERVICE_CODES else kind_default)
         _add_item(rng, chosen, event, idx, len(body.items), desc=it.description, kind=kind, qty=float(it.qty),
                   unit=it.unit, ref=float(it.reference_price),
                   incoterm=it.incoterm or ("EXW" if body.direction == "sell" else "FH"),

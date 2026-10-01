@@ -93,3 +93,19 @@ def test_a_vendor_known_to_be_hard_ranks_lower_than_an_equal_flexible_one(client
             assert any("Hard to crack" in r for r in bad["reasons"]) or bad["toughness"] != "hard"
             return
     pytest.skip("no category with a hard vendor")
+
+
+@pytest.mark.parametrize("direction", ["buy", "sell"])
+def test_a_category_typed_by_the_buyer_works_with_any_vendor_of_the_right_kind(client, direction):
+    body = payload(client, direction)
+    sugg = client.get("/api/vendor-suggestions", params={"direction": direction, "category_key": "custom", "category_label": "Safety Gear"})
+    assert sugg.status_code == 200 and len(sugg.json()) >= 10
+    ids = [x["id"] for x in sugg.json()][:4]
+    body.update({"category_key": "custom", "category_label": "Safety Gear", "vendor_ids": ids})
+    r = client.post("/api/events", json=body)
+    assert r.status_code == 200, r.text
+    ev = r.json()["event"]
+    assert "Safety Gear" in ev["category"]
+    item = r.json()["items"][0]["id"]
+    assert len(client.get(f"/api/items/{item}").json()["invitees"]) >= 3
+    assert client.post("/api/events", json={**body, "category_label": " "}).status_code == 409

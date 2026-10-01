@@ -125,11 +125,12 @@ export const api = {
       `/api/events${qs({ q: p.q, direction: p.direction, status: p.status, category_key: p.category_key, date_from: p.from, date_to: p.to })}`,
     ),
   event: (id: string) => request<EventDetail>(`/api/events/${id}`),
-  vendorSuggestions: (direction: Direction, categoryKey: string, descriptions: string[]) =>
+  vendorSuggestions: (direction: Direction, categoryKey: string, descriptions: string[], categoryLabel?: string) =>
     request<VendorSuggestion[]>(
       `/api/vendor-suggestions?${new URLSearchParams([
         ["direction", direction],
         ["category_key", categoryKey],
+        ...(categoryLabel ? [["category_label", categoryLabel] as [string, string]] : []),
         ...descriptions.filter((d) => d.trim()).map((d) => ["q", d.trim()] as [string, string]),
       ])}`,
     ),

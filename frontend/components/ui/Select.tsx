@@ -41,6 +41,9 @@ export function Select<V extends string = string>({
   compact = false,
   id,
   placement = "bottom",
+  addLabel,
+  onAdd,
+  scroll = true,
 }: {
   value: V;
   onChange: (value: V) => void;
@@ -52,6 +55,11 @@ export function Select<V extends string = string>({
   id?: string;
   /** Open the list above the field (for controls at the bottom of the page). */
   placement?: "bottom" | "top";
+  /** A last row, for example "Add category": it turns into a text box in place; Enter or the arrow button adds it. */
+  addLabel?: string;
+  onAdd?: (text: string) => void;
+  /** Set false to show every option without a scroll bar. */
+  scroll?: boolean;
 }) {
   const uid = useId();
   const listId = `${uid}-list`;
@@ -60,6 +68,16 @@ export function Select<V extends string = string>({
   const [open, setOpen] = useState(false);
   const selected = Math.max(0, options.findIndex((o) => o.value === value));
   const [active, setActive] = useState(selected);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const submitAdd = () => {
+    const text = draft.trim();
+    if (text.length < 2) return;
+    onAdd?.(text);
+    setAdding(false);
+    setDraft("");
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -166,7 +184,7 @@ export function Select<V extends string = string>({
           id={listId}
           role="listbox"
           aria-label={ariaLabel}
-          className={`absolute left-0 z-40 max-h-64 w-full overflow-auto rounded-m border border-line bg-panel py-1 shadow-card ${placement === "top" ? "bottom-full mb-1" : "mt-1"}`}
+          className={`absolute left-0 z-40 w-full rounded-m border border-line bg-panel py-1 shadow-card ${scroll ? "max-h-64 overflow-auto" : ""} ${placement === "top" ? "bottom-full mb-1" : "mt-1"}`}
         >
           {options.map((o, i) => {
             const isSel = i === selected;
@@ -194,6 +212,40 @@ export function Select<V extends string = string>({
               </li>
             );
           })}
+          {onAdd && (
+            <li role="presentation" className="border-t border-line2">
+              {adding ? (
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <input
+                    autoFocus
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        submitAdd();
+                      } else if (e.key === "Escape") {
+                        setAdding(false);
+                        setDraft("");
+                      }
+                    }}
+                    maxLength={60}
+                    placeholder="Name the new one"
+                    aria-label={addLabel ?? "Add"}
+                    className="min-w-0 flex-1 rounded-m border border-brand bg-panel px-3 py-2 text-sm text-ink outline-none placeholder:text-muted"
+                  />
+                  <button type="button" aria-label="Add" title="Add" disabled={draft.trim().length < 2} onClick={submitAdd} className="grid h-9 w-9 shrink-0 place-items-center rounded-m bg-brand text-on-brand disabled:opacity-40">
+                    <Icon name="enter" size={16} />
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setAdding(true)} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-semibold text-brand hover:bg-raise">
+                  <Icon name="plus" size={14} /> {addLabel ?? "Add"}
+                </button>
+              )}
+            </li>
+          )}
         </ul>
       )}
     </div>
