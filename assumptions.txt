@@ -339,3 +339,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 113. The workspace has a Strategy panel (round of 12, phase, the vendor's observed stance, the history note, the next-best quote and the tactics used) and each of our messages carries a small tactic tag for the buyer only. Steering buttons (be firmer, offer terms) were left out; the manual message bar covers them.
     Reason: show the thinking without adding more controls.
+
+114. The Add event form is grouped into sections with required markers, inline messages shown after the first attempt to continue, a calendar date picker with quick choices (in a week, two weeks, a month), suggested requestors, an items grid with one header row, searchable vendor cards, and a live "Your event" summary beside it. "Auto fill example" fills every step with a believable example for the chosen type (random category, plant, requestor, a date one to four weeks out, one to three items with quantities and prices near the examples, all vendors) and opens the review step; it creates nothing until "Create event" is pressed.
+    Reason: faster demos and a clearer form.

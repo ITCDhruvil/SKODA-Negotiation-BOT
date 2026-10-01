@@ -2,29 +2,70 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { Button, DirectionBadge, Field, Panel, inputClass } from "@/components/ui/basics";
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Button, DirectionBadge, inputClass } from "@/components/ui/basics";
+import { Avatar } from "@/components/ui/charts";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Select";
+import { SearchBox } from "@/components/ui/TableToolbar";
 import { ErrorBox, Loading, Notice } from "@/components/ui/State";
 import { api, type Direction, type EventOptions, type NewEvent, type NewItem } from "@/lib/api";
 import { num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
 
-type ItemRow = { description: string; qty: string; unit: NewItem["unit"]; price: string; incoterm: string; days: string };
+type ItemRow = { description: string; qty: string; unit: NewItem["unit"]; price: string };
 
-const STEPS = ["Details", "Items", "Vendors", "Review"] as const;
+const STEPS = [
+  { key: "details", label: "Details", hint: "What and who" },
+  { key: "items", label: "Items", hint: "Quantities and prices" },
+  { key: "vendors", label: "Vendors", hint: "Who to invite" },
+  { key: "review", label: "Review", hint: "Check and create" },
+] as const;
 const BUY_UNITS: NewItem["unit"][] = ["EA", "AU", "LOT"];
 const SELL_UNITS: NewItem["unit"][] = ["KG", "TON"];
 
-const blankItem = (d: Direction): ItemRow => ({ description: "", qty: "", unit: d === "buy" ? "EA" : "KG", price: "", incoterm: "", days: "" });
+const blankItem = (d: Direction): ItemRow => ({ description: "", qty: "", unit: d === "buy" ? "EA" : "KG", price: "" });
 const positive = (v: string) => Number.isFinite(Number(v)) && Number(v) > 0;
+const todayIso = () => new Date().toISOString().slice(0, 10);
+const inDays = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const pickOne = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)];
+const shuffled = <T,>(xs: T[]): T[] => [...xs].sort(() => Math.random() - 0.5);
+
+function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-3">
+      <div>
+        <h3 className="text-sm font-bold text-ink">{title}</h3>
+        {hint && <p className="text-xs text-muted">{hint}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Labeled({ label, required, hint, error, children }: { label: string; required?: boolean; hint?: string; error?: string | null; children: ReactNode }) {
+  return (
+    <div className="grid content-start gap-1.5 text-sm">
+      <span className="font-semibold text-ink">
+        {label} {required && <span className="text-red" aria-hidden="true">*</span>}
+      </span>
+      {children}
+      {error ? <span role="alert" className="text-xs text-red">{error}</span> : hint ? <span className="text-xs text-muted">{hint}</span> : null}
+    </div>
+  );
+}
 
 function Form({ options }: { options: EventOptions }) {
   const router = useRouter();
   const params = useSearchParams();
   const [direction, setDirection] = useState<Direction>(params.get("type") === "sell" ? "sell" : "buy");
   const [step, setStep] = useState(0);
+  const [attempted, setAttempted] = useState(false);
   const cats = useMemo(() => options.categories.filter((c) => c.direction === direction), [options, direction]);
   const orgs = useMemo(() => options.organisations.filter((o) => o.direction === direction), [options, direction]);
   const [categoryKey, setCategoryKey] = useState("");
@@ -36,8 +77,10 @@ function Form({ options }: { options: EventOptions }) {
   const [cartNo, setCartNo] = useState("");
   const [items, setItems] = useState<ItemRow[]>([blankItem(direction)]);
   const [picked, setPicked] = useState<string[]>([]);
+  const [vq, setVq] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filled, setFilled] = useState(false);
 
   // A new type starts the form over with that type's defaults.
   useEffect(() => {
@@ -46,22 +89,74 @@ function Form({ options }: { options: EventOptions }) {
     setItems([blankItem(direction)]);
     setPicked([]);
     setStep(0);
+    setAttempted(false);
   }, [direction, cats]);
   const org = orgs[Number(orgIdx)] ?? orgs[0];
   useEffect(() => setCostCentre(org?.cost_centre ?? ""), [org]);
   const category = cats.find((c) => c.key === categoryKey);
-  useEffect(() => setPicked(category ? category.vendors.map((v) => v.id) : []), [category]);
+  useEffect(() => {
+    if (!filled) setPicked(category ? category.vendors.map((v) => v.id) : []);
+    setFilled(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
 
-  const detailsOk = Boolean(category && org && requestor.trim().length >= 2 && costCentre.trim().length >= 3 && due);
-  const itemsOk = items.length > 0 && items.every((i) => i.description.trim().length >= 2 && positive(i.qty) && positive(i.price));
+  const problems = {
+    requestor: requestor.trim().length < 2 ? "Enter who is asking for this" : null,
+    costCentre: costCentre.trim().length < 3 ? "Enter a cost centre" : null,
+    due: !due ? "Pick the date it is needed by" : due < todayIso() ? "That date has passed" : null,
+  };
+  const detailsOk = Boolean(category && org && !problems.requestor && !problems.costCentre && !problems.due);
+  const itemProblem = (i: ItemRow) => ({
+    description: i.description.trim().length < 2 ? "Describe the item" : null,
+    qty: !positive(i.qty) ? "Enter a quantity above 0" : null,
+    price: !positive(i.price) ? "Enter a price above 0" : null,
+  });
+  const itemsOk = items.length > 0 && items.every((i) => !itemProblem(i).description && !itemProblem(i).qty && !itemProblem(i).price);
   const vendorsOk = picked.length >= options.min_vendors;
   const ok = [detailsOk, itemsOk, vendorsOk, true];
 
   const setItem = (idx: number, patch: Partial<ItemRow>) => setItems((rows) => rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
-  const sampleItem = (c: number) => {
-    const s = category?.samples[c];
+  const sampleRow = (s: EventOptions["categories"][number]["samples"][number]): ItemRow => ({ description: s.description, qty: String(s.qty), unit: s.unit, price: String(s.reference_price) });
+  const addSample = (idx: number) => {
+    const s = category?.samples[idx];
     if (!s) return;
-    setItems([{ description: s.description, qty: String(s.qty), unit: s.unit, price: String(s.reference_price), incoterm: "", days: "" }]);
+    if (direction === "sell") return setItems([sampleRow(s)]);
+    setItems((rows) => [...rows.filter((r) => r.description.trim() || r.qty || r.price), sampleRow(s)]);
+  };
+
+  const goNext = () => {
+    if (!ok[step]) {
+      setAttempted(true);
+      return;
+    }
+    setAttempted(false);
+    setStep((s) => s + 1);
+  };
+
+  // Fill the whole form with a believable example and jump to the review.
+  const autoFill = () => {
+    const cat = pickOne(cats);
+    if (!cat) return;
+    const orgChoice = Math.floor(Math.random() * Math.max(orgs.length, 1));
+    const chosen = direction === "buy" ? shuffled(cat.samples).slice(0, Math.min(cat.samples.length, 1 + Math.floor(Math.random() * 3))) : [pickOne(cat.samples)];
+    const rows: ItemRow[] = chosen.map((s) => ({
+      description: s.description,
+      unit: s.unit,
+      qty: String(direction === "sell" ? 1000 + Math.floor(Math.random() * 70) * 100 : Math.max(1, Math.round(s.qty * (1 + Math.random() * 2)))),
+      price: String(Math.round(s.reference_price * (1 + Math.random() * 0.08))),
+    }));
+    setFilled(true);
+    setCategoryKey(cat.key);
+    setOrgIdx(String(orgChoice));
+    setRequestor(pickOne(options.requestors));
+    setDue(inDays([7, 10, 14, 21, 30][Math.floor(Math.random() * 5)]));
+    setTitle("");
+    setCartNo("");
+    setItems(rows);
+    setPicked(cat.vendors.map((v) => v.id));
+    setAttempted(false);
+    setError(null);
+    setStep(3);
   };
 
   const submit = async () => {
@@ -82,14 +177,7 @@ function Form({ options }: { options: EventOptions }) {
       due,
       source_cart_no: cartNo.trim() || null,
       vendor_ids: picked,
-      items: items.map((i) => ({
-        description: i.description.trim(),
-        qty: Number(i.qty),
-        unit: i.unit,
-        reference_price: Number(i.price),
-        incoterm: i.incoterm || null,
-        delivery_days: i.days.trim() === "" ? null : Number(i.days),
-      })),
+      items: items.map((i) => ({ description: i.description.trim(), qty: Number(i.qty), unit: i.unit, reference_price: Number(i.price), incoterm: null, delivery_days: null })),
     };
     try {
       const res = await api.addEvent(body);
@@ -101,201 +189,299 @@ function Form({ options }: { options: EventOptions }) {
   };
 
   const unitOptions = (direction === "buy" ? BUY_UNITS : SELL_UNITS).map((u) => ({ value: u, label: u }));
+  const eventTitle = title.trim() || (items[0]?.description.trim() ? items[0].description.trim() + (items.length > 1 ? ` (+${items.length - 1} more)` : "") : "");
+  const vendorList = (category?.vendors ?? []).filter((v) => !vq || v.name.toLowerCase().includes(vq.toLowerCase()));
+  const err = (e: string | null) => (attempted ? e : null);
+
+  const summary: [string, ReactNode, boolean][] = [
+    ["Category", category?.label.replace(/^\d+ - /, "") ?? "—", Boolean(category)],
+    ["Plant", org ? `${org.plant}` : "—", Boolean(org)],
+    ["Requestor", requestor.trim() ? requestor.trim().toUpperCase() : "—", !problems.requestor],
+    ["Needed by", due ? new Date(`${due}T00:00:00`).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—", !problems.due],
+    ["Items", itemsOk ? String(items.length) : "—", itemsOk],
+    ["Vendors", picked.length ? `${picked.length} invited` : "—", vendorsOk],
+  ];
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-4">
-      <ol className="grid grid-cols-4 gap-2" aria-label="Steps">
+    <div className="mx-auto grid max-w-6xl gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-extrabold tracking-tight text-ink">Add event</h2>
+          <p className="text-sm text-muted">Four short steps. Or let it fill in an example and just review it.</p>
+        </div>
+        <Button onClick={autoFill}>
+          <Icon name="bulb" size={16} /> Auto fill example
+        </Button>
+      </div>
+
+      <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Steps">
         {STEPS.map((s, i) => (
-          <li key={s}>
+          <li key={s.key}>
             <button
               type="button"
               disabled={i > step && !ok.slice(0, i).every(Boolean)}
               onClick={() => setStep(i)}
               aria-current={i === step ? "step" : undefined}
-              className={`flex w-full items-center justify-center gap-2 rounded-card border px-3 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${i === step ? "border-brand bg-brand-soft text-ink" : "border-line bg-panel text-muted hover:border-brand"}`}
+              className={`flex w-full items-center gap-3 rounded-card border px-3.5 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${i === step ? "border-brand bg-brand-soft" : "border-line bg-panel hover:border-brand"}`}
             >
-              <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${i < step ? "bg-ok text-white" : i === step ? "bg-brand text-on-brand" : "bg-raise text-muted"}`}>
-                {i < step ? <Icon name="check" size={13} /> : i + 1}
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold ${i < step ? "bg-ok text-white" : i === step ? "bg-brand text-on-brand" : "bg-raise text-muted"}`}>
+                {i < step ? <Icon name="check" size={15} /> : i + 1}
               </span>
-              <span className="hidden sm:inline">{s}</span>
+              <span className="min-w-0">
+                <span className={`block text-sm font-bold ${i === step ? "text-ink" : "text-text"}`}>{s.label}</span>
+                <span className="block truncate text-xs text-muted">{s.hint}</span>
+              </span>
             </button>
           </li>
         ))}
       </ol>
 
-      {step === 0 && (
-        <Panel title="Event details">
-          <div className="grid gap-4">
-            <div className="inline-flex w-fit rounded-m border border-line bg-raise p-0.5" role="group" aria-label="Event type">
-              {(["buy", "sell"] as const).map((d) => (
-                <button key={d} type="button" aria-pressed={direction === d} onClick={() => setDirection(d)} className={`rounded-chip px-4 py-2 text-sm font-semibold ${direction === d ? "bg-panel text-brand shadow-card" : "text-muted hover:text-ink"}`}>
-                  {d === "buy" ? "Purchase cart" : "Scrap lot"}
-                </button>
-              ))}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="rounded-card border border-line bg-panel p-5 shadow-card">
+          {step === 0 && (
+            <div className="grid gap-6">
+              <Section title="What is it" hint="The kind of event and what it covers.">
+                <div className="inline-flex w-fit rounded-m border border-line bg-raise p-0.5" role="group" aria-label="Event type">
+                  {(["buy", "sell"] as const).map((d) => (
+                    <button key={d} type="button" aria-pressed={direction === d} onClick={() => setDirection(d)} className={`rounded-chip px-4 py-2 text-sm font-semibold transition ${direction === d ? "bg-panel text-brand shadow-card" : "text-muted hover:text-ink"}`}>
+                      {d === "buy" ? "Purchase cart" : "Scrap lot"}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Labeled label="Category" required>
+                    <Select value={categoryKey} onChange={setCategoryKey} ariaLabel="Category" options={cats.map((c) => ({ value: c.key, label: c.label }))} />
+                  </Labeled>
+                  <Labeled label="Event title" hint="Optional. Left empty, the first item names the event.">
+                    <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder={eventTitle || "For example, Training lunch for batch 12"} />
+                  </Labeled>
+                </div>
+              </Section>
+
+              <Section title="Who and where" hint="Taken from the organisation set-up used by existing events.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Labeled label="Plant and purchasing group" required>
+                    <Select
+                      value={orgIdx}
+                      onChange={setOrgIdx}
+                      ariaLabel="Plant and purchasing group"
+                      options={orgs.map((o, i) => ({ value: String(i), label: `${o.plant} · ${o.purch_group}`, hint: `${o.company} · ${o.purch_org}` }))}
+                    />
+                  </Labeled>
+                  <Labeled label="Cost centre" required error={err(problems.costCentre)}>
+                    <input className={`${inputClass} ${err(problems.costCentre) ? "!border-red" : ""}`} value={costCentre} onChange={(e) => setCostCentre(e.target.value)} maxLength={20} inputMode="numeric" />
+                  </Labeled>
+                  <div className="md:col-span-2">
+                    <Labeled label="Requestor" required error={err(problems.requestor)} hint="Who is asking for this.">
+                      <input className={`${inputClass} ${err(problems.requestor) ? "!border-red" : ""}`} value={requestor} onChange={(e) => setRequestor(e.target.value)} maxLength={60} placeholder="Name of the requestor" />
+                    </Labeled>
+                    <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Suggested requestors">
+                      {options.requestors.slice(0, 5).map((r) => (
+                        <button key={r} type="button" onClick={() => setRequestor(r)} className="rounded-full border border-line px-2.5 py-1 text-xs font-semibold text-text hover:border-brand hover:text-brand">
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="When" hint="Vendors are asked to respond before this date.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Labeled label="Needed by" required error={err(problems.due)}>
+                    <DatePicker ariaLabel="Needed by" value={due} onChange={setDue} min={todayIso()} invalid={Boolean(err(problems.due))} />
+                  </Labeled>
+                  {direction === "buy" && (
+                    <Labeled label="Shopping cart number" hint="Optional. A number is generated if left empty.">
+                      <input className={inputClass} value={cartNo} onChange={(e) => setCartNo(e.target.value.replace(/\D/g, ""))} maxLength={20} inputMode="numeric" placeholder="For example 1012358189" />
+                    </Labeled>
+                  )}
+                </div>
+              </Section>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Category">
-                <Select value={categoryKey} onChange={setCategoryKey} ariaLabel="Category" options={cats.map((c) => ({ value: c.key, label: c.label }))} />
-              </Field>
-              <Field label="Event title" hint="Optional. Leave empty to use the first item.">
-                <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
-              </Field>
-              <Field label="Plant and purchasing group">
-                <Select
-                  value={orgIdx}
-                  onChange={setOrgIdx}
-                  ariaLabel="Plant and purchasing group"
-                  options={orgs.map((o, i) => ({ value: String(i), label: `${o.plant} · ${o.purch_group}`, hint: `${o.company} · ${o.purch_org}` }))}
-                />
-              </Field>
-              <Field label="Requestor">
-                <input className={inputClass} list="requestors" value={requestor} onChange={(e) => setRequestor(e.target.value)} maxLength={60} />
-                <datalist id="requestors">
-                  {options.requestors.map((r) => (
-                    <option key={r} value={r} />
+          )}
+
+          {step === 1 && (
+            <div className="grid gap-5">
+              <Section title={direction === "buy" ? "Items in the cart" : "The scrap lot"} hint={direction === "buy" ? "Add every item the vendors should quote on." : "A scrap lot is one material measured by weight."}>
+                {category && (
+                  <div>
+                    <div className="mb-1.5 text-xs font-semibold text-muted">{direction === "buy" ? "Add from examples" : "Start from an example"}</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {category.samples.map((s, i) => (
+                        <button key={s.description} type="button" onClick={() => addSample(i)} className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-text hover:border-brand hover:text-brand">
+                          <Icon name="plus" size={12} /> {s.description}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <div className="grid min-w-[34rem] gap-2">
+                    <div className="grid grid-cols-[minmax(0,2.4fr)_100px_90px_120px_36px] gap-2 px-1 text-xs font-semibold text-muted">
+                      <span>Item</span>
+                      <span>Quantity</span>
+                      <span>Unit</span>
+                      <span>Price per unit (₹)</span>
+                      <span />
+                    </div>
+                    {items.map((it, idx) => {
+                      const p = itemProblem(it);
+                      return (
+                        <div key={idx} className="grid grid-cols-[minmax(0,2.4fr)_100px_90px_120px_36px] items-start gap-2 rounded-m border border-line2 bg-raise/40 p-1.5">
+                          <div>
+                            <input aria-label={`Item ${idx + 1} description`} className={`${inputClass} ${attempted && p.description ? "!border-red" : ""}`} list="item-samples" value={it.description} onChange={(e) => setItem(idx, { description: e.target.value })} placeholder="What is needed" maxLength={120} />
+                            {attempted && p.description && <span role="alert" className="text-xs text-red">{p.description}</span>}
+                          </div>
+                          <div>
+                            <input aria-label={`Item ${idx + 1} quantity`} className={`${inputClass} ${attempted && p.qty ? "!border-red" : ""}`} inputMode="decimal" value={it.qty} onChange={(e) => setItem(idx, { qty: e.target.value })} />
+                            {attempted && p.qty && <span role="alert" className="text-xs text-red">Required</span>}
+                          </div>
+                          <Select value={it.unit} onChange={(u) => setItem(idx, { unit: u })} ariaLabel={`Item ${idx + 1} unit`} options={unitOptions} />
+                          <div>
+                            <input aria-label={`Item ${idx + 1} price per unit`} className={`${inputClass} ${attempted && p.price ? "!border-red" : ""}`} inputMode="decimal" value={it.price} onChange={(e) => setItem(idx, { price: e.target.value })} />
+                            {attempted && p.price && <span role="alert" className="text-xs text-red">Required</span>}
+                          </div>
+                          {direction === "buy" && items.length > 1 ? (
+                            <button type="button" aria-label={`Remove item ${idx + 1}`} title="Remove" onClick={() => setItems((r) => r.filter((_, i) => i !== idx))} className="grid h-[42px] w-9 place-items-center rounded-m text-muted hover:bg-raise hover:text-red">
+                              <Icon name="close" size={15} />
+                            </button>
+                          ) : (
+                            <span />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <datalist id="item-samples">
+                  {category?.samples.map((s) => (
+                    <option key={s.description} value={s.description} />
                   ))}
                 </datalist>
-              </Field>
-              <Field label="Cost centre">
-                <input className={inputClass} value={costCentre} onChange={(e) => setCostCentre(e.target.value)} maxLength={20} inputMode="numeric" />
-              </Field>
-              <Field label="Needed by">
-                <input type="date" className={inputClass} value={due} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDue(e.target.value)} />
-              </Field>
-              {direction === "buy" && (
-                <Field label="Shopping cart number" hint="Optional. A number is generated if left empty.">
-                  <input className={inputClass} value={cartNo} onChange={(e) => setCartNo(e.target.value.replace(/\D/g, ""))} maxLength={20} inputMode="numeric" />
-                </Field>
-              )}
-            </div>
-          </div>
-        </Panel>
-      )}
-
-      {step === 1 && (
-        <Panel
-          title={direction === "buy" ? "Items in the cart" : "The scrap lot"}
-          actions={
-            <>
-              {category?.samples.slice(0, 3).map((s, i) => (
-                <Button key={s.description} size="sm" onClick={() => sampleItem(i)} title="Fill from a sample">
-                  {s.description}
-                </Button>
-              ))}
-            </>
-          }
-        >
-          <div className="grid gap-3">
-            {items.map((it, idx) => (
-              <div key={idx} className="grid gap-3 rounded-m border border-line2 p-3 md:grid-cols-[minmax(0,2fr)_110px_110px_130px_auto]">
-                <Field label={`Item ${idx + 1}`}>
-                  <input className={inputClass} list="item-samples" value={it.description} onChange={(e) => setItem(idx, { description: e.target.value })} placeholder="What is needed" maxLength={120} />
-                </Field>
-                <Field label="Quantity">
-                  <input className={inputClass} inputMode="decimal" value={it.qty} onChange={(e) => setItem(idx, { qty: e.target.value })} />
-                </Field>
-                <Field label="Unit">
-                  <Select value={it.unit} onChange={(u) => setItem(idx, { unit: u })} ariaLabel="Unit" options={unitOptions} />
-                </Field>
-                <Field label={`Price per ${it.unit}`} hint="Reference price">
-                  <input className={inputClass} inputMode="decimal" value={it.price} onChange={(e) => setItem(idx, { price: e.target.value })} />
-                </Field>
-                {direction === "buy" && items.length > 1 && (
-                  <div className="flex items-end">
-                    <Button aria-label={`Remove item ${idx + 1}`} onClick={() => setItems((r) => r.filter((_, i) => i !== idx))}>
-                      <Icon name="close" size={14} />
+                {direction === "buy" && items.length < 20 && (
+                  <div>
+                    <Button onClick={() => setItems((r) => [...r, blankItem(direction)])}>
+                      <Icon name="plus" size={14} /> Add another item
                     </Button>
                   </div>
                 )}
-              </div>
-            ))}
-            <datalist id="item-samples">
-              {category?.samples.map((s) => (
-                <option key={s.description} value={s.description} />
-              ))}
-            </datalist>
-            {direction === "buy" && items.length < 20 && (
-              <div>
-                <Button onClick={() => setItems((r) => [...r, blankItem(direction)])}>
-                  <Icon name="plus" size={14} /> Add an item
-                </Button>
-              </div>
-            )}
-          </div>
-        </Panel>
-      )}
-
-      {step === 2 && category && (
-        <Panel
-          title="Vendors to invite"
-          actions={
-            <>
-              <Button size="sm" onClick={() => setPicked(category.vendors.map((v) => v.id))}>Select all</Button>
-              <Button size="sm" onClick={() => setPicked([])}>Clear</Button>
-            </>
-          }
-        >
-          <p className="mb-3 text-sm text-muted">
-            Vendors that deal in this category. Invite at least {options.min_vendors}; <b className="text-ink">{picked.length}</b> selected.
-          </p>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {category.vendors.map((v) => {
-              const on = picked.includes(v.id);
-              return (
-                <li key={v.id}>
-                  <label className={`flex cursor-pointer items-center gap-3 rounded-m border px-3 py-2.5 text-sm transition ${on ? "border-brand bg-brand-soft" : "border-line hover:border-brand"}`}>
-                    <input type="checkbox" className="h-4 w-4" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== v.id) : [...p, v.id]))} />
-                    <span className="min-w-0 flex-1 truncate font-semibold text-ink">{v.name}</span>
-                    <span className="text-xs text-muted">Rating {v.rating.toFixed(1)}</span>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
-        </Panel>
-      )}
-
-      {step === 3 && category && org && (
-        <Panel title="Review">
-          <div className="grid gap-4 md:grid-cols-2">
-            <dl className="grid text-sm">
-              {([
-                ["Type", <DirectionBadge key="d" direction={direction} />],
-                ["Category", category.label],
-                ["Title", title.trim() || items[0]?.description || "—"],
-                ["Plant", `${org.plant} · ${org.company}`],
-                ["Purchasing", `${org.purch_org} · ${org.purch_group}`],
-                ["Requestor", requestor.trim().toUpperCase()],
-                ["Cost centre", costCentre],
-                ["Needed by", due],
-              ] as [string, React.ReactNode][]).map(([k, v]) => (
-                <div key={k} className="flex items-baseline justify-between gap-4 border-b border-line2 py-2 last:border-0">
-                  <dt className="text-muted">{k}</dt>
-                  <dd className="text-right font-semibold text-ink">{v}</dd>
-                </div>
-              ))}
-            </dl>
-            <div className="grid content-start gap-3">
-              <div>
-                <h3 className="mb-1 text-sm font-bold text-ink">Items</h3>
-                <ul className="grid gap-1 text-sm">
-                  {items.map((i, idx) => (
-                    <li key={idx} className="flex justify-between gap-3 border-b border-line2 pb-1 last:border-0">
-                      <span className="truncate text-text">{i.description}</span>
-                      <span className="shrink-0 tabular-nums text-muted">{num(Number(i.qty))} {i.unit} at ₹ {num(Number(i.price))}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="mb-1 text-sm font-bold text-ink">Invited vendors ({picked.length})</h3>
-                <p className="text-sm text-muted">{category.vendors.filter((v) => picked.includes(v.id)).map((v) => v.name).join(", ")}</p>
-              </div>
-              <Notice tone="info">After you create the event the vendors can be asked to respond, and the event follows the normal flow. Whether it is eligible for negotiation is checked on its page.</Notice>
+              </Section>
             </div>
+          )}
+
+          {step === 2 && category && (
+            <Section title="Vendors to invite" hint={`Vendors that deal in this category. Invite at least ${options.min_vendors} so there are enough quotes to compare.`}>
+              <div className="flex flex-wrap items-center gap-2">
+                <SearchBox value={vq} onChange={setVq} placeholder="Search vendors" />
+                <Button size="sm" onClick={() => setPicked(category.vendors.map((v) => v.id))}>Select all</Button>
+                <Button size="sm" onClick={() => setPicked([])}>Clear</Button>
+                <span className={`ml-auto rounded-full px-3 py-1 text-xs font-bold ${vendorsOk ? "bg-ok-soft text-ok" : "bg-amber-soft text-amber"}`}>
+                  {picked.length} selected{vendorsOk ? "" : ` · need ${options.min_vendors - picked.length} more`}
+                </span>
+              </div>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {vendorList.map((v) => {
+                  const on = picked.includes(v.id);
+                  return (
+                    <li key={v.id}>
+                      <label className={`flex cursor-pointer items-center gap-3 rounded-m border px-3 py-2.5 text-sm transition ${on ? "border-brand bg-brand-soft" : "border-line hover:border-brand"}`}>
+                        <input type="checkbox" className="sr-only" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== v.id) : [...p, v.id]))} />
+                        <Avatar name={v.name} index={Number(v.id.replace(/\D/g, ""))} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold text-ink">{v.name}</span>
+                          <span className="text-xs text-muted">Rating {v.rating.toFixed(1)}</span>
+                        </span>
+                        <span className={`grid h-5 w-5 place-items-center rounded-full border ${on ? "border-brand bg-brand text-on-brand" : "border-line"}`} aria-hidden="true">
+                          {on && <Icon name="check" size={12} />}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+                {vendorList.length === 0 && <li className="text-sm text-muted">No vendors match.</li>}
+              </ul>
+            </Section>
+          )}
+
+          {step === 3 && category && org && (
+            <div className="grid gap-5">
+              <Section title="Review" hint="Check everything, change anything with Edit, then create the event.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-m border border-line2 p-4">
+                    <div className="mb-1 flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-ink">Event</h4>
+                      <button type="button" onClick={() => setStep(0)} className="text-xs font-semibold text-brand hover:underline">Edit</button>
+                    </div>
+                    <dl className="grid text-sm">
+                      {([
+                        ["Type", <DirectionBadge key="d" direction={direction} />],
+                        ["Category", category.label],
+                        ["Title", eventTitle || "—"],
+                        ["Plant", `${org.plant} · ${org.company}`],
+                        ["Purchasing", `${org.purch_org} · ${org.purch_group}`],
+                        ["Requestor", requestor.trim().toUpperCase()],
+                        ["Cost centre", costCentre],
+                        ["Needed by", due],
+                      ] as [string, ReactNode][]).map(([k, v]) => (
+                        <div key={k} className="flex items-baseline justify-between gap-4 border-b border-line2 py-1.5 last:border-0">
+                          <dt className="text-muted">{k}</dt>
+                          <dd className="text-right font-semibold text-ink">{v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                  <div className="grid content-start gap-4">
+                    <div className="rounded-m border border-line2 p-4">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-ink">Items ({items.length})</h4>
+                        <button type="button" onClick={() => setStep(1)} className="text-xs font-semibold text-brand hover:underline">Edit</button>
+                      </div>
+                      <ul className="grid gap-1 text-sm">
+                        {items.map((i, idx) => (
+                          <li key={idx} className="flex justify-between gap-3 border-b border-line2 pb-1 last:border-0">
+                            <span className="truncate text-text">{i.description}</span>
+                            <span className="shrink-0 tabular-nums text-muted">{num(Number(i.qty))} {i.unit} · ₹ {num(Number(i.price))}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-m border border-line2 p-4">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-ink">Invited vendors ({picked.length})</h4>
+                        <button type="button" onClick={() => setStep(2)} className="text-xs font-semibold text-brand hover:underline">Edit</button>
+                      </div>
+                      <p className="text-sm text-muted">{category.vendors.filter((v) => picked.includes(v.id)).map((v) => v.name).join(", ")}</p>
+                    </div>
+                  </div>
+                </div>
+              </Section>
+            </div>
+          )}
+        </div>
+
+        <aside className="grid gap-3 lg:sticky lg:top-20" aria-label="Summary">
+          <div className="rounded-card border border-line bg-panel p-4 shadow-card">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-ink">Your event</h3>
+              <DirectionBadge direction={direction} />
+            </div>
+            <div className="mb-2 truncate text-base font-extrabold text-ink">{eventTitle || "Untitled event"}</div>
+            <ul className="grid gap-1.5 text-sm">
+              {summary.map(([k, v, done]) => (
+                <li key={k} className="flex items-center gap-2">
+                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full ${done ? "bg-ok text-white" : "border border-line text-transparent"}`} aria-hidden="true">
+                    <Icon name="check" size={10} />
+                  </span>
+                  <span className="text-muted">{k}</span>
+                  <span className="ml-auto min-w-0 truncate text-right font-semibold text-ink">{v}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </Panel>
-      )}
+          <Notice tone="info">The vendors&rsquo; answers are simulated for this demo. You will create them from the event page.</Notice>
+        </aside>
+      </div>
 
       {error && <Notice tone="red">{error}</Notice>}
 
@@ -306,7 +492,7 @@ function Form({ options }: { options: EventOptions }) {
             <Icon name="back" size={14} /> Back
           </Button>
           {step < 3 ? (
-            <Button variant="primary" disabled={!ok[step]} onClick={() => setStep((s) => s + 1)}>
+            <Button variant="primary" onClick={goNext}>
               Next <Icon name="chevron" size={14} />
             </Button>
           ) : (
