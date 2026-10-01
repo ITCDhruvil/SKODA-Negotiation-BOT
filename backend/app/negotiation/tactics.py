@@ -11,9 +11,9 @@ from typing import Optional
 from app import deal
 from app.negotiation.messages import money
 
-MAX_ROUNDS = 6
+MAX_ROUNDS = 8
 CLOSE_WINDOW = 0.025  # a vendor within 2.5% of our limit gets a closing offer at the limit
-FRACTION = 0.4  # share of the distance to the vendor's price we move each round
+FRACTION = 0.2  # share of the distance to the vendor's price we move each round
 FRACTION_PAYMENT_FOCUS = 0.25  # move less on price when the buyer's objective is payment terms
 
 
@@ -74,7 +74,7 @@ def respond(ctx: Context) -> Decision:
     word = deal.limit_word(d)
     if ctx.continuing:
         return _push_further(ctx, word)
-    if inside and (ctx.round >= 3 or ctx.vendor_final or deal.gap_to_target(d, v, ctx.target) == 0):
+    if inside and (ctx.round >= 4 or ctx.vendor_final or deal.gap_to_target(d, v, ctx.target) == 0):
         return Decision(
             "accept", "accept", v, ctx.vendor_payment,
             f"{money(v)} is within your {word} of {money(ctx.limit)}. I recommend accepting.")
@@ -85,7 +85,7 @@ def respond(ctx: Context) -> Decision:
                 "handback", "", None, None,
                 f"The vendor is at {money(v)}, outside your {word} of {money(ctx.limit)}, and is not "
                 "moving further. I recommend handing this back to you to decide.")
-        if deal.within_pct(v, ctx.limit, CLOSE_WINDOW):
+        if ctx.round >= 3 and deal.within_pct(v, ctx.limit, CLOSE_WINDOW):
             ask = _payment_ask(ctx, 1)
             more = f" with payment in {deal.payment_days(ask)} days" if ask else ""
             return Decision(

@@ -73,4 +73,4 @@ def test_sell_export_is_a_plain_summary_with_the_uplift(client):
         pytest.skip("hero sell event has more than one item")
     assert close(client, SELL, SELL_EVT, 170, 165).status_code == 200
     table = rows(client.get(f"/api/events/{SELL_EVT}/export"))
-    assert table[0][0] == "Event" and table[1][7] == "168" and table[1][8] == "25000"
+    assert table[0][0] == "Event" and table[1][7] == "167" and table[1][8] == "20000"

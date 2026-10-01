@@ -196,6 +196,12 @@ _VENDOR: dict[tuple[str, str, str], str] = {
     ("counter", "buy", "en"): "Thanks for the feedback. For this quantity the best I can do is {price} per {unit}.",
     ("counter", "buy", "hi"): "फीडबैक के लिए धन्यवाद। इस मात्रा के लिए मैं {price} प्रति {unit} तक कर सकता हूँ।",
     ("counter", "buy", "mr"): "प्रतिसादाबद्दल धन्यवाद. या प्रमाणासाठी मी {price} प्रति {unit} पर्यंत करू शकतो.",
+    ("hold", "buy", "en"): "I understand you need a better price, but {price} per {unit} already reflects current material and transport costs. It is difficult for me to move right now.",
+    ("hold", "buy", "hi"): "मैं समझता हूँ कि आपको बेहतर कीमत चाहिए, लेकिन {price} प्रति {unit} में मौजूदा सामग्री और ढुलाई का खर्च शामिल है। अभी कीमत घटाना मुश्किल है।",
+    ("hold", "buy", "mr"): "तुम्हाला चांगली किंमत हवी हे मला समजते, पण {price} प्रति {unit} मध्ये सध्याचा माल आणि वाहतूक खर्च धरलेला आहे. सध्या किंमत कमी करणे कठीण आहे.",
+    ("hold", "sell", "en"): "I understand you were expecting more, but {price} per {unit} is in line with what the material is fetching for us at the moment. I cannot move right away.",
+    ("hold", "sell", "hi"): "मैं समझता हूँ कि आपको ज़्यादा की उम्मीद थी, लेकिन {price} प्रति {unit} अभी हमें इस माल के लिए मिल रहे भाव के अनुसार है। मैं तुरंत नहीं बढ़ा सकता।",
+    ("hold", "sell", "mr"): "तुम्हाला जास्त अपेक्षित होते हे मला समजते, पण {price} प्रति {unit} हा सध्या या मालाला मिळणाऱ्या भावानुसार आहे. मी लगेच वाढवू शकत नाही.",
     ("firm", "buy", "en"): "I understand, but {price} per {unit} really is the lowest I can go. That is my final price.",
     ("firm", "buy", "hi"): "मैं समझता हूँ, लेकिन {price} प्रति {unit} इससे कम नहीं हो पाएगा। यही मेरी अंतिम कीमत है।",
     ("firm", "buy", "mr"): "मला समजते, पण {price} प्रति {unit} यापेक्षा कमी होणार नाही. हीच माझी अंतिम किंमत आहे.",
@@ -248,32 +254,101 @@ _OURS_ALT: dict[tuple[str, str], list[str]] = {
     ],
 }
 _VENDOR_ALT: dict[tuple[str, str], list[str]] = {
+    ("hold", "buy"): [
+        "Please understand, steel and packing costs have gone up this quarter. {price} per {unit} is already a fair rate and I cannot reduce it just yet.",
+        "I have quoted {price} per {unit} keeping your quantity in mind. If you can tell me how you plan to place the order, I will see what is possible.",
+        "Our rates are not flexible at the moment because of input costs. {price} per {unit} is what I can stand by for now.",
+    ],
     ("counter", "buy"): [
         "Okay, let me see what I can do. {price} per {unit} is possible.",
-        "I can come down a little, to {price} per {unit}.",
+        "Since you are ordering the full quantity, I can come down a little, to {price} per {unit}.",
+        "I spoke to my team. We can do {price} per {unit}, but it is getting tight for us.",
+        "Fine, I will adjust a little for the relationship. {price} per {unit}.",
+        "This is a stretch for me, but {price} per {unit} I can manage.",
     ],
     ("firm", "buy"): [
         "Sorry, there is not much room left. {price} per {unit} is my last price.",
         "I have already stretched a lot. {price} per {unit} is final from my side.",
+        "I really cannot go below {price} per {unit}. That is where my cost sits.",
     ],
     ("accept", "buy"): [
         "Fine, {price} per {unit} is okay.{pay} Please send the order on these terms.",
         "Okay, we have a deal at {price} per {unit}.{pay} I will wait for the order.",
+        "Alright, {price} per {unit} then.{pay} Let us close this and I will arrange the dispatch plan.",
+    ],
+    ("hold", "sell"): [
+        "The market for this material has been firm this month. {price} per {unit} is a good rate and I cannot change it just yet.",
+        "I bid {price} per {unit} after checking current yard rates. If you can share your pickup schedule, I will look again.",
+        "Our rates are fixed by what we get from the mills. {price} per {unit} is what I can stand by for now.",
     ],
     ("counter", "sell"): [
         "Okay, I can go up to {price} per {unit}.",
         "Let me improve it a little, {price} per {unit}.",
+        "Since the lot is clean and the quantity is good, I can do {price} per {unit}.",
+        "I checked with my buyer. We can stretch to {price} per {unit}, but not much more.",
+        "This is a stretch for me, but {price} per {unit} I can manage.",
     ],
     ("firm", "sell"): [
         "Sorry, {price} per {unit} is the best I can offer. That is final.",
         "I cannot go beyond {price} per {unit}. My final bid.",
+        "The mills will not pay me more, so {price} per {unit} is where I stop.",
     ],
     ("accept", "sell"): [
         "Fine, {price} per {unit} is okay.{pay} I will arrange the pickup.",
         "Okay, deal at {price} per {unit}.{pay} Tell me when we can lift the material.",
+        "Alright, {price} per {unit} then.{pay} I will send the truck as soon as you confirm.",
     ],
 }
 
+# Reasons our side gives for a counter or a closing ask (English only), picked by round. They never
+# quote another vendor's number and never mention our own limits.
+_REASONS: dict[str, list[str]] = {
+    "buy": [
+        "Prices for similar quantities that we have seen recently are lower.",
+        "We are giving the whole quantity to one vendor, so I would like the rate to reflect that.",
+        "We prefer long-term vendors and would like to build a regular relationship with you.",
+        "I have to justify this rate internally, and the current number is hard to explain.",
+        "We have other offers that are closer to what we expected.",
+    ],
+    "sell": [
+        "Current market rates for this grade are higher than the bid.",
+        "The lot is clean and the full quantity goes to one buyer, so I would like the rate to reflect that.",
+        "We would like to work with a regular buyer for our scrap and would take a good offer.",
+        "I have to justify this rate internally, and the current number is hard to explain.",
+        "We have other interest in the lot that is closer to what we expected.",
+    ],
+}
+
+
+_LEADS = {
+    "counter": [
+        "Thanks for coming back to us.", "Appreciate the quick reply.", "Understood, thank you for the update.",
+        "Thanks, I have noted your position.",
+    ],
+    "close": [
+        "Thank you, we are getting closer.", "I do see your point.", "Thanks for working on this with us.",
+        "We would like to finalise this with you.",
+    ],
+}
+_ASKS = {
+    ("counter", "buy"): [
+        "Could you stretch to {price} per {unit}?{pay}", "We can move to {price} per {unit}.{pay} Would that work?",
+        "From our side {price} per {unit} is where we can get to.{pay}",
+    ],
+    ("close", "buy"): [
+        "If {price} per {unit} is possible, I can confirm the order right away.{pay}",
+        "At {price} per {unit} we can go ahead with the order today.{pay}",
+    ],
+    ("counter", "sell"): [
+        "Could you improve to {price} per {unit}?{pay}", "We can come down to {price} per {unit}.{pay} Would that work?",
+        "From our side {price} per {unit} is where we can settle.{pay}",
+    ],
+    ("close", "sell"): [
+        "If you can match {price} per {unit}, we can release the lot to you this week.{pay}",
+        "At {price} per {unit} we can proceed right away.{pay}",
+    ],
+}
+_CLOSINGS = ["Thanks", "Regards", "Best regards"]
 
 _HONORIFICS = {"m/s", "mr", "mr.", "shree", "sri", "the"}
 
@@ -301,11 +376,20 @@ def our_message(
         sign = sign.split("\n")[0]  # mid-conversation: just the name, like a real chat
     pay = payment_phrase(lang, direction, payment_ask) if kind != "accept" else _agreed_payment(lang, agreed_payment)
     name = short_name(vendor_name)
-    return template.format(
+    fields = dict(
         vendor=f" {name}" if name else "", item=item, qty=_qty(qty),
         unit=_UNIT[lang].get(unit, unit), qty_unit=_qty_unit(lang, unit, qty),
-        quote=money(quote), price=money(price), pay=pay,
-        sign=sign)
+        quote=money(quote), price=money(price), pay=pay, sign=sign)
+    if lang == "en" and kind in ("counter", "close") and variant > 0:
+        # Later rounds are written from parts: an acknowledgement, a reason, then the ask.
+        leads, asks = _LEADS[kind], _ASKS[(kind, direction)]
+        reasons = _REASONS[direction]
+        text = " ".join([
+            leads[variant % len(leads)], reasons[(variant - 1) % len(reasons)],
+            asks[(variant // 2) % len(asks)].format(**fields)])
+        closing = _CLOSINGS[variant % len(_CLOSINGS)]
+        return text + "\n\n" + closing + ",\n" + sign
+    return template.format(**fields)
 
 
 def vendor_message(

@@ -80,15 +80,17 @@ def test_full_auto_hero_buy_ends_at_270_with_45_day_payment(buy: Repo):
     assert s.status == "agreed" and s.agreed_price == 270 and s.agreed_payment == "ZD45"
     assert item_state(buy, BUY) == "result_pending"
     ts = neg.turns(buy, s.id)
-    assert [(t.speaker, t.price) for t in ts] == [("us", 250), ("vendor", 275), ("us", 270), ("vendor", 270)]
-    assert [t.author for t in ts] == ["bot", "vendor", "bot", "vendor"]
+    assert [(t.speaker, t.price) for t in ts] == [
+        ("us", 250), ("vendor", 285), ("us", 257), ("vendor", 280), ("us", 262), ("vendor", 277),
+        ("us", 265), ("vendor", 275), ("us", 270), ("vendor", 270)]
+    assert [t.author for t in ts] == ["bot", "vendor"] * 5
     assert deal.realised_delta("buy", s.original_price, s.agreed_price, 600) == 9000
 
 
-def test_full_auto_hero_sell_ends_at_168(sell: Repo):
+def test_full_auto_hero_sell_ends_at_167(sell: Repo):
     s = run_auto(sell, neg.start(sell, SELL, mode="auto").id)
-    assert s.status == "agreed" and s.agreed_price == 168
-    assert deal.realised_delta("sell", s.original_price, s.agreed_price, 5000) == 25000
+    assert s.status == "agreed" and s.agreed_price == 167
+    assert deal.realised_delta("sell", s.original_price, s.agreed_price, 5000) == 20000
 
 
 def test_nothing_the_vendor_sees_reveals_software_or_internal_numbers(buy: Repo):
@@ -113,14 +115,18 @@ def test_approve_mode_waits_for_the_buyer_and_lets_them_edit(buy: Repo):
 
     s = neg.approve_draft(buy, s.id, d.id)
     ts = neg.turns(buy, s.id)
-    assert [t.speaker for t in ts] == ["us", "vendor"] and ts[0].author == "bot" and ts[1].price == 275
+    assert [t.speaker for t in ts] == ["us", "vendor"] and ts[0].author == "bot" and ts[1].price == 285
 
-    neg.advance(buy, s.id)
-    d2 = neg.pending_draft(buy, s.id)
-    assert d2.price == 270 and d2.payment_code == "ZD45"
-    s = neg.approve_draft(buy, s.id, d2.id, price=269)  # the buyer edits the price
+    for _ in range(10):
+        neg.advance(buy, s.id)
+        d2 = neg.pending_draft(buy, s.id)
+        if d2.price == 270:
+            assert d2.payment_code == "ZD45"
+            s = neg.approve_draft(buy, s.id, d2.id, price=269)  # the buyer edits the price
+            break
+        s = neg.approve_draft(buy, s.id, d2.id)
     assert s.status == "agreed" and s.agreed_price == 269
-    assert [t.author for t in neg.turns(buy, s.id)][2] == "human"
+    assert [t.author for t in neg.turns(buy, s.id)][-2] == "human"
 
 
 def test_a_draft_can_be_discarded_and_replaced_by_hand(buy: Repo):
@@ -167,9 +173,13 @@ def test_the_buyer_can_stop_auto_and_take_over_mid_conversation(buy: Repo):
     assert s.round == 1 and s.status == "active"
     s = neg.set_mode(buy, s.id, "manual")
     assert neg.advance(buy, s.id).round == 1          # auto stopped
-    s = neg.send_message(buy, s.id, price=270)
+    for _ in range(5):  # the vendor tries for a little more before it says yes
+        s = neg.send_message(buy, s.id, price=270)
+        if s.status != "active":
+            break
     assert s.status == "agreed" and s.agreed_price == 270
-    assert [t.author for t in neg.turns(buy, s.id)] == ["bot", "vendor", "human", "vendor"]
+    authors = [t.author for t in neg.turns(buy, s.id)]
+    assert authors[:2] == ["bot", "vendor"] and set(authors[2:-1]) == {"human", "vendor"} and authors[-2] == "human"
 
 
 def test_switching_from_approve_to_auto_runs_the_waiting_draft(buy: Repo):
@@ -284,3 +294,12 @@ def test_auto_negotiation_is_safe_on_every_analyzed_seed_item(repo: Repo):
                 assert deal.within_limit(event.direction, t.price, limit)
         checked += 1
     assert checked >= 20
+
+
+def test_hero_conversations_take_several_rounds_and_start_with_a_pushback(buy: Repo, sell: Repo):
+    for repo_, item, floor in ((buy, BUY, 10), (sell, SELL, 8)):
+        s = run_auto(repo_, neg.start(repo_, item, mode="auto").id)
+        ts = neg.turns(repo_, s.id)
+        assert len(ts) >= floor
+        assert ts[1].speaker == "vendor" and ts[1].price == s.original_price  # first answer: no movement
+        assert len({t.text for t in ts if t.speaker == "us"}) == len([t for t in ts if t.speaker == "us"])

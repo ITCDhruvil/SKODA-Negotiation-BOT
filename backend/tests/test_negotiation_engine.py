@@ -36,17 +36,20 @@ def test_hero_buy_story_ends_at_270_with_45_day_payment():
     status, price, pay, log = play("buy", target=250, limit=270, quote=285, reserve=268, flex=0.3)
     assert status == "agreed" and price == 270 and pay == "ZD45"
     assert [(w, k, p) for w, k, p, _ in log] == [
-        ("us", "offer", 250), ("vendor", "counter", 275), ("us", "offer", 270), ("vendor", "accept", 270)]
+        ("us", "offer", 250), ("vendor", "hold", 285), ("us", "offer", 257), ("vendor", "counter", 280),
+        ("us", "offer", 262), ("vendor", "counter", 277), ("us", "offer", 265), ("vendor", "counter", 275),
+        ("us", "offer", 270), ("vendor", "accept", 270)]
     assert deal.realised_delta("buy", 285, price, 600) == 9000
 
 
-def test_hero_sell_story_ends_at_168():
+def test_hero_sell_story_ends_at_167():
     status, price, pay, log = play("sell", target=170, limit=165, quote=163, reserve=169, flex=0.4,
                                    vendor_payment="ADV")
-    assert status == "agreed" and price == 168
+    assert status == "agreed" and price == 167
     assert [(w, k, p) for w, k, p, _ in log] == [
-        ("us", "offer", 170), ("vendor", "counter", 166), ("us", "offer", 168), ("vendor", "accept", 168)]
-    assert deal.realised_delta("sell", 163, price, 5000) == 25000
+        ("us", "offer", 170), ("vendor", "hold", 163), ("us", "offer", 169), ("vendor", "counter", 164),
+        ("us", "offer", 168), ("vendor", "counter", 165), ("us", "offer", 167), ("vendor", "accept", 167)]
+    assert deal.realised_delta("sell", 163, price, 5000) == 20000
 
 
 def test_no_deal_buy_hands_back_when_the_vendor_reserve_is_beyond_the_ceiling():
@@ -89,10 +92,10 @@ def test_payment_objective_asks_for_better_terms_up_front():
 
 def test_vendor_grants_at_most_15_extra_days():
     r = vendor_sim.reply("buy", reserve=268, flex=0.3, vendor_price=285, vendor_payment="ZD30",
-                         offer_price=270, offer_payment="ZD60", round_no=1)
+                         offer_price=270, offer_payment="ZD60", round_no=3)
     assert r.kind == "accept" and r.payment == "ZD30"
     r = vendor_sim.reply("buy", reserve=268, flex=0.3, vendor_price=285, vendor_payment="ZD30",
-                         offer_price=270, offer_payment="ZD45", round_no=1)
+                         offer_price=270, offer_payment="ZD45", round_no=3)
     assert r.payment == "ZD45"
 
 
@@ -105,7 +108,7 @@ def test_vendor_never_goes_below_its_reserve_and_flexibility_is_stable():
 
 
 def test_rationales_are_buyer_only_but_messages_never_leak_them():
-    ctx = tactics.Context("buy", 250, 270, "reduce_price", 1, 250, 275, 285, "ZD30", False, 285)
+    ctx = tactics.Context("buy", 250, 270, "reduce_price", 3, 265, 275, 277, "ZD30", False, 285)
     dec = tactics.respond(ctx)
     assert "270" in dec.rationale and "ceiling" in dec.rationale
     for lang in messages.LANGS:

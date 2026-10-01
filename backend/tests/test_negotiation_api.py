@@ -51,11 +51,14 @@ def test_approve_mode_over_http_to_a_closed_item(client):
 
     s = client.post(f"/api/sessions/{sid}/drafts/{d['id']}/approve").json()   # no body at all
     assert [t["speaker"] for t in s["turns"]] == ["us", "vendor"]
-    assert s["intelligence"]["latest_vendor_offer"] == 275 and s["intelligence"]["movement"] == 10
+    assert s["intelligence"]["latest_vendor_offer"] == 285 and s["intelligence"]["movement"] == 0
 
-    s = client.post(f"/api/sessions/{sid}/advance").json()
-    d = s["pending_draft"]
-    s = client.post(f"/api/sessions/{sid}/drafts/{d['id']}/approve", json={}).json()
+    for _ in range(10):
+        s = client.post(f"/api/sessions/{sid}/advance").json()
+        d = s["pending_draft"]
+        s = client.post(f"/api/sessions/{sid}/drafts/{d['id']}/approve", json={}).json()
+        if s["status"] != "active":
+            break
     assert s["status"] == "agreed" and s["agreed_price"] == 270 and s["agreed_payment"] == "ZD45"
     assert s["agreed_delta"] == 9000 and s["intelligence"]["delta_if_accepted"] == 9000
 
@@ -82,18 +85,21 @@ def test_auto_mode_runs_by_repeated_advance_and_the_buyer_can_take_over(client):
     s = client.put(f"/api/sessions/{sid}/mode", json={"mode": "manual"}).json()
     assert s["mode"] == "manual"
     assert client.post(f"/api/sessions/{sid}/advance").json()["round"] == 1
-    s = client.post(f"/api/sessions/{sid}/messages", json={"price": 270}).json()
+    for _ in range(5):
+        s = client.post(f"/api/sessions/{sid}/messages", json={"price": 270}).json()
+        if s["status"] != "active":
+            break
     assert s["status"] == "agreed" and [t["author"] for t in s["turns"]][2] == "human"
 
 
-def test_full_auto_sell_hero_reaches_168(client):
+def test_full_auto_sell_hero_reaches_167(client):
     analyzed(client, SELL, 170, 165)
     sid = start(client, SELL, "auto")["id"]
     for _ in range(8):
         s = client.post(f"/api/sessions/{sid}/advance").json()
         if s["status"] != "active":
             break
-    assert s["status"] == "agreed" and s["agreed_price"] == 168 and s["agreed_delta"] == 25000
+    assert s["status"] == "agreed" and s["agreed_price"] == 167 and s["agreed_delta"] == 20000
 
 
 def test_guardrails_reject_bad_manual_messages_with_a_readable_reason(client):
