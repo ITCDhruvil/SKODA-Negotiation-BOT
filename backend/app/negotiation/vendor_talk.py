@@ -106,3 +106,84 @@ def reply_delay(persona: str, bid_id: str, round_no: int, after_pause: bool) -> 
 def pause_delay(bid_id: str, round_no: int) -> int:
     """The "let me check" message itself comes quickly."""
     return _pick(f"pause:{bid_id}:{round_no}", 3, 12)
+
+
+# --- disapproval: how a vendor pushes back, refuses and walks away ---------------------------------
+# Three kinds. "replace" lines stand in for the usual price message, "before" lines come ahead of it and
+# "after" lines are added to it. They use {price} and {unit}; none names a limit, a target or software.
+KIND = {"frustrated": "before", "nothing_left": "replace", "ultimatum": "replace", "rescope": "replace",
+        "walkaway": "replace", "deadline": "after", "nibble": "after"}
+
+_FLAVOUR = {
+    ("frustrated", "*"): {
+        "en": ["That is far from where I can go. I need a realistic number to continue.",
+               "Honestly, small steps like this do not help me. I need a serious number.",
+               "I am trying to work with you, but this is getting difficult."],
+        "hi": ["यह मेरी सीमा से काफ़ी दूर है। आगे बढ़ने के लिए मुझे एक वास्तविक संख्या चाहिए।",
+               "ईमानदारी से कहूँ तो ऐसे छोटे कदमों से बात नहीं बनती।"],
+        "mr": ["हे माझ्या मर्यादेपासून बरेच दूर आहे. पुढे जाण्यासाठी मला खरा आकडा हवा.",
+               "खरे सांगायचे तर असे लहान पाऊल उपयोगी नाही."],
+    },
+    ("nothing_left", "*"): {
+        "en": ["I have really got nothing left to give on price. {price} per {unit} is it.",
+               "I have gone as far as I can. {price} per {unit} is all I have in this."],
+        "hi": ["कीमत पर मेरे पास अब देने के लिए कुछ नहीं बचा है। {price} प्रति {unit} ही है।"],
+        "mr": ["किंमतीवर माझ्याकडे आता देण्यासाठी काही उरलेले नाही. {price} प्रति {unit} हेच आहे."],
+    },
+    ("ultimatum", "*"): {
+        "en": ["{price} per {unit} is my final price. Take it or leave it.",
+               "I cannot do better than {price} per {unit}. That is my last word."],
+        "hi": ["{price} प्रति {unit} मेरी अंतिम कीमत है। लेना हो तो लीजिए।"],
+        "mr": ["{price} प्रति {unit} ही माझी अंतिम किंमत आहे. घ्यायचे तर घ्या."],
+    },
+    ("rescope", "buy"): {
+        "en": ["At that price I can only do a lower grade or a smaller lot. For the full quantity as quoted, {price} per {unit} stays.",
+               "That level does not cover my cost. If you want it that low, I would have to change the grade or add charges. Otherwise it stays at {price} per {unit}."],
+        "hi": ["उस कीमत पर मैं केवल कम ग्रेड या छोटा लॉट दे सकता हूँ। पूरी मात्रा के लिए {price} प्रति {unit} ही रहेगा।"],
+        "mr": ["त्या किंमतीत मी फक्त कमी ग्रेड किंवा छोटा लॉट देऊ शकतो. पूर्ण प्रमाणासाठी {price} प्रति {unit} राहील."],
+    },
+    ("rescope", "sell"): {
+        "en": ["At that rate I can only take part of the lot, or take it as it is without sorting. For the full lot, {price} per {unit} stays.",
+               "That is more than I can pay for all of it. I would have to take a smaller quantity, or deduct for mixed material. Otherwise it stays at {price} per {unit}."],
+        "hi": ["उस भाव पर मैं लॉट का केवल हिस्सा ले सकता हूँ। पूरे लॉट के लिए {price} प्रति {unit} ही रहेगा।"],
+        "mr": ["त्या भावात मी लॉटचा फक्त काही भाग घेऊ शकतो. संपूर्ण लॉटसाठी {price} प्रति {unit} राहील."],
+    },
+    ("walkaway", "*"): {
+        "en": ["I am sorry, I cannot make that work. {price} per {unit} was the best I could do. If your budget changes, let me know.",
+               "Then I will leave it here. {price} per {unit} was my best. Do reach out if things change."],
+        "hi": ["क्षमा कीजिए, यह मेरे लिए संभव नहीं है। {price} प्रति {unit} मेरा सबसे अच्छा था। बजट बदले तो बताइएगा।"],
+        "mr": ["माफ करा, हे मला जमणार नाही. {price} प्रति {unit} हेच माझे सर्वोत्तम होते. बजेट बदलले तर कळवा."],
+    },
+    ("deadline", "*"): {
+        "en": ["This rate holds only until tomorrow evening, then I will have to re-quote.",
+               "I have to confirm this by tomorrow, so I can hold it for a day."],
+        "hi": ["यह दर केवल कल शाम तक है, उसके बाद मुझे दोबारा भाव देना होगा।"],
+        "mr": ["हा दर फक्त उद्या संध्याकाळपर्यंत आहे, त्यानंतर मला पुन्हा भाव द्यावा लागेल."],
+    },
+    ("nibble", "buy"): {
+        "en": ["On one condition: you arrange the pickup from our works.",
+               "Fine, as long as the loading is arranged at your end."],
+        "hi": ["एक शर्त पर: माल हमारे यहाँ से आप उठवाएँगे।"],
+        "mr": ["एका अटीवर: माल आमच्याकडून तुम्ही उचलाल."],
+    },
+    ("nibble", "sell"): {
+        "en": ["On one condition: the loading is done by your team at your end.",
+               "Fine, as long as you cover the weighbridge charges."],
+        "hi": ["एक शर्त पर: लोडिंग आपकी टीम करेगी।"],
+        "mr": ["एका अटीवर: लोडिंग तुमची टीम करेल."],
+    },
+}
+
+
+def flavour_line(flavour: str, direction: str, lang: str, variant: int, *, price: str = "", unit: str = "") -> str:
+    """The pushback wording for a vendor state, or '' when the state has none."""
+    pool = _FLAVOUR.get((flavour, direction)) or _FLAVOUR.get((flavour, "*"))
+    if not pool:
+        return ""
+    lines = pool[lang]
+    return lines[variant % len(lines)].format(price=price, unit=unit)
+
+
+def walk_away_delay(bid_id: str, round_no: int) -> int:
+    """A vendor that is leaving goes quiet first: a day or two."""
+    return _pick(f"quiet:{bid_id}:{round_no}", 1440, 2880)

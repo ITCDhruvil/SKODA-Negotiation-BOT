@@ -389,8 +389,10 @@ class Strategy(BaseModel):
     round: int
     max_rounds: int
     phase: Literal["opening", "probing", "trading", "pressing", "closing", "done"]
-    stance: Literal["unknown", "open", "firm", "open_on_terms"]
+    stance: Literal["unknown", "open", "firm", "open_on_terms", "crawling"]
     stance_note: str
+    mood: int  # 0 calm .. 100 about to walk away, inferred from the vendor's own replies
+    mood_label: Literal["calm", "impatient", "frustrated", "walking_away"]
     tactics_used: list[str]
     elapsed_minutes: int  # conversation time so far
     alternative: Optional[str]  # the next-best quote, if another vendor quoted
@@ -450,6 +452,7 @@ class SessionView(SessionSummary):
     original_value: float  # quantity x the vendor's original price
     agreed_value: Optional[float]  # quantity x the agreed price
     handback_reason: Optional[str]
+    vendor_ended: bool  # the vendor ended the conversation
     ended_at: Optional[datetime]
     turns: list[TurnView]
     pending_draft: Optional[DraftView]

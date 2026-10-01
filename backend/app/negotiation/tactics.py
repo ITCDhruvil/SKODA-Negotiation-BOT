@@ -40,6 +40,8 @@ class Context:
     trade_used: bool = False
     leverage_used: bool = False
     split_used: bool = False
+    token_count: int = 0  # replies in a row where the vendor moved its price by a token amount
+    crawl_called: bool = False
     has_alternative: bool = False  # another vendor has really quoted on this item
     alternative: str = ""  # the next-best quote as text, for the hand-back advice
 
@@ -96,7 +98,8 @@ def respond(ctx: Context) -> Decision:
     word = deal.limit_word(d)
     if ctx.continuing:
         return _push_further(ctx, word)
-    if inside and (ctx.round >= ACCEPT_AFTER or ctx.vendor_final or ctx.stalls >= 3
+    crawl_open = ctx.token_count >= 2 and not (ctx.crawl_called and ctx.trade_used)  # small steps are not yet dealt with
+    if inside and (ctx.round >= ACCEPT_AFTER or ctx.vendor_final or (ctx.stalls >= 3 and not crawl_open)
                    or deal.gap_to_target(d, v, ctx.target) == 0):
         return Decision(
             "accept", "accept", v, ctx.vendor_payment,
@@ -126,7 +129,14 @@ def respond(ctx: Context) -> Decision:
                 "offer", "close", ctx.limit, ask,
                 f"The vendor is at {money(v)}, only {money(deal.distance(v, ctx.limit))} outside your {word}. "
                 f"I recommend asking {money(ctx.limit)}{more} to close.", "close")
-    if ctx.stalls >= 1:  # the vendor did not move: try terms, other offers, then the middle, before anything else
+    if ctx.token_count >= 2 and not ctx.crawl_called:
+        held = ctx.our_offer if ctx.our_offer is not None else ctx.target
+        return Decision(
+            "offer", "crawl", held, None,
+            f"The vendor is moving by token amounts (now {money(v)}). I recommend holding at {money(held)} and saying "
+            "plainly that steps this small do not help, so a real move or a different trade is needed.", "crawl")
+    if ctx.stalls >= 1 and not (ctx.token_count == 1 and not ctx.crawl_called):
+        # the vendor did not really move: try terms, other offers, then the middle, before anything else
         held = ctx.our_offer if ctx.our_offer is not None else ctx.target
         if not ctx.trade_used:
             ask = _payment_ask(ctx, 1)

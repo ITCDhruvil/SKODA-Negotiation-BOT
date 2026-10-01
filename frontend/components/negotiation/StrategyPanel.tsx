@@ -1,7 +1,7 @@
 import { Panel, Pill } from "@/components/ui/basics";
 import type { Strategy } from "@/lib/api";
 import { duration } from "@/lib/format";
-import { PHASE_LABEL, STANCE_LABEL, STANCE_TONE, TACTIC_LABEL, TOUGH_LABEL, TOUGH_TONE } from "@/lib/labels";
+import { MOOD_LABEL, MOOD_TONE, PHASE_LABEL, STANCE_LABEL, STANCE_TONE, TACTIC_LABEL, TOUGH_LABEL, TOUGH_TONE } from "@/lib/labels";
 
 /** Where the conversation stands: round, phase, what the vendor has shown, history advice and the options. */
 export function StrategyPanel({ strategy }: { strategy: Strategy }) {
@@ -32,6 +32,10 @@ export function StrategyPanel({ strategy }: { strategy: Strategy }) {
             <Pill tone={STANCE_TONE[stance]}>{STANCE_LABEL[stance]}</Pill>
           </div>
           <p className="text-text">{note}</p>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-xs text-muted">Mood</span>
+            <Pill tone={MOOD_TONE[strategy.mood_label]}>{MOOD_LABEL[strategy.mood_label]}</Pill>
+          </div>
         </div>
 
         {history.level !== "unknown" && (

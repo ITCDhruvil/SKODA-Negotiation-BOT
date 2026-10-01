@@ -1683,6 +1683,8 @@ export interface components {
             agreed_value: number | null;
             /** Handback Reason */
             handback_reason: string | null;
+            /** Vendor Ended */
+            vendor_ended: boolean;
             /** Ended At */
             ended_at: string | null;
             /** Turns */
@@ -1728,9 +1730,16 @@ export interface components {
              * Stance
              * @enum {string}
              */
-            stance: "unknown" | "open" | "firm" | "open_on_terms";
+            stance: "unknown" | "open" | "firm" | "open_on_terms" | "crawling";
             /** Stance Note */
             stance_note: string;
+            /** Mood */
+            mood: number;
+            /**
+             * Mood Label
+             * @enum {string}
+             */
+            mood_label: "calm" | "impatient" | "frustrated" | "walking_away";
             /** Tactics Used */
             tactics_used: string[];
             /** Elapsed Minutes */

@@ -4878,6 +4878,10 @@
       ],
       "title": "Handback Reason"
      },
+     "vendor_ended": {
+      "type": "boolean",
+      "title": "Vendor Ended"
+     },
      "ended_at": {
       "anyOf": [
        {
@@ -4942,6 +4946,7 @@
      "original_value",
      "agreed_value",
      "handback_reason",
+     "vendor_ended",
      "ended_at",
      "turns",
      "pending_draft",
@@ -5022,13 +5027,28 @@
        "unknown",
        "open",
        "firm",
-       "open_on_terms"
+       "open_on_terms",
+       "crawling"
       ],
       "title": "Stance"
      },
      "stance_note": {
       "type": "string",
       "title": "Stance Note"
+     },
+     "mood": {
+      "type": "integer",
+      "title": "Mood"
+     },
+     "mood_label": {
+      "type": "string",
+      "enum": [
+       "calm",
+       "impatient",
+       "frustrated",
+       "walking_away"
+      ],
+      "title": "Mood Label"
      },
      "tactics_used": {
       "items": {
@@ -5063,6 +5083,8 @@
      "phase",
      "stance",
      "stance_note",
+     "mood",
+     "mood_label",
      "tactics_used",
      "elapsed_minutes",
      "alternative",

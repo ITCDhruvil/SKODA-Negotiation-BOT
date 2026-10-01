@@ -6,7 +6,7 @@ from typing import Optional
 from app import deal
 from app import schemas as sch
 from app.models import Draft, Session, Turn
-from app.negotiation import service, tactics
+from app.negotiation import service, tactics, vendor_sim
 from app.negotiation.messages import money
 from app.services import NotFound
 from app.store import Repo
@@ -56,6 +56,8 @@ def _stance(s: Session) -> tuple[str, str]:
     """What the vendor has shown so far (observed behaviour only)."""
     if s.round < 2:
         return "unknown", "Too early to tell: the vendor has only replied once."
+    if s.token_count >= 2:
+        return "crawling", f"Crawling: the vendor has moved by token amounts in its last {s.token_count} replies."
     moved = abs(s.vendor_offer - s.original_price) / s.original_price
     terms = s.vendor_payment != s.original_payment
     if s.stall_count >= 2:
@@ -103,7 +105,7 @@ def session_view(repo: Repo, session_id: str) -> sch.SessionView:
                       if s.agreed_price is not None else None),
         original_value=deal.value(item.qty, s.original_price),
         agreed_value=deal.value(item.qty, s.agreed_price) if s.agreed_price is not None else None,
-        handback_reason=s.handback_reason, ended_at=s.ended_at,
+        handback_reason=s.handback_reason, vendor_ended=s.vendor_ended, ended_at=s.ended_at,
         turns=[_turn(t) for t in service.turns(repo, s.id)],
         pending_draft=_draft(draft) if draft else None, intelligence=intelligence,
         strategy=_strategy(repo, s, item, event))
@@ -131,6 +133,7 @@ def _strategy(repo: Repo, s: Session, item, event) -> sch.Strategy:
     used = [t.tactic for t in all_turns if t.speaker == "us" and t.tactic]
     return sch.Strategy(
         round=s.round, max_rounds=tactics.MAX_ROUNDS, phase=_phase(s), stance=stance, stance_note=note,
+        mood=s.mood, mood_label=vendor_sim.mood_label(s.mood),
         tactics_used=used, elapsed_minutes=all_turns[-1].elapsed_minutes if all_turns else 0, alternative=alt, history=readmodel.vendor_toughness(repo.fetch("history"), s.vendor_id))
 
 

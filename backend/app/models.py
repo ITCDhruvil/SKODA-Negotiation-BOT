@@ -182,6 +182,11 @@ class Session(_Model):
     trade_used: bool = False
     leverage_used: bool = False
     split_used: bool = False
+    mood: int = 0  # how irritated the vendor is (0 calm .. 100), from how far and how stingily we offer
+    token_count: int = 0  # replies in a row where the vendor moved its price by a token amount
+    crawl_called: bool = False
+    ultimatum_round: int = -1  # the reply in which the vendor said "take it or leave it" (-1: not yet)
+    vendor_ended: bool = False  # the vendor walked away, not us
     agreed_price: Optional[float]
     agreed_payment: Optional[str]
     handback_reason: Optional[str]

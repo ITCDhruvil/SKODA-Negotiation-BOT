@@ -7,16 +7,18 @@ from app.negotiation import guardrails, messages, tactics, vendor_sim
 
 
 def play(direction, *, target, limit, quote, reserve, flex, objective="reduce_price",
-         vendor_payment="ZD30", max_turns=16, persona="cooperative", has_alternative=False):
+         vendor_payment="ZD30", max_turns=16, persona="cooperative", has_alternative=False, scripted=True):
     """Run the buyer's tactics against the simulated vendor until someone agrees or we hand back."""
     v_price, v_prev, v_pay, v_final, our, rnd = quote, quote, vendor_payment, False, None, 0
-    stalls, flags = 0, {"bluff": False, "trade": False, "leverage": False, "split": False}
+    stalls, flags = 0, {"bluff": False, "trade": False, "leverage": False, "split": False, "crawl": False}
+    tokens, mood, ult = 0, 0, -1
     log = []
     for _ in range(max_turns):
         ctx = tactics.Context(direction, target, limit, objective, rnd, our, v_price, v_prev,
                               v_pay, v_final, quote, stalls=stalls, bluff_called=flags["bluff"],
                               trade_used=flags["trade"], leverage_used=flags["leverage"],
-                              split_used=flags["split"], has_alternative=has_alternative,
+                              split_used=flags["split"], token_count=tokens, crawl_called=flags["crawl"],
+                              has_alternative=has_alternative,
                               alternative="Other Vendor at ₹100" if has_alternative else "")
         dec = tactics.opening(ctx) if our is None else tactics.respond(ctx)
         log.append(("us", dec.kind, dec.price, dec.payment))
@@ -29,10 +31,19 @@ def play(direction, *, target, limit, quote, reserve, flex, objective="reduce_pr
             flags[dec.tactic] = True
         r = vendor_sim.reply(direction, reserve=reserve, flex=flex, vendor_price=v_price,
                              vendor_payment=v_pay, offer_price=our, offer_payment=dec.payment,
-                             round_no=rnd, persona=persona)
+                             round_no=rnd, persona=persona, tactic=dec.tactic, mood=mood, ultimatum_round=ult,
+                             scripted=scripted, seed="t")
         log.append(("vendor", r.kind, r.price, r.payment))
-        moved = r.price != v_price or r.payment != v_pay
+        mood = r.mood
+        if r.flavour == "ultimatum" and ult < 0:
+            ult = rnd
+        step = abs(r.price - v_price)
+        token = 0 < step <= max(1.0, 0.005 * v_price) and r.payment == v_pay and not scripted
+        moved = (step > 0 and not token) or r.payment != v_pay
+        tokens = (tokens + 1 if token else (0 if moved else tokens)) if rnd >= 1 else 0
         stalls = stalls + 1 if (not moved and rnd >= 1 and r.kind != "accept") else 0
+        if r.ends:
+            return "walked", None, None, log
         rnd += 1
         v_prev, v_price, v_pay, v_final = v_price, r.price, r.payment, r.final
         if r.kind == "accept":
@@ -178,3 +189,40 @@ class TestGuardrails:
     def test_ordinary_words_are_fine(self):
         guardrails.check_message("Thanks, please share the delivery plan. Chai and snacks included.",
                                  offer_price=260, limit=270, target=250)
+
+
+def test_a_vendor_that_creeps_a_rupee_a_round_is_called_out_and_not_taken_for_progress():
+    status, price, pay, log = play("buy", target=250, limit=270, quote=285, reserve=262, flex=0.3,
+                                   persona="crawler", scripted=False, max_turns=30)
+    steps = [(w, k) for w, k, *_ in log]
+    assert ("us", "offer") in steps
+    prices = [p for w, _, p, _ in log if w == "vendor"]
+    assert any(0 < abs(a - b) <= 1 for a, b in zip(prices, prices[1:]))  # it really does move by a rupee
+    assert status in ("agreed", "handback")  # the buyer does not just keep nudging for ever
+
+
+def test_crawler_jumps_when_terms_are_traded():
+    r = vendor_sim.reply("buy", reserve=262, flex=0.3, vendor_price=280, vendor_payment="ZD30", offer_price=268,
+                         offer_payment="ZD45", round_no=3, persona="crawler", tactic="trade", scripted=True)
+    assert r.price < 279
+
+
+def test_crawler_alone_moves_a_rupee():
+    r = vendor_sim.reply("buy", reserve=262, flex=0.3, vendor_price=280, vendor_payment="ZD30", offer_price=268,
+                         offer_payment=None, round_no=3, persona="crawler", scripted=True)
+    assert r.price == 279
+
+
+def test_a_hard_vendor_irritated_after_a_final_price_leaves_and_a_scripted_one_never_does():
+    kw = dict(reserve=262, flex=0.3, vendor_price=270, vendor_payment="ZD30", offer_price=240, offer_payment=None,
+              round_no=6, persona="anchor", mood=70, ultimatum_round=3, seed="x")
+    assert vendor_sim.reply("buy", **kw).ends
+    assert not vendor_sim.reply("buy", scripted=True, **kw).ends
+    assert not vendor_sim.reply("buy", **{**kw, "persona": "cooperative"}).ends  # cooperative vendors do not walk away
+    assert not vendor_sim.reply("buy", **{**kw, "offer_price": 265}).ends  # an acceptable offer is never refused
+
+
+def test_mood_rises_with_low_offers_and_eases_when_we_come_close():
+    low = vendor_sim.next_mood(0, accepts=False, offer_price=230, reserve=262, our_prev=None)
+    assert low > 15
+    assert vendor_sim.next_mood(low, accepts=True, offer_price=265, reserve=262, our_prev=230) < low

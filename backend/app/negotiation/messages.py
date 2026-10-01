@@ -384,8 +384,14 @@ def _decorate(text: str, answers: Optional[list[str]], ask: Optional[str]) -> st
 def vendor_message(
     kind: str, *, direction: str, lang: str, price: float, unit: str, payment: Optional[str] = None,
     variant: int = 0, answer: Optional[str] = None, ask: Optional[str] = None, gap: Optional[float] = None,
+    flavour: str = "",
 ) -> str:
     """The simulated vendor's reply text: a reaction to our offer, then `answer`, then its price, then a question of its own."""
+    line = _vt.flavour_line(flavour, direction, lang, variant, price=money(price),
+                            unit=_UNIT[lang].get(unit, unit)) if flavour else ""
+    how = _vt.KIND.get(flavour, "")
+    if line and how == "replace":
+        return (answer + " " if answer else "") + line
     template = _VENDOR[(kind, direction, lang)]
     alts = _VENDOR_ALT.get((kind, direction), []) if lang == "en" else []
     if alts and variant % (len(alts) + 1):
@@ -395,5 +401,9 @@ def vendor_message(
         pay=_agreed_payment(lang, payment) if payment else "")
     if payment and kind in ("counter", "hold"):
         text += _agreed_payment(lang, payment)  # it also moved on payment terms
-    react = _vt.reaction(direction, lang, gap, variant) if kind in ("counter", "firm") else ""
+    if line and how == "after":
+        text += " " + line
+    react = _vt.reaction(direction, lang, gap, variant) if kind in ("counter", "firm") and how != "before" else ""
+    if line and how == "before":
+        react = line
     return (react + " " if react else "") + (answer + " " if answer else "") + text + (" " + ask if ask else "")

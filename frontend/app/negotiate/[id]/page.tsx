@@ -207,7 +207,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             {s.vendor_name}
             <DirectionBadge direction={d} />
             <Pill tone={s.status === "agreed" ? "ok" : s.status === "handed_back" ? "red" : "amber"}>
-              {s.status === "agreed" ? "Agreed" : s.status === "handed_back" ? "Handed back" : `Round ${s.round}`}
+              {s.status === "agreed" ? "Agreed" : s.status === "handed_back" ? (s.vendor_ended ? "Vendor left" : "Handed back") : `Round ${s.round}`}
             </Pill>
           </span>
         }
@@ -283,7 +283,7 @@ function Workspace({ initial }: { initial: SessionView }) {
 
             {s.status === "handed_back" && (
               <div className="rounded-card border border-transparent bg-red-soft p-4 text-sm text-red" role="status">
-                <p className="font-bold">Handed back to you</p>
+                <p className="font-bold">{s.vendor_ended ? "The vendor ended the conversation" : "Handed back to you"}</p>
                 <p className="mt-1">{s.handback_reason ?? "No acceptable deal could be reached within your limits."}</p>
                 <div className="mt-3">
                   <Link href={`/items/${s.item_id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink">

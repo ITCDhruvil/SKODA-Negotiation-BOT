@@ -18,6 +18,8 @@ from app.negotiation import guardrails, info, messages, personas, tactics, vendo
 from app.services import Conflict, NotFound
 from app.store import Repo
 
+TOKEN_SHARE = 0.005  # a price move of this share of the vendor's price or less (or a rupee) is a token step
+
 
 # --- lookups ---------------------------------------------------------------------------------
 
@@ -105,7 +107,8 @@ def _context(repo: Repo, s: Session, item: Item, event: Event) -> tactics.Contex
         previous_vendor_offer=s.previous_vendor_offer, vendor_payment=s.vendor_payment,
         vendor_final=s.vendor_final, original_price=s.original_price, continuing=s.continuing,
         stalls=s.stall_count, bluff_called=s.bluff_called, trade_used=s.trade_used,
-        leverage_used=s.leverage_used, split_used=s.split_used, has_alternative=has_alt, alternative=alt)
+        leverage_used=s.leverage_used, split_used=s.split_used, token_count=s.token_count,
+        crawl_called=s.crawl_called, has_alternative=has_alt, alternative=alt)
 
 
 def _facts(repo: Repo, s: Session, item: Item, event: Event) -> info.Facts:
@@ -216,11 +219,11 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
 # --- executing moves -------------------------------------------------------------------------
 
 def _finish(repo: Repo, s: Session, item: Item, *, agreed: bool, price: Optional[float] = None,
-            payment: Optional[str] = None, reason: Optional[str] = None) -> Session:
+            payment: Optional[str] = None, reason: Optional[str] = None, vendor_ended: bool = False) -> Session:
     s = s.model_copy(update={
         "status": "agreed" if agreed else "handed_back", "agreed_price": price if agreed else None,
         "agreed_payment": payment if agreed else None, "handback_reason": reason,
-        "ended_at": clock.now()})
+        "vendor_ended": vendor_ended, "ended_at": clock.now()})
     _move_item(repo, item, "result_pending" if agreed else "handed_back")
     for d in repo.fetch("draft", parent=s.id):
         if d.status == "pending":
@@ -255,7 +258,9 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
     reply = vendor_sim.reply(
         event.direction, reserve=reserve, flex=vendor_sim.flexibility(s.bid_id),
         vendor_price=s.vendor_offer, vendor_payment=s.vendor_payment, offer_price=price,
-        offer_payment=payment, round_no=s.round, persona=personas.persona_for(s.bid_id, s.vendor_id))
+        offer_payment=payment, round_no=s.round, persona=personas.persona_for(s.bid_id, s.vendor_id),
+        tactic=tactic or "", mood=s.mood, our_prev=s.our_offer, ultimatum_round=s.ultimatum_round,
+        scripted=s.bid_id in personas.SCRIPTED_BIDS, seed=s.bid_id)
     changed_payment = reply.payment if reply.payment != s.vendor_payment else None
     facts = _facts(repo, s, item, event)
     asked = info.topics_in(text, include_payment=author == "human")
@@ -270,25 +275,42 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
     gap = abs(s.vendor_offer - price) / s.vendor_offer if (s.vendor_offer and s.round >= 1) else None  # nothing to react to at first
     _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
-        unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question, gap=gap),
+        unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question, gap=gap,
+        flavour=reply.flavour),
         reply.price, reply.payment,
-        delay=vendor_talk.reply_delay(personas.persona_for(s.bid_id, s.vendor_id), s.bid_id, s.round,
-                                      vendor_talk.pauses_before(s.round, reply.kind)))
+        delay=(vendor_talk.walk_away_delay(s.bid_id, s.round) if reply.ends else
+               vendor_talk.reply_delay(personas.persona_for(s.bid_id, s.vendor_id), s.bid_id, s.round,
+                                       vendor_talk.pauses_before(s.round, reply.kind))))
     # Movement means a lower (buy) or higher (sell) price, or a better payment term; the very first reply does not count.
-    moved = reply.price != s.vendor_offer or reply.payment != s.vendor_payment
+    # A token step (a rupee or so) is not movement: it counts as a stall and is tracked on its own.
+    step = abs(reply.price - s.vendor_offer)
+    token = (s.bid_id not in personas.SCRIPTED_BIDS and 0 < step <= max(1.0 if s.vendor_offer >= 100 else 0.0, TOKEN_SHARE * s.vendor_offer)
+             and reply.payment == s.vendor_payment)
+    moved = (step > 0 and not token) or reply.payment != s.vendor_payment
     stalls = s.stall_count + 1 if (not moved and s.round >= 1 and reply.kind != "accept") else 0
+    tokens = (s.token_count + 1 if token else (0 if moved else s.token_count)) if s.round >= 1 else 0
     s = s.model_copy(update={
         "stall_count": stalls,
         "bluff_called": s.bluff_called or tactic == "bluff",
         "trade_used": s.trade_used or tactic == "trade",
         "leverage_used": s.leverage_used or tactic == "leverage",
         "split_used": s.split_used or tactic == "split",
+        "crawl_called": s.crawl_called or tactic == "crawl", "token_count": tokens,
+        "mood": reply.mood,
+        "ultimatum_round": s.round if (reply.flavour == "ultimatum" and s.ultimatum_round < 0) else s.ultimatum_round,
         "vendor_question": info.VENDOR_QUESTION_TOPICS if question else None,
         "our_offer": price, "our_payment": payment, "round": s.round + 1,
         "previous_vendor_offer": s.vendor_offer, "vendor_offer": reply.price,
         "vendor_payment": reply.payment, "vendor_final": reply.final, "continuing": False})
     if reply.kind == "accept":
         return _finish(repo, s, item, agreed=True, price=price, payment=reply.payment)
+    if reply.ends:
+        _, alt = _alternative(repo, s, event)
+        nxt = f"switch to the next-best quote ({alt}), " if alt else ""
+        reason = (f"The vendor ended the conversation at {messages.money(reply.price)}, "
+                  f"after your offer of {messages.money(price)}. Options: {nxt}trade payment terms with a different vendor, "
+                  "adjust your limit yourself, or close without a deal.")
+        return _finish(repo, s, item, agreed=False, reason=reason, vendor_ended=True)
     return _save_session(repo, s)
 
 

@@ -7,6 +7,12 @@ Main wording is variant 0; ALT holds the extra English variants.
 from __future__ import annotations
 
 OURS: dict[tuple[str, str, str], str] = {
+    ("crawl", "buy", "en"): "Thank you for moving, but steps this small do not really help us. We need a more meaningful number to take this forward. We are at {price} per {unit} for now.{pay}",
+    ("crawl", "buy", "hi"): "आगे बढ़ने के लिए धन्यवाद, लेकिन इतने छोटे कदमों से हमें मदद नहीं मिलती। बात आगे ले जाने के लिए हमें एक सार्थक संख्या चाहिए। हम अभी {price} प्रति {unit} पर हैं।{pay}",
+    ("crawl", "buy", "mr"): "पुढे आल्याबद्दल धन्यवाद, पण इतक्या लहान पावलांनी आम्हाला मदत होत नाही. पुढे जाण्यासाठी आम्हाला अर्थपूर्ण आकडा हवा. आम्ही सध्या {price} प्रति {unit} वर आहोत.{pay}",
+    ("crawl", "sell", "en"): "Thank you for moving, but steps this small do not really help us. We need a more meaningful rate to take this forward. We are at {price} per {unit} for now.{pay}",
+    ("crawl", "sell", "hi"): "आगे बढ़ने के लिए धन्यवाद, लेकिन इतने छोटे कदमों से हमें मदद नहीं मिलती। बात आगे ले जाने के लिए हमें एक सार्थक भाव चाहिए। हम अभी {price} प्रति {unit} पर हैं।{pay}",
+    ("crawl", "sell", "mr"): "पुढे आल्याबद्दल धन्यवाद, पण इतक्या लहान पावलांनी आम्हाला मदत होत नाही. पुढे जाण्यासाठी आम्हाला अर्थपूर्ण भाव हवा. आम्ही सध्या {price} प्रति {unit} वर आहोत.{pay}",
     ("trade", "buy", "en"): "I understand price is tight for you, so let us look at terms instead. We can stay at {price} per {unit} if the payment terms can be eased.{pay}",
     ("trade", "buy", "hi"): "मैं समझता हूँ कि कीमत पर आपके लिए गुंजाइश कम है, तो चलिए शर्तों पर बात करते हैं। अगर भुगतान की शर्तें आसान हो जाएँ तो हम {price} प्रति {unit} पर बने रह सकते हैं।{pay}",
     ("trade", "buy", "mr"): "किंमतीवर तुमच्यासाठी जागा कमी आहे हे मला समजते, त्यामुळे अटींवर बोलूया. पेमेंटच्या अटी सोप्या झाल्या तर आम्ही {price} प्रति {unit} वर राहू शकतो.{pay}",
@@ -40,6 +46,12 @@ OURS: dict[tuple[str, str, str], str] = {
 }
 
 ALT: dict[tuple[str, str], list[str]] = {
+    ("crawl", "buy"): [
+        "I see you are moving a little each time, but that will not get us there. A real step from your side would let me take this to my manager. We stay at {price} per {unit}.{pay}",
+    ],
+    ("crawl", "sell"): [
+        "I see you are moving a little each time, but that will not get us there. A real step from your side would let me take this to my manager. We stay at {price} per {unit}.{pay}",
+    ],
     ("trade", "buy"): [
         "Let us try a different angle. We can hold at {price} per {unit} if the payment terms can be eased.{pay}",
         "Maybe we can meet on terms rather than price. We stay at {price} per {unit}.{pay}",

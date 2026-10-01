@@ -101,6 +101,7 @@ export const TACTIC_LABEL: Record<string, string> = {
   leverage: "Other offers",
   split: "Meet in the middle",
   bluff: "Testing a final price",
+  crawl: "Called out small steps",
   close: "Closing ask",
   hold: "Holding firm",
   accept: "Accepting",
@@ -124,8 +125,10 @@ export const PHASE_LABEL: Record<string, string> = {
   done: "Finished",
 };
 
-export const STANCE_LABEL: Record<string, string> = { unknown: "Too early to tell", open: "Open", firm: "Firm", open_on_terms: "Open on terms" };
-export const STANCE_TONE: Record<string, Tone> = { unknown: "muted", open: "ok", firm: "red", open_on_terms: "info" };
+export const STANCE_LABEL: Record<string, string> = { unknown: "Too early to tell", open: "Open", firm: "Firm", open_on_terms: "Open on terms", crawling: "Crawling" };
+export const MOOD_LABEL: Record<string, string> = { calm: "Calm", impatient: "Impatient", frustrated: "Frustrated", walking_away: "About to walk away" };
+export const MOOD_TONE: Record<string, Tone> = { calm: "ok", impatient: "info", frustrated: "amber", walking_away: "red" };
+export const STANCE_TONE: Record<string, Tone> = { unknown: "muted", open: "ok", firm: "red", open_on_terms: "info", crawling: "amber" };
 
 export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
   auto: "Messages go out on their own, round by round. You can stop and take over at any time.",
