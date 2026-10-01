@@ -215,14 +215,16 @@ function Workspace({ initial }: { initial: SessionView }) {
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <Panel
-          title="Conversation"
-        >
-          <div className="grid gap-4">
+        {/* The chat fills the height of the window: messages scroll in the middle, the answer bar stays at the bottom. */}
+        <section className="flex min-h-[32rem] flex-col rounded-card border border-line bg-panel shadow-card xl:h-[calc(100vh-10.5rem)]">
+          <header className="flex shrink-0 items-center justify-between gap-2 px-4 pt-3.5 pb-2">
+            <h2 className="text-[15px] font-bold text-ink">Conversation</h2>
+          </header>
+          <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+            <ChatLog turns={s.turns} typing={typing} vendorName={s.vendor_name} />
+          </div>
+          <div className="grid max-h-[60%] shrink-0 gap-3 overflow-y-auto border-t border-line2 p-3">
             {error && <Notice tone="red">{error}</Notice>}
-            <div ref={scroller} className="max-h-[55vh] min-h-[16rem] overflow-y-auto pr-1">
-              <ChatLog turns={s.turns} typing={typing} vendorName={s.vendor_name} />
-            </div>
 
             {s.status === "active" && s.pending_draft && <DraftCard s={s} onResult={apply} onError={setError} />}
 
@@ -291,7 +293,7 @@ function Workspace({ initial }: { initial: SessionView }) {
               </div>
             )}
           </div>
-        </Panel>
+        </section>
 
         <div className="grid content-start gap-5">
           <Panel title="Permission">
