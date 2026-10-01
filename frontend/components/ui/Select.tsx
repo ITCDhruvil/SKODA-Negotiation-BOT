@@ -3,7 +3,13 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Icon } from "./Icon";
 
-export type SelectOption<V extends string = string> = { value: V; label: string; hint?: string };
+export type SelectOption<V extends string = string> = {
+  value: V;
+  label: string;
+  hint?: string;
+  /** Options the buyer added by hand can be deleted: a delete button appears while the pointer is over the row. */
+  removable?: boolean;
+};
 
 /** One line of text, cut off with an ellipsis; while `play` is on it slides right to left to reveal the rest. */
 function Marquee({ text, play, className = "" }: { text: string; play: boolean; className?: string }) {
@@ -47,6 +53,7 @@ export function Select<V extends string = string>({
   searchable = false,
   searchPlaceholder = "Search",
   onAdd,
+  onRemove,
   addPlaceholder = "Name the new one",
   scroll = true,
 }: {
@@ -63,6 +70,8 @@ export function Select<V extends string = string>({
   searchable?: boolean;
   searchPlaceholder?: string;
   onAdd?: (text: string) => void;
+  /** Called with the value of a removable option when its delete button is pressed. */
+  onRemove?: (value: V) => void;
   addPlaceholder?: string;
   /** Set false to show every option without a scroll bar. */
   scroll?: boolean;
@@ -75,6 +84,7 @@ export function Select<V extends string = string>({
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const [flip, setFlip] = useState(false);
   const withBar = searchable || Boolean(onAdd);
   const needle = query.trim().toLowerCase();
   const shown = needle ? options.filter((o) => `${o.label} ${o.hint ?? ""}`.toLowerCase().includes(needle)) : options;
@@ -99,6 +109,12 @@ export function Select<V extends string = string>({
   useEffect(() => setActive(0), [needle]);
 
   const openList = () => {
+    // Open upward when there is clearly more room above the field than below it.
+    const rect = root.current?.getBoundingClientRect();
+    if (rect) {
+      const below = window.innerHeight - rect.bottom;
+      setFlip(below < 320 && rect.top > below);
+    }
     setQuery("");
     setAdding(false);
     setDraft("");
@@ -203,7 +219,7 @@ export function Select<V extends string = string>({
         <Icon name="down" size={16} className={`shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className={`absolute left-0 z-40 w-full rounded-m border border-line bg-panel shadow-card ${placement === "top" ? "bottom-full mb-1" : "mt-1"}`}>
+        <div className={`absolute left-0 z-40 w-full rounded-m border border-line bg-panel shadow-card ${placement === "top" || flip ? "bottom-full mb-1" : "mt-1"}`}>
           {withBar && (
             <div className="flex items-center gap-1.5 border-b border-line2 p-2">
               {adding ? (
@@ -277,7 +293,7 @@ export function Select<V extends string = string>({
               )}
             </div>
           )}
-          <ul ref={list} id={listId} role="listbox" aria-label={ariaLabel} className={`py-1 ${scroll ? "max-h-64 overflow-auto" : ""}`}>
+          <ul ref={list} id={listId} role="listbox" aria-label={ariaLabel} className={`py-1 ${scroll ? "max-h-[max(10rem,min(16rem,40vh))] overflow-y-auto overscroll-contain" : ""}`}>
             {shown.map((o, i) => {
               const isSel = o.value === value;
               return (
@@ -292,13 +308,29 @@ export function Select<V extends string = string>({
                     e.preventDefault(); // inside a <label>, a click would otherwise re-activate the trigger
                     choose(i);
                   }}
-                  className={`flex cursor-pointer items-start justify-between gap-3 px-3 py-2 text-sm ${i === active ? "bg-brand-soft text-ink" : "text-text"} ${isSel ? "font-semibold" : ""}`}
+                  className={`group flex cursor-pointer items-start justify-between gap-3 px-3 py-2 text-sm ${i === active ? "bg-brand-soft text-ink" : "text-text"} ${isSel ? "font-semibold" : ""}`}
                 >
                   <span className="min-w-0 flex-1">
                     <Marquee text={o.label} play={i === active} />
                     {o.hint && <Marquee text={o.hint} play={i === active} className="text-xs font-normal text-muted" />}
                   </span>
                   {isSel && <Icon name="check" size={16} className="mt-0.5 shrink-0 text-brand" />}
+                  {o.removable && onRemove && (
+                    <button
+                      type="button"
+                      aria-label={`Delete ${o.label}`}
+                      title="Delete"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onRemove(o.value);
+                      }}
+                      className="-my-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-m text-muted opacity-0 transition hover:bg-red-soft hover:text-red focus-visible:opacity-100 group-hover:opacity-100"
+                    >
+                      <Icon name="trash" size={15} />
+                    </button>
+                  )}
                 </li>
               );
             })}

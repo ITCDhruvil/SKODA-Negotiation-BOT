@@ -357,3 +357,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 119. Drop-downs that need it have a search bar with a "+" button at its end. Pressing "+" swaps the search bar for a text box with its own placeholder (different for a purchase cart and a scrap lot) and an enter button; Enter or the button adds the value and selects it. Categories and requestors use this; the earlier "Add category" last row is replaced.
     Reason: the same pattern everywhere for find-or-add.
+
+120. Options typed in by hand (a category or a requestor) show a delete button while the pointer is over their row, and only then; deleting the selected one falls back to the default. Drop-down lists scroll when they are long (up to 16 rem or 40% of the window height, never less than 10 rem), and open upward when there is clearly more room above the field than below it, so they never run off the screen.
+    Reason: tidy up hand-added values and keep long lists usable.

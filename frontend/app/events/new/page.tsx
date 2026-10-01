@@ -76,6 +76,10 @@ function Form({ options }: { options: EventOptions }) {
     options.categories.filter((c) => c.direction === direction).forEach((c) => c.vendors.forEach((v) => seen.set(v.id, v)));
     return [...seen.values()].sort((a, b) => a.id.localeCompare(b.id));
   }, [options, direction]);
+  const removeCategory = (key: string) => {
+    setCustomCats((rows) => rows.filter((c) => c.key !== key));
+    if (categoryKey === key) setCategoryKey(options.categories.find((c) => c.direction === direction)?.key ?? "");
+  };
   const addCategory = (label: string) => {
     const key = `custom:${label}`;
     if (!cats.some((c) => c.key === key)) {
@@ -131,6 +135,7 @@ function Form({ options }: { options: EventOptions }) {
     const u = people.find((x) => x.id === id);
     if (u && u.cost_centre) setCostCentre(u.cost_centre);
   };
+  const removeRequestor = (id: string) => setCustomUsers((rows) => rows.filter((u) => u.id !== id)); // the default is picked again if it was selected
   const addRequestor = (name: string) => {
     const id = `custom-${name.toLowerCase().replace(/\s+/g, "-")}`;
     setCustomUsers((rows) => (rows.some((r) => r.id === id) ? rows : [...rows, { id, entity, sso: "", emp_no: "New", full_name: name, email: "", role: "INITIATOR", role_name: "Requestor", cost_centre: costCentre }]));
@@ -333,12 +338,12 @@ function Form({ options }: { options: EventOptions }) {
                       value={categoryKey}
                       onChange={setCategoryKey}
                       ariaLabel="Category"
-                      scroll={false}
                       searchable
                       searchPlaceholder="Search categories"
                       onAdd={addCategory}
+                      onRemove={removeCategory}
                       addPlaceholder={direction === "sell" ? "New scrap material, e.g. Zinc dross" : "New category, e.g. Office furniture"}
-                      options={cats.map((c) => ({ value: c.key, label: c.label }))}
+                      options={cats.map((c) => ({ value: c.key, label: c.label, removable: c.key.startsWith("custom:") }))}
                     />
                   </Labeled>
                   <Labeled label="Event title" hint={direction === "sell" ? "Starts with Scrap and follows the lot. Edit it if you like." : "Follows the first item. Edit it if you like."}>
@@ -369,8 +374,9 @@ function Form({ options }: { options: EventOptions }) {
                         searchable
                         searchPlaceholder="Search people or roles"
                         onAdd={addRequestor}
+                        onRemove={removeRequestor}
                         addPlaceholder={direction === "sell" ? "New requestor for the scrap sale, e.g. Asha Rao" : "New requestor, e.g. Asha Rao"}
-                        options={people.map((u) => ({ value: u.id, label: u.full_name, hint: `${u.emp_no} · ${u.role_name} · cost centre ${u.cost_centre}` }))}
+                        options={people.map((u) => ({ value: u.id, label: u.full_name, hint: `${u.emp_no} · ${u.role_name} · cost centre ${u.cost_centre}`, removable: u.id.startsWith("custom-") }))}
                       />
                     </Labeled>
                   </div>
