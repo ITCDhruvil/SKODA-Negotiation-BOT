@@ -310,6 +310,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events/{event_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Event Sessions */
+        get: operations["event_sessions_api_events__event_id__sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/items/{item_id}/negotiations": {
         parameters: {
             query?: never;
@@ -491,6 +508,23 @@ export interface paths {
         put?: never;
         /** Accept Deal */
         post: operations["accept_deal_api_items__item_id__accept_deal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/items/{item_id}/close-without-deal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Without Deal */
+        post: operations["close_without_deal_api_items__item_id__close_without_deal_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -936,6 +970,10 @@ export interface components {
             outcome: components["schemas"]["OutcomeView"] | null;
             value_eligibility: components["schemas"]["EligibilityView"];
             bids_eligibility: components["schemas"]["EligibilityView"];
+            /** Active Session Id */
+            active_session_id?: string | null;
+            /** Latest Session Status */
+            latest_session_status?: string | null;
         };
         /**
          * ItemRow
@@ -1219,6 +1257,21 @@ export interface components {
             /** Events */
             events: number;
         };
+        /** SessionActions */
+        SessionActions: {
+            /** Can Advance */
+            can_advance: boolean;
+            /** Can Send */
+            can_send: boolean;
+            /** Can Accept Offer */
+            can_accept_offer: boolean;
+            /** Can Hand Back */
+            can_hand_back: boolean;
+            /** Can Continue */
+            can_continue: boolean;
+            /** Can Accept Deal */
+            can_accept_deal: boolean;
+        };
         /** SessionSummary */
         SessionSummary: {
             /** Id */
@@ -1278,6 +1331,9 @@ export interface components {
             started_at: string;
             /** Agreed Price */
             agreed_price: number | null;
+            /** Event Id */
+            event_id: string;
+            actions: components["schemas"]["SessionActions"];
             /** Item Description */
             item_description: string;
             /**
@@ -1996,6 +2052,37 @@ export interface operations {
             };
         };
     };
+    event_sessions_api_events__event_id__sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     start_negotiation_api_items__item_id__negotiations_post: {
         parameters: {
             query?: never;
@@ -2329,6 +2416,37 @@ export interface operations {
         };
     };
     accept_deal_api_items__item_id__accept_deal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_without_deal_api_items__item_id__close_without_deal_post: {
         parameters: {
             query?: never;
             header?: never;
