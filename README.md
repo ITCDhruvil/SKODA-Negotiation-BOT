@@ -41,6 +41,19 @@ Open **Demo story** in the sidebar for a guided, nine-step walk through the whol
 - Permission modes: Full auto, Approve each message, Manual. You can stop auto and take over at any time.
 - Export: closed BUY events produce the 38-column SAP Shopping Cart template (`DD.MM.YYYY` dates); closed SELL events produce a deal summary.
 
+- The vendor is simulated by rules, not a model. It has a hidden reserve and a persona, and it can push back: it says an offer is too far away, claims nothing is left to give, names a final price, offers a smaller lot, sets a deadline, or (for the harder personas) leaves. A vendor that moves by a rupee or so a round is treated as stalling. Research behind this is in `docs/research/vendor-negotiation-behaviour.md`.
+
+## From this POC to a real negotiation bot
+
+No model needs training. Keep the decisions in code and use a hosted model through an API only for language.
+
+1. **Keep the engine.** Targets, limits, accept or hand-back rules and any "a human must handle deals above a set value" rule stay deterministic. A model never decides a price.
+2. **Add a language layer.** The code decides what to say (counter at a price, ask for terms, hold). A model words it in the right language and tone. A model also reads the vendor's free-text reply into structured data: new price, payment change, question, refusal, deadline.
+3. **Reading the vendor is the main new work.** Today the vendor reply is simulated; a real one is free text, so a misreading is the biggest risk.
+4. **Keep the guardrails.** Run every generated message through the same checks (no numbers outside the limit, no mention of software). If a message fails, send the template wording instead.
+5. **Make the channel real.** Email or WhatsApp Business, one thread per vendor and item, real delays, reminders and "no reply" handling.
+6. **Test on history, not by training.** Replay anonymised past threads and compare the bot's decisions with what buyers did. Roll out in stages: drafts for review, then approve each message, then automatic for small deals only.
+
 ## Layout
 
 - `backend/`: FastAPI, SQLite store, deal maths in `app/deal.py`, negotiation engine in `app/negotiation/`, export in `app/export.py`. See `backend/README.md`.
