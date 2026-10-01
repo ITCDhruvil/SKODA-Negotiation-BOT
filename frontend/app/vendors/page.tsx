@@ -69,7 +69,7 @@ export default function VendorsPage() {
             <ErrorBox message={error} status={errorStatus} onRetry={reload} />
           </div>
         )}
-        {data && <DataTable columns={columns} rows={rows} rowKey={(v) => v.id} onRowClick={(v) => router.push(`/vendors/${v.id}`)} empty="No vendors match." />}
+        {data && <DataTable columns={columns} rows={rows} rowKey={(v) => v.id} onRowClick={(v) => router.push(`/vendors/${v.id}`)} empty="No vendors match." paginate noun="vendors" />}
       </Panel>
     </>
   );

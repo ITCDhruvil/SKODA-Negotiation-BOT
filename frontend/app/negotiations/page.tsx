@@ -84,7 +84,7 @@ export default function NegotiationsPage() {
         {rows.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-muted">No negotiations here yet.</p>
         ) : (
-          <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} />
+          <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} paginate noun="negotiations" />
         )}
       </Panel>
     </>

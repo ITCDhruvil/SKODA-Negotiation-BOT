@@ -11,7 +11,7 @@ import { DirectionBadge, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { IconLink } from "@/components/ui/TableToolbar";
 
-export function EventsTable({ events, empty }: { events: EventView[]; empty?: string }) {
+export function EventsTable({ events, empty, paginate = false }: { events: EventView[]; empty?: string; paginate?: boolean }) {
   const router = useRouter();
   const [stat, setStat] = useState<{ event: EventView; kind: StatKind } | null>(null);
   const lastKind = stat?.kind ?? "items";
@@ -124,6 +124,8 @@ export function EventsTable({ events, empty }: { events: EventView[]; empty?: st
         rowKey={(e) => e.id}
         onRowClick={(e) => router.push(`/events/${e.id}`)}
         empty={empty ?? "No events match."}
+        paginate={paginate}
+        noun="events"
       />
       <EventStatDialog event={stat?.event ?? null} kind={lastKind} onClose={() => setStat(null)} />
     </>

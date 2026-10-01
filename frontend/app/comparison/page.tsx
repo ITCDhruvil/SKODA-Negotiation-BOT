@@ -90,7 +90,7 @@ export default function ComparisonPage() {
             <ErrorBox message={error} status={errorStatus} onRetry={reload} />
           </div>
         )}
-        {data && <DataTable columns={columns} rows={rows} rowKey={(i) => i.id} onRowClick={(i) => router.push(`/items/${i.id}`)} empty="No items match." dense />}
+        {data && <DataTable columns={columns} rows={rows} rowKey={(i) => i.id} onRowClick={(i) => router.push(`/items/${i.id}`)} empty="No items match." dense paginate noun="items" />}
       </Panel>
     </>
   );

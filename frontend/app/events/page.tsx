@@ -25,7 +25,7 @@ function EventsInner() {
       <RangeNotice />
       {loading && !data && <Loading label="Loading events" />}
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}
-      {data && <EventsPanel events={data} title="All events" q={q} onQ={setQ} />}
+      {data && <EventsPanel events={data} title="All events" q={q} onQ={setQ} paginate />}
     </>
   );
 }

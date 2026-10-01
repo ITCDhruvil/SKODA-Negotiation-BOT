@@ -88,7 +88,7 @@ export default function HistoryPage() {
             <ErrorBox message={error} status={errorStatus} onRetry={reload} />
           </div>
         )}
-        {data && <DataTable columns={columns} rows={data} rowKey={(h) => h.id} empty="No deals match." dense />}
+        {data && <DataTable columns={columns} rows={data} rowKey={(h) => h.id} empty="No deals match." dense paginate noun="deals" />}
       </Panel>
     </>
   );

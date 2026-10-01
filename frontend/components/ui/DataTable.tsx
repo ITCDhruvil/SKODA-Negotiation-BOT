@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Icon } from "./Icon";
+import { PAGE_SIZES, Pagination } from "./Pagination";
 
 export type Column<T> = {
   key: string;
@@ -35,6 +36,8 @@ export function DataTable<T>({
   empty = "Nothing to show.",
   dense = false,
   defaultSort,
+  paginate = false,
+  noun,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -44,7 +47,22 @@ export function DataTable<T>({
   dense?: boolean;
   /** Column key and direction to start with; without it rows keep the order they arrive in. */
   defaultSort?: { key: string; dir: Dir };
+  /** Show the page footer (rows per page, page buttons). Sorting applies to all rows before they are paged. */
+  paginate?: boolean;
+  /** Plural name for what the rows are, used in "Showing 1–10 of 85 events". */
+  noun?: string;
 }) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
+  // The chosen page size is remembered between visits.
+  useEffect(() => {
+    try {
+      const saved = Number(window.localStorage.getItem("pageSize"));
+      if ((PAGE_SIZES as readonly number[]).includes(saved)) setPageSize(saved);
+    } catch {
+      /* storage may be blocked */
+    }
+  }, []);
   const [sort, setSort] = useState<{ key: string; dir: Dir } | null>(defaultSort ?? null);
   const align = (a?: string) => (a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left");
   const pad = dense ? "px-3 py-2" : "px-4 py-3";
@@ -64,10 +82,17 @@ export function DataTable<T>({
     });
   }, [rows, sort, columns]);
 
+  // New data or a new order starts again on page one; a shorter list never leaves you past its end.
+  useEffect(() => setPage(1), [rows.length, sort, pageSize]);
+  const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const current = Math.min(page, pages);
+  const shown = paginate ? sorted.slice((current - 1) * pageSize, current * pageSize) : sorted;
+
   const toggle = (key: string) =>
     setSort((s) => (s?.key !== key ? { key, dir: "asc" } : s.dir === "asc" ? { key, dir: "desc" } : null));
 
   return (
+    <>
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <thead>
@@ -103,14 +128,14 @@ export function DataTable<T>({
           </tr>
         </thead>
         <tbody>
-          {sorted.length === 0 && (
+          {shown.length === 0 && (
             <tr>
               <td colSpan={columns.length} className="px-4 py-10 text-center text-muted">
                 {empty}
               </td>
             </tr>
           )}
-          {sorted.map((row) => (
+          {shown.map((row) => (
             <tr
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
@@ -142,5 +167,23 @@ export function DataTable<T>({
         </tbody>
       </table>
     </div>
+    {paginate && sorted.length > 0 && (
+      <Pagination
+        total={sorted.length}
+        page={current}
+        pageSize={pageSize}
+        noun={noun}
+        onPage={setPage}
+        onPageSize={(n) => {
+          setPageSize(n);
+          try {
+            window.localStorage.setItem("pageSize", String(n));
+          } catch {
+            /* storage may be blocked */
+          }
+        }}
+      />
+    )}
+    </>
   );
 }

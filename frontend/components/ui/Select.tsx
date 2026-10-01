@@ -40,6 +40,7 @@ export function Select<V extends string = string>({
   disabled,
   compact = false,
   id,
+  placement = "bottom",
 }: {
   value: V;
   onChange: (value: V) => void;
@@ -49,6 +50,8 @@ export function Select<V extends string = string>({
   /** Shrink to the content (for filter bars) instead of filling the row. */
   compact?: boolean;
   id?: string;
+  /** Open the list above the field (for controls at the bottom of the page). */
+  placement?: "bottom" | "top";
 }) {
   const uid = useId();
   const listId = `${uid}-list`;
@@ -163,7 +166,7 @@ export function Select<V extends string = string>({
           id={listId}
           role="listbox"
           aria-label={ariaLabel}
-          className="absolute left-0 z-40 mt-1 max-h-64 w-full overflow-auto rounded-m border border-line bg-panel py-1 shadow-card"
+          className={`absolute left-0 z-40 max-h-64 w-full overflow-auto rounded-m border border-line bg-panel py-1 shadow-card ${placement === "top" ? "bottom-full mb-1" : "mt-1"}`}
         >
           {options.map((o, i) => {
             const isSel = i === selected;

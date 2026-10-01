@@ -23,6 +23,7 @@ export function EventsPanel({
   limit,
   footer,
   actions,
+  paginate = false,
 }: {
   events: EventView[];
   title?: string;
@@ -31,6 +32,7 @@ export function EventsPanel({
   limit?: number;
   footer?: React.ReactNode;
   actions?: React.ReactNode;
+  paginate?: boolean;
 }) {
   const [kind, setKind] = useState<Kind>("all");
   const [status, setStatus] = useState("");
@@ -91,7 +93,7 @@ export function EventsPanel({
           ]}
           right={<span>{shown.length} events</span>}
         />
-        <EventsTable events={rows} empty="No events match." />
+        <EventsTable events={rows} empty="No events match." paginate={paginate} />
         {footer}
       </div>
     </Panel>
