@@ -1202,6 +1202,104 @@
     }
    }
   },
+  "/api/sessions/{session_id}/questions": {
+   "post": {
+    "summary": "Ask Question",
+    "operationId": "ask_question_api_sessions__session_id__questions_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/QuestionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/language": {
+   "put": {
+    "summary": "Set Language",
+    "operationId": "set_language_api_sessions__session_id__language_put",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LanguageIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/sessions/{session_id}/advance": {
    "post": {
     "summary": "Advance",
@@ -3450,6 +3548,25 @@
     ],
     "title": "Kpis"
    },
+   "LanguageIn": {
+    "properties": {
+     "language": {
+      "type": "string",
+      "enum": [
+       "en",
+       "hi",
+       "mr"
+      ],
+      "title": "Language"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "language"
+    ],
+    "title": "LanguageIn"
+   },
    "MessageIn": {
     "properties": {
      "price": {
@@ -3694,6 +3811,22 @@
      "limit"
     ],
     "title": "PointsIn"
+   },
+   "QuestionIn": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Text"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "text"
+    ],
+    "title": "QuestionIn"
    },
    "ReleaseIn": {
     "properties": {

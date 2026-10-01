@@ -5,12 +5,14 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatLog } from "@/components/negotiation/ChatLog";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
+import { QuestionBox } from "@/components/negotiation/QuestionBox";
+import { Select } from "@/components/ui/Select";
 import { Button, DirectionBadge, Field, Panel, Pill, inputClass } from "@/components/ui/basics";
 import { Dialog } from "@/components/ui/Dialog";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { ApiError, api, type DraftView, type Mode, type SessionView } from "@/lib/api";
 import { money, num } from "@/lib/format";
-import { deltaLabel, limitLabel } from "@/lib/labels";
+import { LANGUAGE_LABEL, deltaLabel, limitLabel } from "@/lib/labels";
 
 // Replies arrive after a short, uneven pause, the way a person would write back.
 const stepDelay = () => 1400 + Math.floor(Math.random() * 1600);
@@ -278,6 +280,8 @@ function Workspace({ initial }: { initial: SessionView }) {
               <Composer s={s} onResult={apply} onError={setError} />
             )}
 
+            {s.status === "active" && <QuestionBox sessionId={s.id} onResult={apply} onError={setError} />}
+
             {s.status === "agreed" && (
               <div className="rounded-l border border-transparent bg-ok-soft p-4 text-sm text-ok" role="status">
                 <p className="text-base font-bold">
@@ -329,6 +333,16 @@ function Workspace({ initial }: { initial: SessionView }) {
         <div className="grid content-start gap-5">
           <Panel title="Permission">
             <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
+          </Panel>
+          <Panel title="Conversation language" subtitle="Applies to the messages that follow.">
+            <Select<"en" | "hi" | "mr">
+              id="ws-language"
+              ariaLabel="Conversation language"
+              value={s.language}
+              disabled={busy || s.status !== "active"}
+              onChange={(l) => act(() => api.setLanguage(s.id, l))}
+              options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
+            />
           </Panel>
           <Panel title="Live intelligence" subtitle={s.status === "active" ? undefined : "Final position"}>
             <dl>

@@ -127,6 +127,9 @@ export const api = {
   session: (id: string) => request<SessionView>(`/api/sessions/${id}`),
   setMode: (id: string, mode: Mode) =>
     request<SessionView>(`/api/sessions/${id}/mode`, { method: "PUT", body: JSON.stringify({ mode }) }),
+  askQuestion: (id: string, text: string) => post<SessionView>(`/api/sessions/${id}/questions`, { text }),
+  setLanguage: (id: string, language: "en" | "hi" | "mr") =>
+    request<SessionView>(`/api/sessions/${id}/language`, { method: "PUT", body: JSON.stringify({ language }) }),
   advance: (id: string) => post<SessionView>(`/api/sessions/${id}/advance`),
   approveDraft: (id: string, draftId: string, edit?: { price?: number; payment_code?: string | null; text?: string | null }) =>
     post<SessionView>(`/api/sessions/${id}/drafts/${draftId}/approve`, edit ?? {}),

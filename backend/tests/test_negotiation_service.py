@@ -303,3 +303,41 @@ def test_hero_conversations_take_several_rounds_and_start_with_a_pushback(buy: R
         assert len(ts) >= floor
         assert ts[1].speaker == "vendor" and ts[1].price == s.original_price  # first answer: no movement
         assert len({t.text for t in ts if t.speaker == "us"}) == len([t for t in ts if t.speaker == "us"])
+
+
+# --- everyday questions and language ---------------------------------------------------------
+
+def test_vendor_asks_about_quantity_and_delivery_and_our_next_message_answers(buy: Repo):
+    s = run_auto(buy, neg.start(buy, BUY, mode="auto").id)
+    ts = neg.turns(buy, s.id)
+    asked = [t for t in ts if t.speaker == "vendor" and "quantity" in t.text and "?" in t.text]
+    assert len(asked) == 1
+    after = ts[ts.index(asked[0]) + 1]
+    assert after.speaker == "us" and "600 units" in after.text and "delivery" in after.text.lower()
+    # we also put a question of our own; the vendor answers it from the quote
+    answered = [t for t in ts if t.speaker == "vendor" and "Delivery will be within" in t.text]
+    assert answered and "FH" in answered[0].text
+
+
+def test_buyer_can_ask_a_question_without_making_an_offer(buy: Repo):
+    s = neg.start(buy, BUY, mode="manual")
+    s = neg.ask_question(buy, s.id, "What is your delivery time and what warranty do you give?")
+    ts = neg.turns(buy, s.id)
+    assert [t.speaker for t in ts] == ["us", "vendor"] and ts[0].price is None and s.round == 0
+    assert "Delivery will be within" in ts[1].text and "warranty" in ts[1].text.lower()
+    with pytest.raises(services.Conflict):
+        neg.ask_question(buy, s.id, "Our ceiling is 270, can you do it?")
+    with pytest.raises(services.Conflict):
+        neg.ask_question(buy, s.id, "   ")
+
+
+def test_changing_the_language_changes_only_the_messages_that_follow(buy: Repo):
+    s = neg.start(buy, BUY, mode="approve")
+    s = neg.advance(buy, s.id)
+    english = neg.pending_draft(buy, s.id).text
+    s = neg.set_language(buy, s.id, "hi")
+    hindi = neg.pending_draft(buy, s.id).text
+    assert s.language == "hi" and english != hindi and "नमस्कार" in hindi
+    assert len(buy.fetch("draft", parent=s.id)) == 2 and len([d for d in buy.fetch("draft", parent=s.id) if d.status == "pending"]) == 1
+    with pytest.raises(services.Conflict):
+        neg.set_language(buy, s.id, "fr")

@@ -395,6 +395,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask Question */
+        post: operations["ask_question_api_sessions__session_id__questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/language": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Language */
+        put: operations["set_language_api_sessions__session_id__language_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{session_id}/advance": {
         parameters: {
             query?: never;
@@ -1191,6 +1225,14 @@ export interface components {
             /** Realised Total */
             realised_total: number;
         };
+        /** LanguageIn */
+        LanguageIn: {
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "hi" | "mr";
+        };
         /** MessageIn */
         MessageIn: {
             /** Price */
@@ -1280,6 +1322,11 @@ export interface components {
             limit: number;
             /** Objective */
             objective?: ("reduce_price" | "improve_lead_time" | "improve_payment_terms" | "improve_commercial_terms") | null;
+        };
+        /** QuestionIn */
+        QuestionIn: {
+            /** Text */
+            text: string;
         };
         /** ReleaseIn */
         ReleaseIn: {
@@ -2269,6 +2316,76 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ModeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ask_question_api_sessions__session_id__questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_language_api_sessions__session_id__language_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanguageIn"];
             };
         };
         responses: {

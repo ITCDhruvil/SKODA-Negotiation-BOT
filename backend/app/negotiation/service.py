@@ -14,7 +14,7 @@ from typing import Optional
 
 from app import clock, deal, lifecycle
 from app.models import Bid, Draft, Event, Item, Mode, Outcome, Session, Turn
-from app.negotiation import guardrails, messages, tactics, vendor_sim
+from app.negotiation import guardrails, info, messages, tactics, vendor_sim
 from app.services import Conflict, NotFound
 from app.store import Repo
 
@@ -92,12 +92,29 @@ def _context(s: Session, item: Item, event: Event) -> tactics.Context:
         vendor_final=s.vendor_final, original_price=s.original_price, continuing=s.continuing)
 
 
-def _our_text(kind: str, s: Session, item: Item, event: Event, vendor_name: str, price: float,
+def _facts(repo: Repo, s: Session, item: Item, event: Event) -> info.Facts:
+    bid = _bid(repo, s)
+    return info.Facts(
+        direction=event.direction, lang=s.language, qty=item.qty,
+        unit_word=messages._qty_unit(s.language, item.unit, item.qty),
+        item_delivery_days=item.delivery_days, bid_delivery_days=bid.delivery_days, incoterm=bid.incoterm,
+        payment_code=s.vendor_payment, validity_days=bid.validity_days, warranty_months=bid.warranty_months)
+
+
+def _our_text(repo: Repo, kind: str, s: Session, item: Item, event: Event, vendor_name: str, price: float,
               payment_ask: Optional[str] = None, agreed_payment: Optional[str] = None) -> str:
+    answers = ask = None
+    if kind in ("counter", "close"):
+        facts = _facts(repo, s, item, event)
+        if s.vendor_question:
+            answers = [info.our_answer(t, facts) for t in s.vendor_question.split(",")]
+        topic = info.ours_question_topic(event.direction, s.round)
+        if topic and (topic, event.direction) in info._ASK_OURS:
+            ask = info.ask_ours(topic, facts)
     return messages.our_message(
         kind, direction=event.direction, lang=s.language, vendor_name=vendor_name,
         item=item.description, qty=item.qty, unit=item.unit, quote=s.vendor_offer, price=price,
-        payment_ask=payment_ask, agreed_payment=agreed_payment, variant=s.round)
+        payment_ask=payment_ask, agreed_payment=agreed_payment, variant=s.round, answers=answers, ask=ask)
 
 
 def vendor_name(repo: Repo, vendor_id: str) -> str:
@@ -130,6 +147,7 @@ def _check_text(repo: Repo, s: Session, item: Item, text: str, *, price: float,
     name = _vendor_name(repo, s)
     allowed = [item.qty, price, s.original_price, s.vendor_offer, s.previous_vendor_offer,
                deal.payment_days(s.vendor_payment), deal.payment_days(s.original_payment)]
+    allowed += info.numbers(_facts(repo, s, item, _event(repo, item)))  # days, months and quantity we may quote
     if payment:
         allowed.append(deal.payment_days(payment))
     # Digits that belong to the item's or the vendor's name (such as "M10" or "3M") are not offers.
@@ -211,7 +229,7 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
             deal.payment_days(payment)
         if text is None:
             kind = "open" if s.our_offer is None else "counter"
-            text = _our_text(kind, s, item, event, _vendor_name(repo, s), price, payment_ask=payment)
+            text = _our_text(repo, kind, s, item, event, _vendor_name(repo, s), price, payment_ask=payment)
         _check_text(repo, s, item, text, price=price, payment=payment, limit=limit, target=target)
     except (guardrails.GuardrailError, ValueError) as e:
         raise Conflict(str(e)) from e
@@ -222,10 +240,18 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         vendor_price=s.vendor_offer, vendor_payment=s.vendor_payment, offer_price=price,
         offer_payment=payment, round_no=s.round)
     changed_payment = reply.payment if reply.payment != s.vendor_payment else None
+    facts = _facts(repo, s, item, event)
+    asked = info.topics_in(text, include_payment=author == "human")
+    answer = " ".join(info.vendor_answer(t, facts) for t in asked) or None
+    question = None
+    if reply.kind == "counter" and s.round == 1 and not s.vendor_question:
+        question = info.ask_vendor(facts)  # the vendor wants to know a few things before it moves
     _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
-        unit=item.unit, payment=changed_payment, variant=s.round), reply.price, reply.payment)
+        unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question),
+        reply.price, reply.payment)
     s = s.model_copy(update={
+        "vendor_question": info.VENDOR_QUESTION_TOPICS if question else None,
         "our_offer": price, "our_payment": payment, "round": s.round + 1,
         "previous_vendor_offer": s.vendor_offer, "vendor_offer": reply.price,
         "vendor_payment": reply.payment, "vendor_final": reply.final, "continuing": False})
@@ -243,7 +269,7 @@ def _accept(repo: Repo, s: Session, text: Optional[str], author: str) -> Session
     try:
         guardrails.check_offer(event.direction, s.vendor_offer, limit)
         if text is None:
-            text = _our_text("accept", s, item, event, _vendor_name(repo, s), s.vendor_offer,
+            text = _our_text(repo, "accept", s, item, event, _vendor_name(repo, s), s.vendor_offer,
                              agreed_payment=s.vendor_payment)
         _check_text(repo, s, item, text, price=s.vendor_offer, payment=s.vendor_payment,
                     limit=limit, target=target)
@@ -266,10 +292,10 @@ def _prepare_draft(repo: Repo, s: Session) -> Draft:
     decision = tactics.opening(ctx) if s.our_offer is None else tactics.respond(ctx)
     text = ""
     if decision.kind == "offer":
-        text = _our_text(decision.message_kind, s, item, event, _vendor_name(repo, s),
+        text = _our_text(repo, decision.message_kind, s, item, event, _vendor_name(repo, s),
                          decision.price, payment_ask=decision.payment)
     elif decision.kind == "accept":
-        text = _our_text("accept", s, item, event, _vendor_name(repo, s), decision.price,
+        text = _our_text(repo, "accept", s, item, event, _vendor_name(repo, s), decision.price,
                          agreed_payment=decision.payment)
     n = len(repo.fetch("draft", parent=s.id)) + 1
     d = Draft(id=f"{s.id}-D{n:02d}", session_id=s.id, kind=decision.kind, price=decision.price,
@@ -344,6 +370,50 @@ def send_message(repo: Repo, session_id: str, *, price: float, payment_code: Opt
         if d is not None:
             repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=s.id)
         return _send_offer(repo, s, price, payment_code, text, "human")
+
+
+def ask_question(repo: Repo, session_id: str, text: str) -> Session:
+    """The buyer asks the vendor something (delivery, payment, warranty...). No offer, no new round."""
+    with repo.transaction():
+        s = _session(repo, session_id)
+        _require_active(s)
+        item = _item(repo, s.item_id)
+        _require_negotiating(item)
+        event = _event(repo, item)
+        text = _blank_to_none(text)
+        if text is None:
+            raise Conflict("Write the question first.")
+        target, limit = _points(item)
+        name = _vendor_name(repo, s)
+        allowed = [item.qty, s.original_price, s.vendor_offer, s.previous_vendor_offer,
+                   deal.payment_days(s.vendor_payment), deal.payment_days(s.original_payment)]
+        allowed += info.numbers(_facts(repo, s, item, event))
+        allowed += guardrails.numbers_in(item.description) + guardrails.numbers_in(name)
+        try:
+            guardrails.check_message(text, offer_price=None, limit=limit, target=target,
+                                     allowed_numbers=allowed, mask=(name, messages.short_name(name), item.description))
+        except guardrails.GuardrailError as e:
+            raise Conflict(str(e)) from e
+        facts = _facts(repo, s, item, event)
+        _add_turn(repo, s, "us", "human", text, None, None)
+        _add_turn(repo, s, "vendor", "vendor", info.vendor_answers(text, facts), None, None)
+        return s
+
+
+def set_language(repo: Repo, session_id: str, language: str) -> Session:
+    """Switch the language of the messages that follow; what was already said stays as it was."""
+    if language not in messages.LANGS:
+        raise Conflict(f"unsupported language: {language}")
+    with repo.transaction():
+        s = _session(repo, session_id)
+        _require_active(s)
+        d = pending_draft(repo, s.id)
+        if d is not None:
+            repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=s.id)
+        s = _save_session(repo, s.model_copy(update={"language": language}))
+        if s.mode == "approve":
+            _prepare_draft(repo, s)  # the waiting draft is rewritten in the new language
+        return s
 
 
 def accept_offer(repo: Repo, session_id: str) -> Session:

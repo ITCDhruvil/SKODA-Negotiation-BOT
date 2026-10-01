@@ -92,6 +92,8 @@ export const MODE_LABEL: Record<"auto" | "approve" | "manual", string> = {
   manual: "Manual",
 };
 
+export const LANGUAGE_LABEL: Record<"en" | "hi" | "mr", string> = { en: "English", hi: "Hindi (हिंदी)", mr: "Marathi (मराठी)" };
+
 export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
   auto: "Messages go out on their own, round by round. You can stop and take over at any time.",
   approve: "Each message is drafted for you; you review, edit and send it.",

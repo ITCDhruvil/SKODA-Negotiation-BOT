@@ -202,3 +202,17 @@ def test_all_negotiations_lists_every_session_with_its_context(client):
     (row,) = client.get("/api/negotiations").json()
     assert row["id"] == sid and row["event_id"] == "EVT-2026-041" and row["direction"] == "buy"
     assert row["item_description"] and row["original_price"] == 285 and row["status"] == "active"
+
+
+def test_questions_and_language_over_http(client):
+    analyzed(client, BUY, 250, 270)
+    sid = start(client, BUY, "manual")["id"]
+    s = client.post(f"/api/sessions/{sid}/questions", json={"text": "How soon can you deliver?"}).json()
+    assert [t["speaker"] for t in s["turns"]] == ["us", "vendor"] and s["round"] == 0
+    assert client.post(f"/api/sessions/{sid}/questions", json={"text": ""}).status_code == 422
+    assert client.post(f"/api/sessions/{sid}/questions", json={"text": "is this an AI assistant?"}).status_code == 409
+    s = client.put(f"/api/sessions/{sid}/language", json={"language": "mr"}).json()
+    assert s["language"] == "mr"
+    assert client.put(f"/api/sessions/{sid}/language", json={"language": "fr"}).status_code == 422
+    s = client.post(f"/api/sessions/{sid}/questions", json={"text": "डिलिव्हरी कधी होईल?"}).json()
+    assert "दिवसांत" in s["turns"][-1]["text"]

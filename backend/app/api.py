@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app import export, lifecycle, readmodel, services, simulate
 from app import schemas as sch
-from app.models import Dataset, Direction, Mode, Objective
+from app.models import Dataset, Direction, Language, Mode, Objective
 from app.negotiation import service as neg
 from app.negotiation import views as negviews
 from app.store import Repo
@@ -37,6 +37,16 @@ class SimulateIn(BaseModel):
 class StartIn(BaseModel):
     vendor_id: Optional[str] = None
     mode: Mode = "approve"
+
+
+class QuestionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=1000)
+
+
+class LanguageIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    language: Language
 
 
 class ModeIn(BaseModel):
@@ -255,6 +265,16 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     @app.put("/api/sessions/{session_id}/mode", response_model=sch.SessionView)
     def set_mode(session_id: str, body: ModeIn):
         neg.set_mode(repo, session_id, body.mode)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/questions", response_model=sch.SessionView)
+    def ask_question(session_id: str, body: QuestionIn):
+        neg.ask_question(repo, session_id, body.text)
+        return negviews.session_view(repo, session_id)
+
+    @app.put("/api/sessions/{session_id}/language", response_model=sch.SessionView)
+    def set_language(session_id: str, body: LanguageIn):
+        neg.set_language(repo, session_id, body.language)
         return negviews.session_view(repo, session_id)
 
     @app.post("/api/sessions/{session_id}/advance", response_model=sch.SessionView)

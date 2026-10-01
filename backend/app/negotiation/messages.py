@@ -364,7 +364,8 @@ def short_name(vendor_name: str) -> str:
 def our_message(
     kind: str, *, direction: str, lang: str, vendor_name: str, item: str, qty: float, unit: str,
     quote: float, price: float, payment_ask: Optional[str] = None, agreed_payment: Optional[str] = None,
-    signature: Optional[str] = None, variant: int = 0,
+    signature: Optional[str] = None, variant: int = 0, answers: Optional[list[str]] = None,
+    ask: Optional[str] = None,
 ) -> str:
     """The text we send. `quote` is the vendor's current price; `price` is what we propose."""
     template = _OURS[(kind, direction, lang)]
@@ -388,19 +389,33 @@ def our_message(
             leads[variant % len(leads)], reasons[(variant - 1) % len(reasons)],
             asks[(variant // 2) % len(asks)].format(**fields)])
         closing = _CLOSINGS[variant % len(_CLOSINGS)]
-        return text + "\n\n" + closing + ",\n" + sign
-    return template.format(**fields)
+        return _decorate(text + "\n\n" + closing + ",\n" + sign, answers, ask)
+    return _decorate(template.format(**fields), answers if kind != "open" else None, ask)
+
+
+def _decorate(text: str, answers: Optional[list[str]], ask: Optional[str]) -> str:
+    """Answers to the vendor's questions go first; a question of ours goes just before the sign-off."""
+    if answers:
+        text = " ".join(answers) + " " + text
+    if ask:
+        if "\n\n" in text:
+            body, closing = text.rsplit("\n\n", 1)
+            text = body + " " + ask + "\n\n" + closing
+        else:
+            text = text + " " + ask
+    return text
 
 
 def vendor_message(
     kind: str, *, direction: str, lang: str, price: float, unit: str, payment: Optional[str] = None,
-    variant: int = 0,
+    variant: int = 0, answer: Optional[str] = None, ask: Optional[str] = None,
 ) -> str:
-    """The simulated vendor's reply text."""
+    """The simulated vendor's reply text. `answer` goes first, a question of its own goes last."""
     template = _VENDOR[(kind, direction, lang)]
     alts = _VENDOR_ALT.get((kind, direction), []) if lang == "en" else []
     if alts and variant % (len(alts) + 1):
         template = alts[variant % (len(alts) + 1) - 1]
-    return template.format(
+    text = template.format(
         price=money(price), unit=_UNIT[lang].get(unit, unit),
         pay=_agreed_payment(lang, payment) if payment else "")
+    return (answer + " " if answer else "") + text + (" " + ask if ask else "")

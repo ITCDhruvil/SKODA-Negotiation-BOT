@@ -175,7 +175,10 @@ export function Select<V extends string = string>({
                 aria-selected={isSel}
                 onMouseEnter={() => setActive(i)}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => choose(i)}
+                onClick={(e) => {
+                  e.preventDefault(); // inside a <label>, a click would otherwise re-activate the trigger
+                  choose(i);
+                }}
                 className={`flex cursor-pointer items-start justify-between gap-3 px-3 py-2 text-sm ${
                   i === active ? "bg-brand-soft text-ink" : "text-text"
                 } ${isSel ? "font-semibold" : ""}`}
