@@ -41,6 +41,7 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<string | null>(null);
   const [rowTop, setRowTop] = useState(0);
+  const [optQ, setOptQ] = useState("");
   const [wide, setWide] = useState(true);
   const root = useRef<HTMLDivElement>(null);
   const active = filters.filter((f) => f.value !== "").length;
@@ -74,12 +75,25 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
   }, [open, view]);
 
   const current = filters.find((f) => f.key === view);
+  // A new filter starts with an empty search.
+  useEffect(() => setOptQ(""), [view]);
   const labelOf = (f: FilterDef) => f.options.find((o) => o.value === f.value)?.label ?? f.options[0]?.label ?? "";
   const showList = wide || !current;
 
   const options = current && (
-    <div role="group" aria-label={current.label} className="max-h-72 overflow-auto py-1">
-      {current.options.map((o) => (
+    <div>
+      <label className="mx-2.5 mb-1 mt-1 flex items-center gap-2 rounded-m border border-line bg-panel px-2.5 py-1.5 focus-within:border-brand">
+        <Icon name="search" size={14} className="text-muted" />
+        <input
+          value={optQ}
+          onChange={(e) => setOptQ(e.target.value)}
+          placeholder={`Search ${current.label.toLowerCase()}`}
+          aria-label={`Search ${current.label.toLowerCase()}`}
+          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+        />
+      </label>
+      <div role="group" aria-label={current.label} className="max-h-64 overflow-auto py-1">
+      {current.options.filter((o) => !optQ.trim() || o.label.toLowerCase().includes(optQ.trim().toLowerCase())).map((o) => (
         <button
           key={o.value}
           role="menuitemradio"
@@ -96,6 +110,10 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
           {current.value === o.value && <Icon name="check" size={16} className="text-brand" />}
         </button>
       ))}
+      {current.options.every((o) => optQ.trim() && !o.label.toLowerCase().includes(optQ.trim().toLowerCase())) && (
+        <p className="px-3.5 py-3 text-sm text-muted">No match.</p>
+      )}
+      </div>
     </div>
   );
 
