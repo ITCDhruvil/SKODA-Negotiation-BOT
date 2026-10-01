@@ -244,5 +244,26 @@ Append new points at the bottom. Format: number, statement, reason.
 81. Accepting the best quote as it stands is allowed from `analyzed` and produces a non-negotiated outcome (original equals final, duration 0). It is the buyer's own explicit decision and is not limit-checked: the limit governs only what the assistant offers or accepts inside a conversation.
     Reason: the buyer may always take a quote they can see; the limit is a guardrail for the assistant, not for the buyer.
 
-82. Sessions, turns and drafts live only in the store and are cleared by Reset. Seeded items that are already `negotiating` or `handed_back` have no conversation; the buyer can start one.
+82. Sessions, turns and drafts live only in the store and are cleared by Reset. Seeded items that are already `negotiating` can be started; seeded `handed_back` items need the buyer to re-set the points first (the state becomes `analyzed`) before a new session can start, or they can be closed without a deal.
     Reason: the seed data has no conversation history, and the POC keeps no data beyond the store.
+
+83. The best quote is the lowest raw unit price when buying and the highest when selling (what the item view shows as the best bid). A negotiation started without naming a vendor uses the vendor of that quote (ties go to the lower bid id), and that quote is the session's `original_price`, which is the baseline savings or uplift are measured from.
+    Reason: one definition used by the item view, the default vendor, accept-as-is and the savings figures, so the numbers on screen agree.
+
+84. Continuing from an agreed result sets `continuing` on the session. The next move asks for a price strictly better than the agreed one (40% of the way toward the target, never past it); if the agreed price already meets the target, or the move would round to the same price, it accepts instead. The flag clears when an offer is sent.
+    Reason: "keep negotiating" must try to get more, not repeat the acceptance at the old price.
+
+85. Closing an item without a deal (only from `handed_back`) records no outcome. The item counts as nothing in the event's quoted, original and final values, adds no savings, and is not counted as negotiated.
+    Reason: nothing was bought or sold, so it must not inflate or distort any total.
+
+86. Every offer must be strictly better for us than the vendor's current price; otherwise the buyer is told to accept that price instead. When the vendor's quote already meets the target, the assistant's first move is to propose accepting it rather than an opening offer.
+    Reason: asking for the price the vendor already gave, or a worse one, would be a step backwards.
+
+87. Every number in an outgoing message must be one of: the offered price, the quantity, a payment period in days (ours or the vendor's), the vendor's current, previous or original quote, or a number that is part of the item description or vendor name. Anything else is refused with the number named.
+    Reason: the text must never say a different price from the structured offer the vendor is answering.
+
+88. The signature at the foot of our messages is configuration, not code: `NEGOTIATION_SIGNATURE` (a literal backslash-n is a line break), defaulting to the demo buyer's name and plant.
+    Reason: the demo name must not be baked into the software.
+
+89. Known wrinkle: `negotiations_in_progress` on the dashboard counts every item awaiting approval, including quotes accepted as they stand without a conversation.
+    Reason: recorded rather than hidden; to be revisited when the workspace is built.

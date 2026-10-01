@@ -78,7 +78,7 @@ Supplier states (`not_invited, invited, consented, otp_verified`) exist only in 
 
 ## 7. API
 
-`GET /dashboard`, `/events`, `/events/{id}`; `PUT /items/{id}/points`; `POST /items/{id}/confirm-points`, `/bids`, `/analyze`; `POST /sessions`, `/sessions/{id}/turn` (streaming), `/sessions/{id}/accept`; `POST /events/{id}/approve`; `GET /events/{id}/export`; `POST /events/simulate` (A36).
+`GET /dashboard`, `/events`, `/events/{id}`; `PUT /items/{id}/points`; `POST /items/{id}/confirm-points`, `/bids`, `/analyze`; `GET /items/{id}/sessions`, `/events/{id}/sessions`, `/sessions/{id}`; `POST /items/{id}/negotiations`, `/items/{id}/continue`, `/items/{id}/accept-deal`, `/items/{id}/close-without-deal`; `PUT /sessions/{id}/mode`; `POST /sessions/{id}/advance`, `/sessions/{id}/drafts/{draft_id}/approve`, `/sessions/{id}/drafts/{draft_id}/discard`, `/sessions/{id}/messages`, `/sessions/{id}/accept-offer`, `/sessions/{id}/hand-back` (auto mode is a client loop on `advance`; there is no streaming); `POST /events/{id}/approve`; `GET /events/{id}/export`; `POST /events/simulate` (A36).
 
 Export: BUY produces the 38-column Shopping Cart template, dates `DD.MM.YYYY`, best-bid flag, gross price/unit, supplier no., payment code, tax code and HSN/SAC; columns without an input source use per-category seed defaults or stay blank (A11). SELL produces a plain deal summary CSV (A12).
 
