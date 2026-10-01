@@ -67,11 +67,14 @@ export function PageHeader({
   actions,
   crumbs,
 }: {
-  title: ReactNode;
+  title?: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
   crumbs?: ReactNode;
 }) {
+  if (!title && !crumbs) {
+    return actions ? <div className="mb-4 flex flex-wrap items-center justify-end gap-2">{actions}</div> : null;
+  }
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">

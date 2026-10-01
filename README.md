@@ -18,7 +18,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. `POST /api/admin/reset` (or the Ops page) restores the seed data. LLM settings are not needed: all decisions and wording are rule-based. Backend env names are listed in `backend/.env.example`.
+Open http://localhost:3000. `POST /api/admin/reset` (or the Settings page) restores the seed data. LLM settings are not needed: all decisions and wording are rule-based. Backend env names are listed in `backend/.env.example`.
 
 ## Demo script
 

@@ -25,7 +25,6 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reports" />
       <RangeNotice />
       {loading && !data && <Loading label="Loading reports" />}
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}

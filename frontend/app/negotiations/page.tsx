@@ -67,9 +67,6 @@ export default function NegotiationsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Negotiations"
-      />
       <Panel flush>
         <TableToolbar
           search={{ value: q, onChange: setQ, placeholder: "Search negotiations" }}

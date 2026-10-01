@@ -56,7 +56,6 @@ export default function ComparisonPage() {
 
   return (
     <>
-      <PageHeader title="Comparison" />
       <RangeNotice />
       <Panel flush>
         <TableToolbar

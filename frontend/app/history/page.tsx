@@ -61,7 +61,6 @@ export default function HistoryPage() {
 
   return (
     <>
-      <PageHeader title="History" />
       <Panel flush>
         <TableToolbar
           search={{ value: q, onChange: setQ, placeholder: "Search history" }}

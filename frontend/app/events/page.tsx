@@ -22,7 +22,6 @@ function EventsInner() {
 
   return (
     <>
-      <PageHeader title="Events" />
       <RangeNotice />
       {loading && !data && <Loading label="Loading events" />}
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}

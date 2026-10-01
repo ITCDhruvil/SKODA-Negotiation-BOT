@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as Reac
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { initials } from "@/lib/format";
-import { useRange, useTheme } from "@/lib/providers";
+import { useRange } from "@/lib/providers";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Dashboard", icon: "dashboard" },
@@ -16,7 +16,7 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/comparison", label: "Comparison", icon: "comparison" },
   { href: "/history", label: "History", icon: "history" },
   { href: "/reports", label: "Reports", icon: "reports" },
-  { href: "/ops", label: "Ops", icon: "ops" },
+  { href: "/settings", label: "Settings", icon: "ops" },
 ];
 
 const USER = { name: "Dhruvil Patel", role: "Buyer · SAVWIPL Pune" };
@@ -80,9 +80,19 @@ function DateRangeMenu() {
   return <DateRangePicker value={range} onChange={setRange} />;
 }
 
-function Topbar({ onMenu, menuRef }: { onMenu: () => void; menuRef: RefObject<HTMLButtonElement> }) {
+/** The heading for the current page, shown on the left of the top bar. */
+function pageTitle(pathname: string): string {
+  if (pathname === "/") return "Dashboard";
+  if (pathname.startsWith("/events/") && pathname.endsWith("/approve")) return "Approval";
+  if (pathname.startsWith("/events/")) return "Event";
+  if (pathname.startsWith("/items/")) return "Item";
+  if (pathname.startsWith("/negotiate/")) return "Conversation";
+  if (pathname.startsWith("/vendors/")) return "Vendor";
+  return NAV.find((n) => n.href !== "/" && pathname.startsWith(n.href))?.label ?? "";
+}
+
+function Topbar({ onMenu, menuRef, pathname }: { onMenu: () => void; menuRef: RefObject<HTMLButtonElement>; pathname: string }) {
   const router = useRouter();
-  const { theme, toggle } = useTheme();
   const [q, setQ] = useState("");
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -99,28 +109,19 @@ function Topbar({ onMenu, menuRef }: { onMenu: () => void; menuRef: RefObject<HT
       >
         <Icon name="menu" />
       </button>
-      <form onSubmit={submit} role="search" className="flex min-w-0 max-w-xl flex-1 items-center gap-2 rounded-m border border-line bg-panel px-3 py-2 hover:border-brand">
-        <Icon name="search" size={16} className="text-muted" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search event, item, category…"
-          aria-label="Search events"
-          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
-        />
-      </form>
-      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+      <h1 className="min-w-0 truncate text-xl font-extrabold tracking-tight text-ink">{pageTitle(pathname)}</h1>
+      <div className="ml-auto flex min-w-0 items-center gap-2">
         <DateRangeMenu />
-        <button
-          onClick={toggle}
-          aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-          className="grid h-10 w-10 place-items-center rounded-m border border-transparent text-ink hover:bg-raise"
-        >
-          <Icon name={theme === "dark" ? "sun" : "moon"} />
-        </button>
-        <span className="hidden h-9 w-9 place-items-center rounded-full bg-emerald text-xs font-bold text-white sm:grid" title={USER.name}>
-          {initials(USER.name)}
-        </span>
+        <form onSubmit={submit} role="search" className="flex w-40 min-w-0 items-center gap-2 rounded-m border border-line bg-panel px-3 py-2 focus-within:border-brand hover:border-brand sm:w-64 lg:w-80">
+          <Icon name="search" size={16} className="text-muted" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search event, item, category…"
+            aria-label="Search events"
+            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+          />
+        </form>
       </div>
     </header>
   );
@@ -179,7 +180,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
       <div className="flex min-w-0 flex-col">
-        <Topbar onMenu={() => setOpen(true)} menuRef={menuRef} />
+        <Topbar onMenu={() => setOpen(true)} menuRef={menuRef} pathname={pathname} />
         <main className="min-w-0 flex-1 px-4 py-5 md:px-6">{children}</main>
       </div>
     </div>

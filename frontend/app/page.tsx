@@ -47,7 +47,6 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`${hello}, Dhruvil`}
         actions={
           <details className="relative" ref={menuRef}>
             <summary

@@ -49,7 +49,6 @@ export default function VendorsPage() {
 
   return (
     <>
-      <PageHeader title="Vendors" />
       <Panel flush>
         <TableToolbar
           search={{ value: q, onChange: setQ, placeholder: "Search vendors" }}

@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button, Panel, Pill } from "@/components/ui/basics";
-import { Notice, PageHeader } from "@/components/ui/State";
+import { Notice } from "@/components/ui/State";
 import { API_BASE, api, type Direction } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { useTheme } from "@/lib/providers";
 
-export default function OpsPage() {
+export default function SettingsPage() {
   const health = useApi(() => api.health(), []);
+  const { theme, toggle } = useTheme();
   // One status; a failed check wins over data from an earlier successful one.
   const status = health.error ? "unreachable" : health.data ? "healthy" : "checking";
   const [message, setMessage] = useState<{ tone: "ok" | "red"; text: React.ReactNode } | null>(null);
@@ -43,8 +45,27 @@ export default function OpsPage() {
 
   return (
     <>
-      <PageHeader title="Ops" />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Appearance">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-ink">Dark mode</div>
+              <div className="text-xs text-muted">Use a dark colour scheme across the app.</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={theme === "dark"}
+              aria-label="Dark mode"
+              onClick={toggle}
+              className={`relative h-7 w-12 shrink-0 rounded-full border transition ${theme === "dark" ? "border-brand bg-brand" : "border-line bg-raise"}`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-panel shadow-card transition-all ${theme === "dark" ? "left-[26px]" : "left-0.5"}`}
+              />
+            </button>
+          </div>
+        </Panel>
         <Panel title="API status">
           <dl className="grid gap-3 text-sm">
             <div className="flex justify-between gap-3">

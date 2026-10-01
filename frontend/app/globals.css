@@ -55,6 +55,8 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* Text fields show focus on their own border (or their wrapper's), not with a square outline. */
+input:focus-visible, textarea:focus-visible { outline: none; }
 
 @keyframes marquee-slide {
   0%, 15% { transform: translateX(0); }
