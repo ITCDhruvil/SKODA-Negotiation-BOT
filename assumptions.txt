@@ -291,3 +291,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 97. To read like a person, our English messages rotate through a few wordings by round number, and only the opening and the final acceptance carry the full signature block; mid-conversation messages end with the name only. The interface says "Negotiation Desk" and never calls the sender a bot or assistant. The delay before a vendor reply is a short random pause in the browser.
     Reason: the counterparty must never be able to tell it is software, and repeated identical wording would give it away.
+
+98. The item page is organised around three tabs: Vendors & quotes (every invited vendor with its quote, status and a link to the conversation), Negotiation (every conversation on the item with its full message history) and Price history. A "Next step" bar under the progress steps says what to do now. A new Negotiations page lists every conversation across events, and the event page lists the ones on that event.
+    Reason: buyers could not find vendors, items or conversation history; each now has one obvious place.

@@ -94,3 +94,16 @@ def summaries_for_event(repo: Repo, event_id: str) -> list[sch.SessionSummary]:
 
 def summaries_for_item(repo: Repo, item_id: str) -> list[sch.SessionSummary]:
     return [summary(repo, s) for s in service.sessions_for_item(repo, item_id)]
+
+
+def all_rows(repo: Repo) -> list[sch.SessionRow]:
+    """Every negotiation, newest first."""
+    rows = []
+    for s in repo.fetch("session"):
+        item = repo.get("item", s.item_id)
+        event = repo.get("event", item.event_id)
+        rows.append(sch.SessionRow(
+            **summary(repo, s).model_dump(), event_id=event.id, event_title=event.title,
+            item_description=item.description, direction=event.direction, qty=item.qty, unit=item.unit,
+            original_price=s.original_price, vendor_offer=s.vendor_offer, ended_at=s.ended_at))
+    return sorted(rows, key=lambda r: r.started_at, reverse=True)

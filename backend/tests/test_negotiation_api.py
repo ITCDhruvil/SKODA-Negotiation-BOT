@@ -187,3 +187,12 @@ def test_nothing_the_vendor_sees_names_software_in_any_language(client, repo: Re
                 assert not ai.search(t["text"])
         n += 1
     assert n >= 20
+
+
+def test_all_negotiations_lists_every_session_with_its_context(client):
+    assert client.get("/api/negotiations").json() == []
+    analyzed(client, BUY, 250, 270)
+    sid = start(client, BUY, "approve")["id"]
+    (row,) = client.get("/api/negotiations").json()
+    assert row["id"] == sid and row["event_id"] == "EVT-2026-041" and row["direction"] == "buy"
+    assert row["item_description"] and row["original_price"] == 285 and row["status"] == "active"

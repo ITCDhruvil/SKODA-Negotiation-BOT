@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { HistoryTab } from "@/components/item/HistoryTab";
+import { NegotiationTab } from "@/components/item/NegotiationTab";
+import { NextStep } from "@/components/item/NextStep";
 import { OpportunityPanel } from "@/components/item/OpportunityPanel";
 import { SupplierDialog } from "@/components/item/SupplierDialog";
 import { PointsPanel } from "@/components/item/PointsPanel";
@@ -12,14 +14,24 @@ import { Stepper } from "@/components/item/Stepper";
 import { Button, DirectionBadge, Panel, Pill } from "@/components/ui/basics";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { Tabs, panelId, tabId } from "@/components/ui/Tabs";
-import { api, type ItemDetail } from "@/lib/api";
+import { api, type ItemDetail, type SessionSummary } from "@/lib/api";
 import { dateShort, money, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import { STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
+import { SESSION_LABEL, SESSION_TONE, STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
 
 const LANG: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi" };
 
-function QuotesTab({ detail, onChanged }: { detail: ItemDetail; onChanged: () => Promise<void> }) {
+function QuotesTab({
+  detail,
+  sessions,
+  onChanged,
+  onShowNegotiation,
+}: {
+  detail: ItemDetail;
+  sessions: SessionSummary[];
+  onChanged: () => Promise<void>;
+  onShowNegotiation: () => void;
+}) {
   const { item, event, invitees, comparison } = detail;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +79,8 @@ function QuotesTab({ detail, onChanged }: { detail: ItemDetail; onChanged: () =>
       )}
 
       <Panel
-        title={comparison.rows.length === 0 ? "Vendor responses" : pending.length > 0 ? "Waiting for vendors" : "Vendors"}
-        subtitle={`${partyLabel(event.direction)}s invited to ${quoteLabel(event.direction).toLowerCase()} on this item.`}
+        title="Vendors on this item"
+        subtitle={`${partyLabel(event.direction)}s invited to ${quoteLabel(event.direction).toLowerCase()}. ${invitees.filter((i) => i.responded).length} of ${invitees.length} responded.`}
         flush
       >
         <ul className="divide-y divide-line2">
@@ -79,7 +91,30 @@ function QuotesTab({ detail, onChanged }: { detail: ItemDetail; onChanged: () =>
               </Link>
               <span className="text-muted">Rating {v.rating.toFixed(1)}</span>
               <span className="text-muted">{LANG[v.language] ?? v.language}</span>
-              <Pill tone={v.responded ? "ok" : "muted"}>{v.responded ? "Responded" : "Invited"}</Pill>
+              {(() => {
+                const quote = comparison.rows.find((r) => r.vendor_id === v.vendor_id);
+                const mine = sessions.filter((x) => x.vendor_id === v.vendor_id);
+                const last = mine[mine.length - 1];
+                return (
+                  <>
+                    {quote && (
+                      <span className="font-semibold tabular-nums text-ink">
+                        {money(quote.unit_price)} · {quote.payment_code}
+                      </span>
+                    )}
+                    {last ? (
+                      <Pill tone={SESSION_TONE[last.status]}>{SESSION_LABEL[last.status]}</Pill>
+                    ) : (
+                      <Pill tone={v.responded ? "ok" : "muted"}>{v.responded ? "Quoted" : "Invited"}</Pill>
+                    )}
+                    {last && (
+                      <Button size="sm" onClick={onShowNegotiation}>
+                        Conversation
+                      </Button>
+                    )}
+                  </>
+                );
+              })()}
               {!v.responded && canCollect && (
                 <Button size="sm" disabled={busy} onClick={() => setInviting(v.vendor_id)}>
                   Simulate response
@@ -195,8 +230,19 @@ function OutcomePanel({ detail }: { detail: ItemDetail }) {
 }
 
 function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<void> }) {
-  const [tab, setTab] = useState<"quotes" | "history">("quotes");
   const { item, event } = detail;
+  const { data: sessions, reload: reloadSessions } = useApi(() => api.sessionsForItem(item.id), [item.id, item.state]);
+  const list = sessions ?? [];
+  const [tab, setTab] = useState<"quotes" | "negotiation" | "history">(list.length > 0 ? "negotiation" : "quotes");
+  const [chosen, setChosen] = useState(false);
+  // Land on the conversation once there is one, unless the user already picked a tab.
+  useEffect(() => {
+    if (!chosen && list.length > 0) setTab("negotiation");
+  }, [chosen, list.length]);
+  const pick = (t: "quotes" | "negotiation" | "history") => {
+    setChosen(true);
+    setTab(t);
+  };
   return (
     <>
       <PageHeader
@@ -217,6 +263,15 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
       />
       <div className="mb-5 rounded-l border border-line bg-panel px-5 py-4 shadow-card">
         <Stepper state={item.state} />
+        <NextStep
+          detail={detail}
+          sessions={list}
+          onOpenVendors={() => pick("quotes")}
+          onChanged={async () => {
+            await reload();
+            await reloadSessions();
+          }}
+        />
       </div>
       {!event.eligibility.eligible && (
         <div className="mb-4">
@@ -229,15 +284,22 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
             <Tabs
               idPrefix="item"
               value={tab}
-              onChange={setTab}
+              onChange={pick}
               tabs={[
-                { key: "quotes", label: `${quotesLabel(event.direction)} & comparison` },
-                { key: "history", label: "History" },
+                { key: "quotes", label: `Vendors & ${quotesLabel(event.direction).toLowerCase()}` },
+                { key: "negotiation", label: `Negotiation${list.length ? ` (${list.length})` : ""}` },
+                { key: "history", label: "Price history" },
               ]}
             />
           </div>
           <div className="p-5" role="tabpanel" id={panelId("item", tab)} aria-labelledby={tabId("item", tab)}>
-            {tab === "quotes" ? <QuotesTab detail={detail} onChanged={reload} /> : <HistoryTab detail={detail} />}
+            {tab === "quotes" ? (
+              <QuotesTab detail={detail} sessions={list} onChanged={reload} onShowNegotiation={() => pick("negotiation")} />
+            ) : tab === "negotiation" ? (
+              <NegotiationTab sessions={list} />
+            ) : (
+              <HistoryTab detail={detail} />
+            )}
           </div>
         </Panel>
         <div className="grid content-start gap-5">

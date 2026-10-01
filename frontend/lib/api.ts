@@ -23,6 +23,7 @@ export type SessionView = S["SessionView"];
 export type SessionSummary = S["SessionSummary"];
 export type TurnView = S["TurnView"];
 export type DraftView = S["DraftView"];
+export type SessionRow = S["SessionRow"];
 export type Mode = SessionView["mode"];
 
 export type Direction = EventView["direction"];
@@ -118,6 +119,8 @@ export const api = {
   vendor: (id: string) => request<VendorDetail>(`/api/vendors/${id}`),
   history: (p: { direction?: string; category_key?: string; q?: string; negotiated?: boolean; limit?: number }) =>
     request<HistoryRow[]>(`/api/history${qs(p)}`),
+  negotiations: () => request<SessionRow[]>("/api/negotiations"),
+  sessionsForEvent: (eventId: string) => request<SessionSummary[]>(`/api/events/${eventId}/sessions`),
   sessionsForItem: (itemId: string) => request<SessionSummary[]>(`/api/items/${itemId}/sessions`),
   startNegotiation: (itemId: string, body: { vendor_id?: string | null; mode: Mode }) =>
     post<SessionView>(`/api/items/${itemId}/negotiations`, body),

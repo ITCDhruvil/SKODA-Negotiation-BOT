@@ -310,6 +310,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/negotiations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All Negotiations */
+        get: operations["all_negotiations_api_negotiations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{event_id}/sessions": {
         parameters: {
             query?: never;
@@ -1289,6 +1306,60 @@ export interface components {
             /** Can Accept Deal */
             can_accept_deal: boolean;
         };
+        /**
+         * SessionRow
+         * @description One negotiation in the all-negotiations list: the summary plus where it belongs.
+         */
+        SessionRow: {
+            /** Id */
+            id: string;
+            /** Item Id */
+            item_id: string;
+            /** Vendor Id */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "auto" | "approve" | "manual";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "agreed" | "handed_back";
+            /** Round */
+            round: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Agreed Price */
+            agreed_price: number | null;
+            /** Event Id */
+            event_id: string;
+            /** Event Title */
+            event_title: string;
+            /** Item Description */
+            item_description: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "buy" | "sell";
+            /** Qty */
+            qty: number;
+            /** Unit */
+            unit: string;
+            /** Original Price */
+            original_price: number;
+            /** Vendor Offer */
+            vendor_offer: number;
+            /** Ended At */
+            ended_at: string | null;
+        };
         /** SessionSummary */
         SessionSummary: {
             /** Id */
@@ -2065,6 +2136,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    all_negotiations_api_negotiations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionRow"][];
                 };
             };
         };

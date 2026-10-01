@@ -235,6 +235,10 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         detail(item_id)  # 404 for an unknown item
         return negviews.summaries_for_item(repo, item_id)
 
+    @app.get("/api/negotiations", response_model=list[sch.SessionRow])
+    def all_negotiations():
+        return negviews.all_rows(repo)
+
     @app.get("/api/events/{event_id}/sessions", response_model=list[sch.SessionSummary])
     def event_sessions(event_id: str):
         return negviews.summaries_for_event(repo, event_id)

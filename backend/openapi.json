@@ -1000,6 +1000,28 @@
     }
    }
   },
+  "/api/negotiations": {
+   "get": {
+    "summary": "All Negotiations",
+    "operationId": "all_negotiations_api_negotiations_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/SessionRow"
+         },
+         "type": "array",
+         "title": "Response All Negotiations Api Negotiations Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/events/{event_id}/sessions": {
    "get": {
     "summary": "Event Sessions",
@@ -3743,6 +3765,135 @@
      "can_accept_deal"
     ],
     "title": "SessionActions"
+   },
+   "SessionRow": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "item_id": {
+      "type": "string",
+      "title": "Item Id"
+     },
+     "vendor_id": {
+      "type": "string",
+      "title": "Vendor Id"
+     },
+     "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+     },
+     "mode": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "approve",
+       "manual"
+      ],
+      "title": "Mode"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "active",
+       "agreed",
+       "handed_back"
+      ],
+      "title": "Status"
+     },
+     "round": {
+      "type": "integer",
+      "title": "Round"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "agreed_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Agreed Price"
+     },
+     "event_id": {
+      "type": "string",
+      "title": "Event Id"
+     },
+     "event_title": {
+      "type": "string",
+      "title": "Event Title"
+     },
+     "item_description": {
+      "type": "string",
+      "title": "Item Description"
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Direction"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "original_price": {
+      "type": "number",
+      "title": "Original Price"
+     },
+     "vendor_offer": {
+      "type": "number",
+      "title": "Vendor Offer"
+     },
+     "ended_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ended At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "item_id",
+     "vendor_id",
+     "vendor_name",
+     "mode",
+     "status",
+     "round",
+     "started_at",
+     "agreed_price",
+     "event_id",
+     "event_title",
+     "item_description",
+     "direction",
+     "qty",
+     "unit",
+     "original_price",
+     "vendor_offer",
+     "ended_at"
+    ],
+    "title": "SessionRow",
+    "description": "One negotiation in the all-negotiations list: the summary plus where it belongs."
    },
    "SessionSummary": {
     "properties": {

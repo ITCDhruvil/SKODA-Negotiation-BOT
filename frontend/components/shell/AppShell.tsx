@@ -11,6 +11,7 @@ import { useRange, useTheme } from "@/lib/providers";
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Dashboard", icon: "dashboard" },
   { href: "/events", label: "Events", icon: "events" },
+  { href: "/negotiations", label: "Negotiations", icon: "chat" },
   { href: "/vendors", label: "Vendors", icon: "vendors" },
   { href: "/comparison", label: "Comparison", icon: "comparison" },
   { href: "/history", label: "History", icon: "history" },
@@ -23,6 +24,7 @@ const USER = { name: "Dhruvil Patel", role: "Buyer · SAVWIPL Pune" };
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   if (href === "/events") return pathname.startsWith("/events") || pathname.startsWith("/items");
+  if (href === "/negotiations") return pathname.startsWith("/negotiat");
   return pathname.startsWith(href);
 }
 

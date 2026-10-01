@@ -97,3 +97,10 @@ export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
   approve: "Each message is drafted for you; you review, edit and send it.",
   manual: "You write every message yourself.",
 };
+
+export const SESSION_TONE: Record<"active" | "agreed" | "handed_back", Tone> = { active: "amber", agreed: "ok", handed_back: "red" };
+export const SESSION_LABEL: Record<"active" | "agreed" | "handed_back", string> = {
+  active: "In progress",
+  agreed: "Agreed",
+  handed_back: "Handed back",
+};

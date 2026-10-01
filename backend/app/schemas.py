@@ -358,6 +358,20 @@ class SessionSummary(BaseModel):
     agreed_price: Optional[float]
 
 
+class SessionRow(SessionSummary):
+    """One negotiation in the all-negotiations list: the summary plus where it belongs."""
+    event_id: str
+    event_title: str
+    item_description: str
+    direction: Direction
+    qty: float
+    unit: str
+    original_price: float
+    vendor_offer: float
+    ended_at: Optional[datetime]
+
+
+
 class SessionActions(BaseModel):
     can_advance: bool
     can_send: bool

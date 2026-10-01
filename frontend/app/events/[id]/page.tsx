@@ -11,6 +11,8 @@ import { useApi } from "@/lib/hooks";
 import {
   RECOMMENDATION_LABEL,
   RECOMMENDATION_TONE,
+  SESSION_LABEL,
+  SESSION_TONE,
   STATE_LABEL,
   STATE_TONE,
   STATUS_LABEL,
@@ -26,6 +28,34 @@ function Meta({ label, value }: { label: string; value: string }) {
       <dt className="text-xs text-muted">{label}</dt>
       <dd className="font-medium text-ink">{value}</dd>
     </div>
+  );
+}
+
+function EventNegotiations({ eventId }: { eventId: string }) {
+  const { data } = useApi(() => api.negotiations(), [eventId]);
+  const rows = (data ?? []).filter((r) => r.event_id === eventId);
+  return (
+    <Panel title="Negotiations on this event" subtitle="Conversations with vendors, newest first." flush>
+      {rows.length === 0 ? (
+        <p className="px-5 pb-5 text-sm text-muted">None yet. Open an item, analyze its quotes, then start a negotiation.</p>
+      ) : (
+        <ul className="divide-y divide-line2">
+          {rows.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold text-ink">{r.item_description}</div>
+                <div className="text-xs text-muted">{r.vendor_name}</div>
+              </div>
+              <span className="font-semibold tabular-nums">{money(r.agreed_price ?? r.vendor_offer)}</span>
+              <Pill tone={SESSION_TONE[r.status]}>{SESSION_LABEL[r.status]}</Pill>
+              <Link href={`/negotiate/${r.id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink hover:border-brand">
+                {r.status === "active" ? "Open" : "View"}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }
 
@@ -140,9 +170,11 @@ function Body({ data }: { data: EventDetail }) {
       )}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Panel title="Items" subtitle="Every item is actionable: open it to set points, see quotes and compare vendors." flush>
+        <Panel title="Items" subtitle="Open an item to set points, see its vendors and quotes, negotiate and read the conversation history." flush>
           <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} />
         </Panel>
+        <div className="grid content-start gap-5">
+        <EventNegotiations eventId={e.id} />
         <Panel title="Details">
           <dl className="grid gap-3 text-sm">
             <Meta label="Reference value" value={money(e.reference_value)} />
@@ -156,6 +188,7 @@ function Body({ data }: { data: EventDetail }) {
             <Meta label="Source cart" value={e.source_cart_no ?? "Scrap sale (no cart)"} />
           </dl>
         </Panel>
+        </div>
       </div>
     </>
   );
