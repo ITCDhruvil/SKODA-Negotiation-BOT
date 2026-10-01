@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { DirectionBadge, Panel, Pill } from "@/components/ui/basics";
+import { TableToolbar, IconLink } from "@/components/ui/TableToolbar";
 import { ErrorBox, Loading, PageHeader } from "@/components/ui/State";
 import { api, type SessionRow } from "@/lib/api";
 import { money } from "@/lib/format";
@@ -19,15 +20,19 @@ const FILTERS = [
 
 export default function NegotiationsPage() {
   const { data, error, errorStatus, loading, reload } = useApi(() => api.negotiations(), []);
+  const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
   if (loading && !data) return <Loading label="Loading negotiations" />;
   if (error && !data) return <ErrorBox message={error} status={errorStatus} onRetry={reload} />;
-  const rows = (data ?? []).filter((r) => filter === "all" || r.status === filter);
+  const rows = (data ?? []).filter(
+    (r) => (filter === "all" || r.status === filter) && (!q || `${r.item_description} ${r.vendor_name} ${r.event_title}`.toLowerCase().includes(q.toLowerCase())),
+  );
 
   const columns: Column<SessionRow>[] = [
     {
       key: "item",
       header: "Item",
+      sort: (r) => r.item_description.toLowerCase(),
       cell: (r) => (
         <div className="min-w-0">
           <Link href={`/items/${r.item_id}`} className="font-semibold text-brand hover:underline">
@@ -39,27 +44,24 @@ export default function NegotiationsPage() {
         </div>
       ),
     },
-    { key: "dir", header: "Type", hideOnMobile: true, cell: (r) => <DirectionBadge direction={r.direction} /> },
-    { key: "vendor", header: "Vendor", cell: (r) => r.vendor_name },
-    { key: "mode", header: "Permission", hideOnMobile: true, cell: (r) => MODE_LABEL[r.mode] },
-    { key: "round", header: "Rounds", align: "right", hideOnMobile: true, cell: (r) => r.round },
-    { key: "orig", header: "Original", align: "right", hideOnMobile: true, cell: (r) => <span className="tabular-nums">{money(r.original_price)}</span> },
+    { key: "dir", header: "Type", hideOnMobile: true, sort: (r) => r.direction, cell: (r) => <DirectionBadge direction={r.direction} /> },
+    { key: "vendor", header: "Vendor", sort: (r) => r.vendor_name.toLowerCase(), cell: (r) => r.vendor_name },
+    { key: "mode", header: "Permission", hideOnMobile: true, sort: (r) => r.mode, cell: (r) => MODE_LABEL[r.mode] },
+    { key: "round", header: "Rounds", align: "right", hideOnMobile: true, sort: (r) => r.round, cell: (r) => r.round },
+    { key: "orig", header: "Original", align: "right", hideOnMobile: true, sort: (r) => r.original_price, cell: (r) => <span className="tabular-nums">{money(r.original_price)}</span> },
     {
       key: "now",
       header: "Latest / agreed",
       align: "right",
+      sort: (r) => r.agreed_price ?? r.vendor_offer,
       cell: (r) => <span className="font-semibold tabular-nums">{money(r.agreed_price ?? r.vendor_offer)}</span>,
     },
-    { key: "status", header: "Status", cell: (r) => <Pill tone={SESSION_TONE[r.status]}>{SESSION_LABEL[r.status]}</Pill> },
+    { key: "status", header: "Status", sort: (r) => r.status, cell: (r) => <Pill tone={SESSION_TONE[r.status]}>{SESSION_LABEL[r.status]}</Pill> },
     {
       key: "open",
       header: "",
       align: "right",
-      cell: (r) => (
-        <Link href={`/negotiate/${r.id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink hover:border-brand">
-          {r.status === "active" ? "Open" : "View"}
-        </Link>
-      ),
+      cell: (r) => <IconLink href={`/negotiate/${r.id}`} icon={r.status === "active" ? "chat" : "eye"} label={r.status === "active" ? "Open conversation" : "View conversation"} />,
     },
   ];
 
@@ -67,22 +69,21 @@ export default function NegotiationsPage() {
     <>
       <PageHeader
         title="Negotiations"
-        subtitle="Every conversation with a vendor, across all events. Start a new one from an item once its quotes are analyzed."
       />
-      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by status">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            aria-pressed={filter === f.key}
-            onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === f.key ? "border-brand bg-brand-soft text-brand" : "border-line bg-panel text-text"}`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
       <Panel flush>
+        <TableToolbar
+          search={{ value: q, onChange: setQ, placeholder: "Search negotiations" }}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              value: filter === "all" ? "" : filter,
+              onChange: (v) => setFilter((v || "all") as typeof filter),
+              options: FILTERS.map((f) => ({ value: f.key === "all" ? "" : f.key, label: f.label })),
+            },
+          ]}
+          right={<span>{rows.length} negotiations</span>}
+        />
         {rows.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-muted">No negotiations here yet.</p>
         ) : (

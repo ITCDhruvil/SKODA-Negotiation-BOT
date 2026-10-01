@@ -312,3 +312,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 104. Charts use one bright categorical palette (tokens --c1 to --c6) and are interactive: the category donut lifts a slice on hover and shows its share at the centre; the price-history chart is a smooth area chart with a crosshair and tooltip, range buttons (3M, 6M, 1Y, All), keyboard arrows and reference lines for target and limit. The donut shows the five largest categories; the rest stays as the empty part of the ring.
     Reason: readability and a modern feel; no extra totals are computed in the browser.
+
+105. List screens share one pattern: tabs for All, Purchase events and Scrap events; a search box in the table header with a separate filter button (a menu of filters, each showing its current choice); sortable column headers (click once for ascending, again for descending, a third time to clear; empty values always stay last); and icon buttons for row actions. The dashboard shows the events table full width and the summary widgets below it; page titles carry no tagline and panels carry no subtitle. Date filtering uses a custom calendar with presets (all dates, last 30 days, last 90 days, this month, this year).
+    Reason: a cleaner, denser layout that uses the full screen width; wording now says "Create" instead of "Simulate".

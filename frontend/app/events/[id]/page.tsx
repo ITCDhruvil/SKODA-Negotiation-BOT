@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { IconLink } from "@/components/ui/TableToolbar";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { api, type EventDetail, type ItemView } from "@/lib/api";
 import { dateShort, money, moneyCompact, num } from "@/lib/format";
@@ -35,7 +36,7 @@ function EventNegotiations({ eventId }: { eventId: string }) {
   const { data } = useApi(() => api.negotiations(), [eventId]);
   const rows = (data ?? []).filter((r) => r.event_id === eventId);
   return (
-    <Panel title="Negotiations on this event" subtitle="Conversations with vendors, newest first." flush>
+    <Panel title="Negotiations on this event" flush>
       {rows.length === 0 ? (
         <p className="px-5 pb-5 text-sm text-muted">None yet. Open an item, analyze its quotes, then start a negotiation.</p>
       ) : (
@@ -48,9 +49,7 @@ function EventNegotiations({ eventId }: { eventId: string }) {
               </div>
               <span className="font-semibold tabular-nums">{money(r.agreed_price ?? r.vendor_offer)}</span>
               <Pill tone={SESSION_TONE[r.status]}>{SESSION_LABEL[r.status]}</Pill>
-              <Link href={`/negotiate/${r.id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink hover:border-brand">
-                {r.status === "active" ? "Open" : "View"}
-              </Link>
+              <IconLink href={`/negotiate/${r.id}`} icon={r.status === "active" ? "chat" : "eye"} label={r.status === "active" ? "Open conversation" : "View conversation"} />
             </li>
           ))}
         </ul>
@@ -66,24 +65,26 @@ function Body({ data }: { data: EventDetail }) {
     {
       key: "item",
       header: "Item",
+      sort: (i) => i.description.toLowerCase(),
       cell: (i) => (
         <Link href={`/items/${i.id}`} className="font-semibold text-brand hover:underline">
           {i.description}
         </Link>
       ),
     },
-    { key: "qty", header: "Qty", align: "right", cell: (i) => `${num(i.qty)} ${i.unit}` },
-    { key: "bids", header: quotesLabel(e.direction), align: "right", hideOnMobile: true, cell: (i) => i.bid_count },
-    { key: "best", header: `Best ${quoteLabel(e.direction).toLowerCase()}`, align: "right", cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
-    { key: "target", header: "Target", align: "right", hideOnMobile: true, cell: (i) => <span className="tabular-nums">{money(i.target)}</span> },
-    { key: "gap", header: "Gap / unit", align: "right", hideOnMobile: true, cell: (i) => <span className="tabular-nums">{i.gap == null ? "—" : money(i.gap)}</span> },
+    { key: "qty", header: "Qty", align: "right", sort: (i) => i.qty, cell: (i) => `${num(i.qty)} ${i.unit}` },
+    { key: "bids", header: quotesLabel(e.direction), align: "right", hideOnMobile: true, sort: (i) => i.bid_count, cell: (i) => i.bid_count },
+    { key: "best", header: `Best ${quoteLabel(e.direction).toLowerCase()}`, align: "right", sort: (i) => i.best_bid, cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
+    { key: "target", header: "Target", align: "right", hideOnMobile: true, sort: (i) => i.target, cell: (i) => <span className="tabular-nums">{money(i.target)}</span> },
+    { key: "gap", header: "Gap / unit", align: "right", hideOnMobile: true, sort: (i) => i.gap, cell: (i) => <span className="tabular-nums">{i.gap == null ? "—" : money(i.gap)}</span> },
     {
       key: "potential",
+      sort: (i) => i.potential_delta,
       header: `Potential ${deltaLabel(e.direction).toLowerCase()}`,
       align: "right",
       cell: (i) => <Delta value={i.potential_delta} direction={e.direction} />,
     },
-    { key: "state", header: "Status", cell: (i) => <Pill tone={STATE_TONE[i.state]}>{STATE_LABEL[i.state]}</Pill> },
+    { key: "state", header: "Status", sort: (i) => i.state, cell: (i) => <Pill tone={STATE_TONE[i.state]}>{STATE_LABEL[i.state]}</Pill> },
     {
       key: "rec",
       header: "Recommendation",
@@ -94,11 +95,7 @@ function Body({ data }: { data: EventDetail }) {
       key: "action",
       header: "",
       align: "right",
-      cell: (i) => (
-        <Link href={`/items/${i.id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink hover:border-brand">
-          Open
-        </Link>
-      ),
+      cell: (i) => <IconLink href={`/items/${i.id}`} icon="eye" label="View item" />,
     },
   ];
 
@@ -157,7 +154,7 @@ function Body({ data }: { data: EventDetail }) {
 
       {closed && (
         <div className="mb-5">
-          <Panel title="Closed summary" subtitle="What this event delivered">
+          <Panel title="Closed summary">
             <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
               <Meta label="Original value" value={money(e.original_value)} />
               <Meta label="Final value" value={money(e.final_value)} />
@@ -170,7 +167,7 @@ function Body({ data }: { data: EventDetail }) {
       )}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Panel title="Items" subtitle="Open an item to set points, see its vendors and quotes, negotiate and read the conversation history." flush>
+        <Panel title="Items" flush>
           <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} />
         </Panel>
         <div className="grid content-start gap-5">

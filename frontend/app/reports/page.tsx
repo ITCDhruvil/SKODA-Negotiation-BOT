@@ -25,7 +25,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reports" subtitle="What negotiation has delivered so far, for events created in this period." />
+      <PageHeader title="Reports" />
       <RangeNotice />
       {loading && !data && <Loading label="Loading reports" />}
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}
@@ -37,7 +37,7 @@ export default function ReportsPage() {
             <KpiCard icon="check" tone="brand" label="Completed negotiations" value={data.kpis.completed_negotiations} />
             <KpiCard icon="chat" tone="amber" label="Still on the table" value={moneyCompact(data.kpis.potential_total)} sub="Potential across open items" />
           </div>
-          <Panel title="Closed events" subtitle="Events created in this period that are now closed." flush>
+          <Panel title="Closed events" flush>
             <EventsTable events={data.events.filter((e) => e.status === "closed")} empty="No closed events created in this period." />
           </Panel>
           <Panel title="Value by category" flush>

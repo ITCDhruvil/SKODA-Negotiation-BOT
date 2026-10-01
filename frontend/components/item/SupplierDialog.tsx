@@ -87,7 +87,7 @@ export function SupplierDialog({
   return (
     <Dialog
       open={open}
-      title={`${partyLabel(direction)} response (demo)`}
+      title={`Create ${partyLabel(direction).toLowerCase()} response`}
       onClose={close}
       footer={
         step === "invite" ? (
@@ -108,7 +108,7 @@ export function SupplierDialog({
       }
     >
       <div className="grid gap-4 text-sm">
-        <Notice tone="info">Simulation only. No message, consent record or one-time code leaves this screen.</Notice>
+        <Notice tone="info">Nothing is sent: this only creates the vendor's response on screen.</Notice>
         {step === "invite" ? (
           <>
             <Field label="Channel">

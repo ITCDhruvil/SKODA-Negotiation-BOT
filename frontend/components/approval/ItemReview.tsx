@@ -53,7 +53,6 @@ export function ItemReview({ entry, event }: { entry: ReviewEntry; event: EventV
   return (
     <Panel
       title={item.description}
-      subtitle={`${event.title} · ${num(item.qty)} ${item.unit}`}
       actions={
         <>
           <Pill tone={session ? "ok" : "info"}>{session ? "Negotiated" : "Best quote accepted as it stands"}</Pill>

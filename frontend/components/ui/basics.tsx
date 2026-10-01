@@ -101,14 +101,12 @@ export function ButtonLink({
 
 export function Panel({
   title,
-  subtitle,
   actions,
   children,
   className = "",
   flush = false,
 }: {
   title?: ReactNode;
-  subtitle?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -117,15 +115,14 @@ export function Panel({
   return (
     <section className={`rounded-l border border-line bg-panel shadow-card ${className}`}>
       {(title || actions) && (
-        <header className="flex flex-wrap items-start justify-between gap-2 px-5 pt-4">
+        <header className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3.5">
           <div className="min-w-0">
-            {title && <h2 className="text-base font-bold text-ink">{title}</h2>}
-            {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
+            {title && <h2 className="text-[15px] font-bold text-ink">{title}</h2>}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </header>
       )}
-      <div className={flush ? "pt-3" : "p-5"}>{children}</div>
+      <div className={flush ? "pt-2.5" : "p-4"}>{children}</div>
     </section>
   );
 }
@@ -153,15 +150,15 @@ export function KpiCard({
   sub?: ReactNode;
 }) {
   return (
-    <div className="rounded-l border border-line bg-panel p-4 shadow-card">
-      <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-m ${KPI_ICON_TONE[tone]}`}>
-          <Icon name={icon} size={20} />
+    <div className="min-w-0 rounded-l border border-line bg-panel p-3.5 shadow-card">
+      <div className="flex items-center gap-2">
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-s ${KPI_ICON_TONE[tone]}`}>
+          <Icon name={icon} size={15} />
         </span>
-        <span className="text-sm font-medium text-muted">{label}</span>
+        <span className="min-w-0 truncate text-xs font-medium text-muted">{label}</span>
       </div>
-      <div className="mt-3 text-2xl font-extrabold tracking-tight text-ink tabular-nums">{value}</div>
-      {sub && <div className="mt-1 text-xs text-muted">{sub}</div>}
+      <div className="mt-2 truncate text-xl font-extrabold leading-tight tracking-tight text-ink tabular-nums">{value}</div>
+      {sub && <div className="mt-0.5 text-[11px] leading-snug text-muted">{sub}</div>}
     </div>
   );
 }

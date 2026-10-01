@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { dateShort, initials } from "@/lib/format";
-import { useDismissDetails } from "@/lib/hooks";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { initials } from "@/lib/format";
 import { useRange, useTheme } from "@/lib/providers";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
@@ -70,9 +70,6 @@ function Sidebar({ pathname, onNavigate }: { pathname: string; onNavigate: () =>
             <span className="text-[11.5px] text-side-m">{USER.role}</span>
           </div>
         </div>
-        <p className="mt-3 text-[11.5px] leading-snug text-side-m">
-          Smarter negotiations. Better outcomes. Prices and scrap rates are illustrative POC values.
-        </p>
       </div>
     </div>
   );
@@ -80,64 +77,7 @@ function Sidebar({ pathname, onNavigate }: { pathname: string; onNavigate: () =>
 
 function DateRangeMenu() {
   const { range, setRange } = useRange();
-  const [from, setFrom] = useState(range.from);
-  const [to, setTo] = useState(range.to);
-  useEffect(() => {
-    setFrom(range.from);
-    setTo(range.to);
-  }, [range.from, range.to]);
-  const label =
-    range.from || range.to
-      ? `${range.from ? dateShort(range.from) : "…"} – ${range.to ? dateShort(range.to) : "…"}`
-      : "All dates";
-  const invalid = Boolean(from && to && from > to);
-  const menuRef = useDismissDetails();
-  return (
-    <details className="relative" ref={menuRef}>
-      <summary
-        aria-label={`Date range: ${label}`}
-        className="flex cursor-pointer list-none items-center gap-2 rounded-m border border-line bg-panel px-3 py-2 text-sm font-medium text-ink hover:border-brand">
-        <Icon name="calendar" size={16} />
-        <span className="hidden sm:inline">{label}</span>
-        <Icon name="down" size={14} />
-      </summary>
-      <div className="absolute right-0 z-40 mt-2 w-72 rounded-l border border-line bg-panel p-4 shadow-pop">
-        <p className="mb-3 text-xs text-muted">Filter events by the date they were created.</p>
-        <div className="grid gap-3">
-          <label className="grid gap-1 text-xs font-semibold text-ink">
-            From
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-m border border-line bg-panel px-2 py-1.5 text-sm" />
-          </label>
-          <label className="grid gap-1 text-xs font-semibold text-ink">
-            To
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-m border border-line bg-panel px-2 py-1.5 text-sm" />
-          </label>
-          {invalid && <p role="alert" className="text-xs text-red">“From” must not be after “To”.</p>}
-          <div className="flex justify-end gap-2">
-            <button
-              className="rounded-m px-3 py-1.5 text-xs font-semibold text-muted hover:bg-raise"
-              onClick={(e) => {
-                setRange({ from: "", to: "" });
-                (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-              }}
-            >
-              Clear
-            </button>
-            <button
-              disabled={invalid}
-              className="rounded-m bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand disabled:opacity-50"
-              onClick={(e) => {
-                setRange({ from, to });
-                (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-              }}
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-      </div>
-    </details>
-  );
+  return <DateRangePicker value={range} onChange={setRange} />;
 }
 
 function Topbar({ onMenu, menuRef }: { onMenu: () => void; menuRef: RefObject<HTMLButtonElement> }) {

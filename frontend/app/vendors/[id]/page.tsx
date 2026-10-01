@@ -55,11 +55,6 @@ function Body({ data }: { data: VendorDetail }) {
       <div className="grid gap-5 xl:grid-cols-2">
         <Panel
           title="Current quotes"
-          subtitle={
-            data.vendor.live_bid_count > data.recent_bids.length
-              ? `Showing the first ${data.recent_bids.length} of ${data.vendor.live_bid_count} live quotes.`
-              : undefined
-          }
           flush
         >
           <DataTable columns={bidColumns} rows={data.recent_bids} rowKey={(b) => `${b.item_id}`} empty="No live quotes." dense />

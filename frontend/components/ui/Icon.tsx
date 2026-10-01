@@ -25,6 +25,13 @@ const PATHS = {
   chat: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
   check: "M5 12l5 5L20 7",
   send: "M12 19V5M5 12l7-7 7 7",
+  eye: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  up: "M6 15l6-6 6 6",
+  sort: "M8 9l4-4 4 4M8 15l4 4 4-4",
+  external: "M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
+  download: "M12 4v11M7 11l5 5 5-5M5 20h14",
+  back: "M15 6l-6 6 6 6",
+  clear: "M4 12h16",
   filter: "M3 5h18l-7 8v6l-4 2v-8z",
 } as const;
 

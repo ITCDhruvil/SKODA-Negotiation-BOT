@@ -32,7 +32,7 @@ export function NextStep({
       break;
     case "points_reviewed":
     case "awaiting_bids":
-      text = `Waiting for vendors to send their ${quote}s. Open the vendor list and simulate each response.`;
+      text = `Waiting for vendors to send their ${quote}s. Open the vendor list and create each response.`;
       action = <Button variant="primary" onClick={onOpenVendors}>Go to vendors</Button>;
       break;
     case "bids_in":

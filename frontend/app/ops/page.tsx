@@ -43,7 +43,7 @@ export default function OpsPage() {
 
   return (
     <>
-      <PageHeader title="Ops" subtitle="Demo controls and system status." />
+      <PageHeader title="Ops" />
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel title="API status">
           <dl className="grid gap-3 text-sm">
@@ -65,10 +65,10 @@ export default function OpsPage() {
             Check again
           </Button>
         </Panel>
-        <Panel title="Demo data" subtitle="Everything here is mock data for the proof of concept.">
+        <Panel title="Demo data">
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy} onClick={() => void simulate("buy")}>Simulate BUY event</Button>
-            <Button disabled={busy} onClick={() => void simulate("sell")}>Simulate SELL event</Button>
+            <Button disabled={busy} onClick={() => void simulate("buy")}>Create purchase event</Button>
+            <Button disabled={busy} onClick={() => void simulate("sell")}>Create scrap event</Button>
             <Button variant="danger" disabled={busy} onClick={reset}>Reset demo data</Button>
           </div>
           {message && (

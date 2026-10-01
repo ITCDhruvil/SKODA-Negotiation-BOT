@@ -216,7 +216,6 @@ function Workspace({ initial }: { initial: SessionView }) {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Panel
           title="Conversation"
-          subtitle={autoOn ? "Running automatically. Press stop to take over." : undefined}
         >
           <div className="grid gap-4">
             {error && <Notice tone="red">{error}</Notice>}
@@ -297,7 +296,7 @@ function Workspace({ initial }: { initial: SessionView }) {
           <Panel title="Permission">
             <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
           </Panel>
-          <Panel title="Conversation language" subtitle="Applies to the messages that follow.">
+          <Panel title="Conversation language">
             <Select<"en" | "hi" | "mr">
               id="ws-language"
               ariaLabel="Conversation language"
@@ -307,7 +306,7 @@ function Workspace({ initial }: { initial: SessionView }) {
               options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
             />
           </Panel>
-          <Panel title="Live intelligence" subtitle={s.status === "active" ? undefined : "Final position"}>
+          <Panel title="Live intelligence">
             <dl>
               <Row label="Original quote">{money(i.current_bid)}</Row>
               <Row label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>

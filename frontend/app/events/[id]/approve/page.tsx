@@ -97,7 +97,7 @@ export default function ApprovePage() {
             <KpiCard icon="coin" tone="ok" label="Cost centre" value={event.cost_centre} sub={`${event.purch_org} · ${event.purch_group}`} />
           </div>
 
-          <Panel title="Items awaiting approval" subtitle="Select a row to review its vendor, terms, conversation, comparison and history below." flush>
+          <Panel title="Items awaiting approval" flush>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[56rem] border-collapse text-sm">
                 <thead>

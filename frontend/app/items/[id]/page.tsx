@@ -81,7 +81,6 @@ function QuotesTab({
       <div id="vendors-panel" className="scroll-mt-4">
       <Panel
         title="Vendors on this item"
-        subtitle={`${partyLabel(event.direction)}s invited to ${quoteLabel(event.direction).toLowerCase()}. ${invitees.filter((i) => i.responded).length} of ${invitees.length} responded.`}
         flush
       >
         <ul className="divide-y divide-line2">
@@ -118,7 +117,7 @@ function QuotesTab({
               })()}
               {!v.responded && canCollect && (
                 <Button size="sm" disabled={busy} onClick={() => setInviting(v.vendor_id)}>
-                  Simulate response
+                  Create response
                 </Button>
               )}
             </li>
@@ -137,10 +136,10 @@ function QuotesTab({
             {canCollect && (
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="primary" disabled={busy} onClick={() => act(() => api.releaseBids(item.id))}>
-                  Load all scripted replies (demo)
+                  Create all responses
                 </Button>
                 <span className="text-xs text-muted">
-                  Or simulate each supplier above: invite, consent and one-time code are mocked on screen only.
+                  Or create each response from the list above.
                 </span>
               </div>
             )}
@@ -210,7 +209,7 @@ function OutcomePanel({ detail }: { detail: ItemDetail }) {
   if (!o) return null;
   const d = detail.event.direction;
   return (
-    <Panel title="Outcome" subtitle={o.negotiated ? "Negotiated deal" : `Accepted at the best ${quoteLabel(d).toLowerCase()}`}>
+    <Panel title="Outcome">
       <dl className="grid gap-2 text-sm">
         {[
           ["Vendor", o.vendor_name],
