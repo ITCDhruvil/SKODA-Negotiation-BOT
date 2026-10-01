@@ -78,6 +78,7 @@ function QuotesTab({
         </>
       )}
 
+      <div id="vendors-panel" className="scroll-mt-4">
       <Panel
         title="Vendors on this item"
         subtitle={`${partyLabel(event.direction)}s invited to ${quoteLabel(event.direction).toLowerCase()}. ${invitees.filter((i) => i.responded).length} of ${invitees.length} responded.`}
@@ -146,6 +147,7 @@ function QuotesTab({
           </div>
         )}
       </Panel>
+      </div>
       <SupplierDialog
         vendor={invitees.find((v) => v.vendor_id === inviting) ?? null}
         direction={event.direction}
@@ -266,7 +268,15 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
         <NextStep
           detail={detail}
           sessions={list}
-          onOpenVendors={() => pick("quotes")}
+          onOpenVendors={() => {
+            pick("quotes");
+            // Wait for the tab to render, then bring the vendor list into view and focus its first action.
+            setTimeout(() => {
+              const panel = document.getElementById("vendors-panel");
+              panel?.scrollIntoView({ behavior: "smooth", block: "center" });
+              panel?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+            }, 50);
+          }}
           onChanged={async () => {
             await reload();
             await reloadSessions();

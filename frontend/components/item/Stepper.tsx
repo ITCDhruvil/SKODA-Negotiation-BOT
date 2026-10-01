@@ -15,7 +15,7 @@ export function Stepper({ state }: { state: ItemState }) {
           <li key={s.key} className="flex items-center gap-2" aria-current={active ? "step" : undefined}>
             <span
               className={`grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${
-                done ? "bg-ok text-white dark:text-[#07130f]" : active ? "bg-brand text-white dark:text-[#07130f]" : "bg-raise text-muted"
+                done ? "bg-ok text-on-brand" : active ? "bg-brand text-on-brand" : "bg-raise text-muted"
               }`}
             >
               {done ? "✓" : i + 1}

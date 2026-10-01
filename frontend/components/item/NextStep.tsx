@@ -63,15 +63,15 @@ export function NextStep({
       break;
     case "negotiating":
       text = last ? `A conversation with ${last.vendor_name} is in progress.` : "A negotiation is in progress.";
-      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f]">Open workspace</Link> : null;
+      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Open workspace</Link> : null;
       break;
     case "result_pending":
       text = last ? `${last.vendor_name} agreed. Accept the deal or keep negotiating.` : "A deal was reached.";
-      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f]">Review result</Link> : null;
+      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Review result</Link> : null;
       break;
     case "awaiting_approval":
       text = "The deal is ready for approval.";
-      action = <Link href={`/events/${event.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f]">Review &amp; approve</Link>;
+      action = <Link href={`/events/${event.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Review &amp; approve</Link>;
       break;
     case "closed":
       text = "This item is closed. The result is recorded in the Outcome card and the dashboard.";

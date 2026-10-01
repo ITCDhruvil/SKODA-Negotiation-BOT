@@ -105,7 +105,7 @@ export function StackBar({ segments, label }: { segments: Segment[]; label: stri
 export function Avatar({ name, index = 0 }: { name: string; index?: number }) {
   return (
     <span
-      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white dark:text-[#07130f]"
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-on-brand"
       style={{ background: SERIES[index % SERIES.length] }}
       aria-hidden="true"
     >

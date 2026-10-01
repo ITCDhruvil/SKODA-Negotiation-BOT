@@ -10,7 +10,7 @@ const config: Config = {
       colors: {
         bg: v("bg"), panel: v("panel"), raise: v("raise"), line: v("line"), line2: v("line2"),
         ink: v("ink"), text: v("text"), muted: v("muted"),
-        brand: v("brand"), "brand-soft": v("brand-soft"),
+        brand: v("brand"), "on-brand": v("on-brand"), "brand-soft": v("brand-soft"),
         ok: v("ok"), "ok-soft": v("ok-soft"),
         amber: v("amber"), "amber-soft": v("amber-soft"),
         red: v("red"), "red-soft": v("red-soft"),

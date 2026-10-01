@@ -123,12 +123,12 @@ function Body({ data }: { data: EventDetail }) {
             <a
               href={api.exportUrl(e.id)}
               download
-              className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f]"
+              className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand"
             >
               {e.direction === "buy" ? "Download Shopping Cart template (CSV)" : "Download deal summary (CSV)"}
             </a>
           ) : data.items.some((i) => i.state === "awaiting_approval") ? (
-            <Link href={`/events/${e.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f]">
+            <Link href={`/events/${e.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">
               Review &amp; approve
             </Link>
           ) : undefined

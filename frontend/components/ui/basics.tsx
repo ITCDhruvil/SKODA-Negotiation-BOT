@@ -58,7 +58,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const BUTTON_VARIANT = {
-  primary: "bg-brand text-white hover:opacity-90 dark:text-[#07130f] border-transparent",
+  primary: "bg-brand text-on-brand hover:opacity-90 border-transparent",
   secondary: "bg-panel text-ink border-line hover:border-brand",
   ghost: "bg-transparent text-text border-transparent hover:bg-raise",
   danger: "bg-red-soft text-red border-transparent hover:opacity-90",

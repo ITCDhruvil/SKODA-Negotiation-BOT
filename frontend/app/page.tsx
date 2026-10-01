@@ -67,7 +67,7 @@ export default function DashboardPage() {
               onClick={(e) => {
                 if (busy) e.preventDefault();
               }}
-              className={`inline-flex list-none items-center gap-2 rounded-m bg-brand px-4 py-2 text-sm font-semibold text-white dark:text-[#07130f] ${busy ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+              className={`inline-flex list-none items-center gap-2 rounded-m bg-brand px-4 py-2 text-sm font-semibold text-on-brand ${busy ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
             >
               <Icon name="plus" size={16} /> Simulate event
             </summary>

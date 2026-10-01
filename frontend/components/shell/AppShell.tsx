@@ -125,7 +125,7 @@ function DateRangeMenu() {
             </button>
             <button
               disabled={invalid}
-              className="rounded-m bg-brand px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 dark:text-[#07130f]"
+              className="rounded-m bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand disabled:opacity-50"
               onClick={(e) => {
                 setRange({ from, to });
                 (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
