@@ -1,0 +1,167 @@
+"""Create an event from a buyer's own input (as opposed to the generated sample in app.simulate).
+
+The buyer supplies the event details, the items and the vendors to invite. The vendors' answers are still
+simulated: each invited vendor gets a scripted quote or bid built from the item's reference price, which
+the buyer "collects" later, exactly as for the seeded events.
+"""
+from __future__ import annotations
+
+import random
+from datetime import date, timedelta
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app import clock, eligibility
+from app.models import Direction, Event, Unit
+from app.seed.build import Accumulator, _add_item
+from app.seed.catalog import BUY_CATEGORIES, FAMILY_TITLES, REQUESTORS, SCRAP_MATERIALS
+from app.seed.constants import SEED
+from app.seed.vendors import pool
+from app.services import Conflict
+from app.store import Repo
+
+MIN_VENDORS = 3
+MAX_ITEMS = 20
+INCOTERMS = ("FH", "EXW", "FCA", "DAP", "DDP")
+_SERVICE_CODES = {"25200000", "41120214", "90101500", "82121500", "78101800", "86101700"}
+
+
+class NewItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    description: str = Field(min_length=2, max_length=120)
+    qty: float = Field(gt=0, le=10_000_000)
+    unit: Unit
+    reference_price: float = Field(gt=0, le=100_000_000)
+    incoterm: Optional[str] = None
+    delivery_days: Optional[int] = Field(default=None, ge=0, le=365)
+
+    @field_validator("description")
+    @classmethod
+    def _trim(cls, v: str) -> str:
+        v = " ".join(v.split())
+        if len(v) < 2:
+            raise ValueError("describe the item")
+        return v
+
+
+class NewEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    direction: Direction
+    title: Optional[str] = Field(default=None, max_length=120)
+    category_key: str
+    company_id: str
+    company: str
+    plant: str
+    purch_org: str
+    purch_group: str
+    requestor: str = Field(min_length=2, max_length=60)
+    cost_centre: str = Field(min_length=3, max_length=20)
+    due: date
+    source_cart_no: Optional[str] = Field(default=None, max_length=20)
+    vendor_ids: list[str]
+    items: list[NewItem] = Field(min_length=1, max_length=MAX_ITEMS)
+
+
+def options(repo: Repo) -> dict:
+    """What the Add event form offers: categories with their vendor pools, and values seen on existing events."""
+    vendors = repo.fetch("vendor")
+
+    def pool_view(key: str) -> list[dict]:
+        return [{"id": v.id, "name": v.name, "rating": v.rating, "language": "en"} for v in pool(vendors, key)]
+
+    buy = [{
+        "key": c.code, "label": c.eclass, "direction": "buy", "kind": c.kind,
+        "samples": [{"description": t.description, "unit": t.unit, "qty": t.qty_lo, "reference_price": t.price_lo}
+                    for t in c.templates],
+        "vendors": pool_view(c.code),
+    } for c in BUY_CATEGORIES]
+    seen: set[str] = set()
+    sell = []
+    for m in SCRAP_MATERIALS:
+        if m.family in seen:
+            continue
+        seen.add(m.family)
+        mats = [x for x in SCRAP_MATERIALS if x.family == m.family]
+        sell.append({
+            "key": m.family, "label": f"Scrap - {FAMILY_TITLES[m.family]}", "direction": "sell", "kind": "scrap",
+            "samples": [{"description": x.description, "unit": "KG", "qty": 1000, "reference_price": x.price_lo}
+                        for x in mats],
+            "vendors": pool_view(m.family),
+        })
+    orgs: dict[tuple, dict] = {}
+    for e in repo.fetch("event"):
+        key = (e.direction, e.company_id, e.plant, e.purch_org, e.purch_group)
+        orgs.setdefault(key, {"direction": e.direction, "company_id": e.company_id, "company": e.company,
+                              "plant": e.plant, "purch_org": e.purch_org, "purch_group": e.purch_group,
+                              "cost_centre": e.cost_centre})
+    return {
+        "categories": buy + sell,
+        "organisations": list(orgs.values()),
+        "requestors": list(REQUESTORS),
+        "incoterms": list(INCOTERMS),
+        "min_vendors": MIN_VENDORS,
+    }
+
+
+def _next_number(repo: Repo) -> int:
+    return max(int(e.id.rsplit("-", 1)[1]) for e in repo.fetch("event")) + 1
+
+
+def create_event(repo: Repo, body: NewEvent) -> str:
+    """Store the event, its items and the vendors' scripted answers; returns the new event id."""
+    vendors = repo.fetch("vendor")
+    chosen = [v for v in vendors if v.id in set(body.vendor_ids)]
+    if len(chosen) != len(set(body.vendor_ids)):
+        raise Conflict("one of the selected vendors does not exist")
+    category = next((c for c in options(repo)["categories"] if c["key"] == body.category_key
+                     and c["direction"] == body.direction), None)
+    if category is None:
+        raise Conflict("choose a category that matches the event type")
+    allowed = {v["id"] for v in category["vendors"]}
+    if not set(body.vendor_ids) <= allowed:
+        raise Conflict("every invited vendor must deal in the chosen category")
+    if len(chosen) < MIN_VENDORS:
+        raise Conflict(f"invite at least {MIN_VENDORS} vendors so there are enough quotes to compare")
+    if body.direction == "sell" and (len(body.items) != 1 or body.items[0].unit not in ("KG", "TON")):
+        raise Conflict("a scrap lot is one item measured in KG or TON")
+    if body.direction == "buy" and any(i.unit in ("KG", "TON") for i in body.items):
+        raise Conflict("purchase items are counted in units, not weight")
+    if body.due < clock.today():
+        raise Conflict("the due date cannot be in the past")
+
+    n = _next_number(repo)
+    event_id = f"EVT-2026-{n:03d}"
+    rng = random.Random(SEED + 5000 + n)
+    today = clock.today()
+    title = (body.title or "").strip() or (
+        body.items[0].description + (f" (+{len(body.items) - 1} more)" if len(body.items) > 1 else ""))
+    event = Event(
+        id=event_id, type="shopping_cart" if body.direction == "buy" else "scrap_sale", direction=body.direction,
+        title=title, company_id=body.company_id, company=body.company, plant=body.plant,
+        purch_org=body.purch_org, purch_group=body.purch_group,
+        category=category["label"], category_key=body.category_key, requestor=body.requestor.strip().upper(),
+        cost_centre=body.cost_centre.strip(), created=today, approval_date=today, due=body.due,
+        source_cart_no=((body.source_cart_no or "").strip() or (f"10124{n:05d}" if body.direction == "buy" else None)),
+        hero=False, acceptable=False, no_deal=False, stage="draft",
+    )
+    acc = Accumulator()
+    acc.events.append(event)
+    kind_default = category["kind"]
+    for idx, it in enumerate(body.items, start=1):
+        kind = "scrap" if body.direction == "sell" else (
+            "service" if it.unit == "AU" or body.category_key in _SERVICE_CODES else kind_default)
+        _add_item(rng, chosen, event, idx, len(body.items), desc=it.description, kind=kind, qty=float(it.qty),
+                  unit=it.unit, ref=float(it.reference_price),
+                  incoterm=it.incoterm or ("EXW" if body.direction == "sell" else "FH"),
+                  delivery_days=it.delivery_days if it.delivery_days is not None else (7 if body.direction == "sell" else 14),
+                  acc=acc)
+    with repo.transaction():
+        repo.put("event", event.id, event)
+        for i in acc.items:
+            repo.put("item", i.id, i, parent=i.event_id)
+        for b in acc.scripted:
+            repo.put("scripted_bid", b.id, b, parent=b.item_id)
+        for bid_id, value in acc.reserves.items():
+            repo.put("reserve", bid_id, value)
+    return event_id

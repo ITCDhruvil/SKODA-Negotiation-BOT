@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import export, lifecycle, readmodel, services, simulate
+from app import export, lifecycle, new_event, readmodel, services, simulate
 from app import schemas as sch
 from app.models import Dataset, Direction, Language, Mode, Objective
 from app.negotiation import service as neg
@@ -152,6 +152,16 @@ def create_app(repo: Repo, seed_dataset: Dataset,
                 [e.id, e.title, e.category, e.requestor, e.source_cart_no or "",
                  descriptions[e.id]]).lower()]
         return sorted(out, key=lambda e: (e.created, e.id), reverse=True)
+
+    @app.get("/api/event-options")
+    def event_options():
+        return new_event.options(repo)
+
+    @app.post("/api/events", response_model=sch.EventDetail)
+    def add_event(body: new_event.NewEvent):
+        event_id = new_event.create_event(repo, body)
+        s = snap()
+        return readmodel.event_detail(s, s.event_by_id[event_id])
 
     @app.post("/api/events/simulate", response_model=sch.EventDetail)
     def simulate_event(body: SimulateIn):

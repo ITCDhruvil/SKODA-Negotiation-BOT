@@ -12,6 +12,9 @@ import { SupplierDialog } from "@/components/item/SupplierDialog";
 import { PointsPanel } from "@/components/item/PointsPanel";
 import { Stepper } from "@/components/item/Stepper";
 import { Button, DirectionBadge, Panel, Pill } from "@/components/ui/basics";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { Icon } from "@/components/ui/Icon";
+import { TableToolbar } from "@/components/ui/TableToolbar";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { Tabs, panelId, tabId } from "@/components/ui/Tabs";
 import { api, type ItemDetail, type SessionSummary } from "@/lib/api";
@@ -20,6 +23,14 @@ import { useApi } from "@/lib/hooks";
 import { SESSION_LABEL, SESSION_TONE, STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
 
 const LANG: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi" };
+const VENDOR_STATUS = ["Invited", "Quoted", "In progress", "Agreed", "Handed back"];
+
+type VendorRow = {
+  invitee: ItemDetail["invitees"][number];
+  quote: ItemDetail["comparison"]["rows"][number] | undefined;
+  last: SessionSummary | undefined;
+  status: string;
+};
 
 function QuotesTab({
   detail,
@@ -40,6 +51,72 @@ function QuotesTab({
   const canCollect = (item.state === "points_reviewed" || item.state === "awaiting_bids") && pending.length > 0;
   const noneAvailable = item.state === "awaiting_bids" && pending.length === 0;
   const showFooter = item.state === "draft" || noneAvailable || canCollect;
+
+  // One row per invited vendor: its quote (if any) and the state of any conversation with it.
+  const [vq, setVq] = useState("");
+  const [vRating, setVRating] = useState("");
+  const [vLang, setVLang] = useState("");
+  const [vStatus, setVStatus] = useState("");
+  const allRows: VendorRow[] = invitees.map((v) => {
+    const quote = comparison.rows.find((r) => r.vendor_id === v.vendor_id);
+    const mine = sessions.filter((x) => x.vendor_id === v.vendor_id);
+    const last = mine[mine.length - 1];
+    const status = last ? SESSION_LABEL[last.status] : v.responded ? "Quoted" : "Invited";
+    return { invitee: v, quote, last, status };
+  });
+  const vendorRows = allRows.filter(
+    (r) =>
+      (!vq || r.invitee.vendor_name.toLowerCase().includes(vq.toLowerCase())) &&
+      (!vRating || r.invitee.rating >= Number(vRating)) &&
+      (!vLang || r.invitee.language === vLang) &&
+      (!vStatus || r.status === vStatus),
+  );
+  const vendorColumns: Column<VendorRow>[] = [
+    {
+      key: "vendor",
+      header: "Vendor",
+      sort: (r) => r.invitee.vendor_name.toLowerCase(),
+      cell: (r) => (
+        <Link href={`/vendors/${r.invitee.vendor_id}`} className="font-semibold text-ink hover:text-brand hover:underline">
+          {r.invitee.vendor_name}
+        </Link>
+      ),
+    },
+    { key: "rating", header: "Rating", align: "center", className: "w-[1%]", sort: (r) => r.invitee.rating, cell: (r) => <span className="tabular-nums">{r.invitee.rating.toFixed(1)}</span> },
+    { key: "lang", header: "Language", align: "center", className: "w-[1%]", sort: (r) => r.invitee.language, cell: (r) => LANG[r.invitee.language] ?? r.invitee.language },
+    {
+      key: "quote",
+      header: "Quote",
+      align: "right",
+      className: "w-[1%]",
+      sort: (r) => r.quote?.unit_price,
+      cell: (r) => (r.quote ? <span className="whitespace-nowrap font-semibold tabular-nums text-ink">{money(r.quote.unit_price)} · {r.quote.payment_code}</span> : <span className="text-muted">—</span>),
+    },
+    {
+      key: "status",
+      header: "Status",
+      align: "center",
+      className: "w-[1%]",
+      sort: (r) => r.status,
+      cell: (r) => (r.last ? <Pill tone={SESSION_TONE[r.last.status]}>{r.status}</Pill> : <Pill tone={r.invitee.responded ? "ok" : "muted"}>{r.status}</Pill>),
+    },
+    {
+      key: "action",
+      header: "Action",
+      align: "right",
+      className: "w-[1%] whitespace-nowrap",
+      cell: (r) =>
+        r.last ? (
+          <Button size="sm" onClick={onShowNegotiation}>
+            <Icon name="chat" size={14} /> Conversation
+          </Button>
+        ) : !r.invitee.responded && canCollect ? (
+          <Button size="sm" disabled={busy} onClick={() => setInviting(r.invitee.vendor_id)}>
+            <Icon name="plus" size={14} /> Create response
+          </Button>
+        ) : null,
+    },
+  ];
 
   const act = async (fn: () => Promise<unknown>) => {
     setBusy(true);
@@ -83,47 +160,39 @@ function QuotesTab({
         title="Vendors on this item"
         flush
       >
-        <ul className="divide-y divide-line2">
-          {invitees.map((v) => (
-            <li key={v.vendor_id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
-              <Link href={`/vendors/${v.vendor_id}`} className="min-w-0 flex-1 truncate font-semibold text-ink hover:underline">
-                {v.vendor_name}
-              </Link>
-              <span className="text-muted">Rating {v.rating.toFixed(1)}</span>
-              <span className="text-muted">{LANG[v.language] ?? v.language}</span>
-              {(() => {
-                const quote = comparison.rows.find((r) => r.vendor_id === v.vendor_id);
-                const mine = sessions.filter((x) => x.vendor_id === v.vendor_id);
-                const last = mine[mine.length - 1];
-                return (
-                  <>
-                    {quote && (
-                      <span className="font-semibold tabular-nums text-ink">
-                        {money(quote.unit_price)} · {quote.payment_code}
-                      </span>
-                    )}
-                    {last ? (
-                      <Pill tone={SESSION_TONE[last.status]}>{SESSION_LABEL[last.status]}</Pill>
-                    ) : (
-                      <Pill tone={v.responded ? "ok" : "muted"}>{v.responded ? "Quoted" : "Invited"}</Pill>
-                    )}
-                    {last && (
-                      <Button size="sm" onClick={onShowNegotiation}>
-                        Conversation
-                      </Button>
-                    )}
-                  </>
-                );
-              })()}
-              {!v.responded && canCollect && (
-                <Button size="sm" disabled={busy} onClick={() => setInviting(v.vendor_id)}>
-                  Create response
-                </Button>
-              )}
-            </li>
-          ))}
-          {invitees.length === 0 && <li className="px-5 py-6 text-sm text-muted">No vendors invited for this item.</li>}
-        </ul>
+        <TableToolbar
+          search={{ value: vq, onChange: setVq, placeholder: "Search vendors" }}
+          filters={[
+            {
+              key: "rating",
+              label: "Rating",
+              value: vRating,
+              onChange: setVRating,
+              options: [{ value: "", label: "Any rating" }, { value: "4.5", label: "4.5 and above" }, { value: "4", label: "4.0 and above" }, { value: "3.5", label: "3.5 and above" }],
+            },
+            {
+              key: "language",
+              label: "Language",
+              value: vLang,
+              onChange: setVLang,
+              options: [{ value: "", label: "All" }, ...Object.entries(LANG).map(([value, label]) => ({ value, label }))],
+            },
+            {
+              key: "status",
+              label: "Status",
+              value: vStatus,
+              onChange: setVStatus,
+              options: [{ value: "", label: "All" }, ...VENDOR_STATUS.map((x) => ({ value: x, label: x }))],
+            },
+          ]}
+          right={<span>{vendorRows.length} of {invitees.length} vendors</span>}
+        />
+        <DataTable
+          columns={vendorColumns}
+          rows={vendorRows}
+          rowKey={(r) => r.invitee.vendor_id}
+          empty={invitees.length === 0 ? "No vendors invited for this item." : "No vendors match."}
+        />
         {showFooter && (
           <div className="grid gap-3 border-t border-line2 px-5 py-4">
             {item.state === "draft" && <Notice tone="info">Confirm your negotiation points first. Vendors are invited once the points are confirmed.</Notice>}

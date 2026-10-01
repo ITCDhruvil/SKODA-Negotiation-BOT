@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
@@ -38,14 +39,23 @@ export function CreateEventMenu() {
       >
         <Icon name="plus" size={16} /> {busy ? "Creating…" : "Create event"}
       </summary>
-      <div className="absolute right-0 z-30 mt-2 grid w-60 gap-1 rounded-card border border-line bg-panel p-2 shadow-pop">
+      <div className="absolute right-0 z-30 mt-2 grid w-64 gap-0.5 rounded-card border border-line bg-panel p-2 shadow-pop">
+        <Link href="/events/new?type=buy" className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise">
+          Add purchase cart
+          <span className="block text-xs font-normal text-muted">Enter the details, items and vendors</span>
+        </Link>
+        <Link href="/events/new?type=sell" className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise">
+          Add scrap lot
+          <span className="block text-xs font-normal text-muted">Enter the lot and choose the buyers</span>
+        </Link>
+        <div className="my-1 border-t border-line2" />
         <button className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise" onClick={() => create("buy")}>
-          New purchase cart
-          <span className="block text-xs font-normal text-muted">Services or goods from suppliers</span>
+          Create sample purchase cart
+          <span className="block text-xs font-normal text-muted">Filled in for you, for a quick demo</span>
         </button>
         <button className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise" onClick={() => create("sell")}>
-          New scrap lot
-          <span className="block text-xs font-normal text-muted">Scrap for bidding buyers</span>
+          Create sample scrap lot
+          <span className="block text-xs font-normal text-muted">Filled in for you, for a quick demo</span>
         </button>
         {error && (
           <p role="alert" className="px-3 py-1 text-xs text-red">

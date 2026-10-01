@@ -48,6 +48,24 @@ export interface paths {
         /** Events */
         get: operations["events_api_events_get"];
         put?: never;
+        /** Add Event */
+        post: operations["add_event_api_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/event-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Event Options */
+        get: operations["event_options_api_event_options_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1250,6 +1268,61 @@ export interface components {
              */
             mode: "auto" | "approve" | "manual";
         };
+        /** NewEvent */
+        NewEvent: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "buy" | "sell";
+            /** Title */
+            title?: string | null;
+            /** Category Key */
+            category_key: string;
+            /** Company Id */
+            company_id: string;
+            /** Company */
+            company: string;
+            /** Plant */
+            plant: string;
+            /** Purch Org */
+            purch_org: string;
+            /** Purch Group */
+            purch_group: string;
+            /** Requestor */
+            requestor: string;
+            /** Cost Centre */
+            cost_centre: string;
+            /**
+             * Due
+             * Format: date
+             */
+            due: string;
+            /** Source Cart No */
+            source_cart_no?: string | null;
+            /** Vendor Ids */
+            vendor_ids: string[];
+            /** Items */
+            items: components["schemas"]["NewItem"][];
+        };
+        /** NewItem */
+        NewItem: {
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: number;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "EA" | "AU" | "KG" | "TON" | "LOT";
+            /** Reference Price */
+            reference_price: number;
+            /** Incoterm */
+            incoterm?: string | null;
+            /** Delivery Days */
+            delivery_days?: number | null;
+        };
         /** Opportunity */
         Opportunity: {
             /** Event Id */
@@ -1724,6 +1797,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_event_api_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewEvent"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    event_options_api_event_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

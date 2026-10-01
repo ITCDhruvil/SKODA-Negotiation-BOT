@@ -226,6 +226,58 @@
       }
      }
     }
+   },
+   "post": {
+    "summary": "Add Event",
+    "operationId": "add_event_api_events_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NewEvent"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EventDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/event-options": {
+   "get": {
+    "summary": "Event Options",
+    "operationId": "event_options_api_event_options_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
    }
   },
   "/api/events/simulate": {
@@ -3622,6 +3674,182 @@
      "mode"
     ],
     "title": "ModeIn"
+   },
+   "NewEvent": {
+    "properties": {
+     "direction": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Direction"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 120
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "category_key": {
+      "type": "string",
+      "title": "Category Key"
+     },
+     "company_id": {
+      "type": "string",
+      "title": "Company Id"
+     },
+     "company": {
+      "type": "string",
+      "title": "Company"
+     },
+     "plant": {
+      "type": "string",
+      "title": "Plant"
+     },
+     "purch_org": {
+      "type": "string",
+      "title": "Purch Org"
+     },
+     "purch_group": {
+      "type": "string",
+      "title": "Purch Group"
+     },
+     "requestor": {
+      "type": "string",
+      "maxLength": 60,
+      "minLength": 2,
+      "title": "Requestor"
+     },
+     "cost_centre": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 3,
+      "title": "Cost Centre"
+     },
+     "due": {
+      "type": "string",
+      "format": "date",
+      "title": "Due"
+     },
+     "source_cart_no": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Cart No"
+     },
+     "vendor_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Vendor Ids"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/NewItem"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Items"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "direction",
+     "category_key",
+     "company_id",
+     "company",
+     "plant",
+     "purch_org",
+     "purch_group",
+     "requestor",
+     "cost_centre",
+     "due",
+     "vendor_ids",
+     "items"
+    ],
+    "title": "NewEvent"
+   },
+   "NewItem": {
+    "properties": {
+     "description": {
+      "type": "string",
+      "maxLength": 120,
+      "minLength": 2,
+      "title": "Description"
+     },
+     "qty": {
+      "type": "number",
+      "maximum": 10000000.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Qty"
+     },
+     "unit": {
+      "type": "string",
+      "enum": [
+       "EA",
+       "AU",
+       "KG",
+       "TON",
+       "LOT"
+      ],
+      "title": "Unit"
+     },
+     "reference_price": {
+      "type": "number",
+      "maximum": 100000000.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Reference Price"
+     },
+     "incoterm": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Incoterm"
+     },
+     "delivery_days": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 365.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Delivery Days"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "description",
+     "qty",
+     "unit",
+     "reference_price"
+    ],
+    "title": "NewItem"
    },
    "Opportunity": {
     "properties": {

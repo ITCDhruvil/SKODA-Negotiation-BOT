@@ -24,6 +24,23 @@ export type SessionSummary = S["SessionSummary"];
 export type TurnView = S["TurnView"];
 export type DraftView = S["DraftView"];
 export type SessionRow = S["SessionRow"];
+export type NewEvent = S["NewEvent"];
+export type NewItem = S["NewItem"];
+export type EventCategory = {
+  key: string;
+  label: string;
+  direction: Direction;
+  kind: string;
+  samples: { description: string; unit: NewItem["unit"]; qty: number; reference_price: number }[];
+  vendors: { id: string; name: string; rating: number }[];
+};
+export type EventOptions = {
+  categories: EventCategory[];
+  organisations: { direction: Direction; company_id: string; company: string; plant: string; purch_org: string; purch_group: string; cost_centre: string }[];
+  requestors: string[];
+  incoterms: string[];
+  min_vendors: number;
+};
 export type Mode = SessionView["mode"];
 
 export type Direction = EventView["direction"];
@@ -96,6 +113,8 @@ export const api = {
       `/api/events${qs({ q: p.q, direction: p.direction, status: p.status, category_key: p.category_key, date_from: p.from, date_to: p.to })}`,
     ),
   event: (id: string) => request<EventDetail>(`/api/events/${id}`),
+  eventOptions: () => request<EventOptions>("/api/event-options"),
+  addEvent: (body: NewEvent) => post<EventDetail>("/api/events", body),
   simulate: (direction: Direction) => post<EventDetail>("/api/events/simulate", { direction }),
   items: (p: {
     event_id?: string;
