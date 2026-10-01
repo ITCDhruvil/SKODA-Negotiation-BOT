@@ -18130,6 +18130,32 @@
   },
   {
    "id": "H0050",
+   "description": "Cardboard And Paper Scrap",
+   "category_key": "paper",
+   "direction": "sell",
+   "vendor_id": "V045",
+   "unit_price": 11.68,
+   "qty": 6420.0,
+   "unit": "KG",
+   "closed_date": "2025-06-08",
+   "negotiated": false,
+   "original_price": null
+  },
+  {
+   "id": "H0051",
+   "description": "Client Dinner Catering",
+   "category_key": "41120214",
+   "direction": "buy",
+   "vendor_id": "V012",
+   "unit_price": 54445.0,
+   "qty": 1.0,
+   "unit": "AU",
+   "closed_date": "2025-07-08",
+   "negotiated": true,
+   "original_price": 58437.0
+  },
+  {
+   "id": "H0052",
    "description": "Aluminium Cast Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -18142,7 +18168,7 @@
    "original_price": null
   },
   {
-   "id": "H0051",
+   "id": "H0053",
    "description": "Brass Scrap",
    "category_key": "brass",
    "direction": "sell",
@@ -18155,7 +18181,7 @@
    "original_price": null
   },
   {
-   "id": "H0052",
+   "id": "H0054",
    "description": "PP Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -18168,7 +18194,7 @@
    "original_price": null
   },
   {
-   "id": "H0053",
+   "id": "H0055",
    "description": "Wireless Presenter Clicker",
    "category_key": "24321900",
    "direction": "buy",
@@ -18181,7 +18207,7 @@
    "original_price": null
   },
   {
-   "id": "H0054",
+   "id": "H0056",
    "description": "Working Lunch Boxes",
    "category_key": "25200000",
    "direction": "buy",
@@ -18194,7 +18220,7 @@
    "original_price": null
   },
   {
-   "id": "H0055",
+   "id": "H0057",
    "description": "Client Dinner Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -18207,7 +18233,7 @@
    "original_price": null
   },
   {
-   "id": "H0056",
+   "id": "H0058",
    "description": "Safety Poster Printing A2",
    "category_key": "82121500",
    "direction": "buy",
@@ -18220,7 +18246,7 @@
    "original_price": null
   },
   {
-   "id": "H0057",
+   "id": "H0059",
    "description": "MS HMS Scrap",
    "category_key": "steel",
    "direction": "sell",
@@ -18233,7 +18259,7 @@
    "original_price": null
   },
   {
-   "id": "H0058",
+   "id": "H0060",
    "description": "Wireless Keyboard Mouse Combo",
    "category_key": "43211500",
    "direction": "buy",
@@ -18246,7 +18272,7 @@
    "original_price": null
   },
   {
-   "id": "H0059",
+   "id": "H0061",
    "description": "A4 Copier Paper 75 GSM Ream",
    "category_key": "44121600",
    "direction": "buy",
@@ -18259,7 +18285,7 @@
    "original_price": null
   },
   {
-   "id": "H0060",
+   "id": "H0062",
    "description": "Annual Day Event Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -18272,7 +18298,7 @@
    "original_price": null
   },
   {
-   "id": "H0061",
+   "id": "H0063",
    "description": "Employee Shuttle Hire Monthly",
    "category_key": "78101800",
    "direction": "buy",
@@ -18285,7 +18311,7 @@
    "original_price": null
   },
   {
-   "id": "H0062",
+   "id": "H0064",
    "description": "File Folders",
    "category_key": "44121600",
    "direction": "buy",
@@ -18298,7 +18324,7 @@
    "original_price": null
   },
   {
-   "id": "H0063",
+   "id": "H0065",
    "description": "Steel Turnings",
    "category_key": "steel",
    "direction": "sell",
@@ -18311,7 +18337,7 @@
    "original_price": null
   },
   {
-   "id": "H0064",
+   "id": "H0066",
    "description": "Wooden Pallet Scrap",
    "category_key": "wood",
    "direction": "sell",
@@ -18324,7 +18350,7 @@
    "original_price": null
   },
   {
-   "id": "H0065",
+   "id": "H0067",
    "description": "Cotton Waste Bale",
    "category_key": "40101800",
    "direction": "buy",
@@ -18337,7 +18363,7 @@
    "original_price": null
   },
   {
-   "id": "H0066",
+   "id": "H0068",
    "description": "Stainless Steel 304 Scrap",
    "category_key": "stainless",
    "direction": "sell",
@@ -18350,7 +18376,7 @@
    "original_price": null
   },
   {
-   "id": "H0067",
+   "id": "H0069",
    "description": "Tripod Stand Projector Screen 10x8 Ft",
    "category_key": "24321900",
    "direction": "buy",
@@ -18363,7 +18389,7 @@
    "original_price": null
   },
   {
-   "id": "H0068",
+   "id": "H0070",
    "description": "Cast Iron Scrap",
    "category_key": "cast_iron",
    "direction": "sell",
@@ -18376,7 +18402,7 @@
    "original_price": null
   },
   {
-   "id": "H0069",
+   "id": "H0071",
    "description": "Courier Charges Bulk Dispatch",
    "category_key": "78101800",
    "direction": "buy",
@@ -18389,7 +18415,7 @@
    "original_price": null
   },
   {
-   "id": "H0070",
+   "id": "H0072",
    "description": "Employee Handbook Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -18402,7 +18428,7 @@
    "original_price": null
   },
   {
-   "id": "H0071",
+   "id": "H0073",
    "description": "Excel Advanced Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -18415,7 +18441,7 @@
    "original_price": null
   },
   {
-   "id": "H0072",
+   "id": "H0074",
    "description": "Garden Maintenance Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -18428,7 +18454,7 @@
    "original_price": null
   },
   {
-   "id": "H0073",
+   "id": "H0075",
    "description": "Visitor Cab Hire Package",
    "category_key": "78101800",
    "direction": "buy",
@@ -18441,7 +18467,7 @@
    "original_price": null
   },
   {
-   "id": "H0074",
+   "id": "H0076",
    "description": "Copper Bare Bright",
    "category_key": "copper",
    "direction": "sell",
@@ -18454,7 +18480,7 @@
    "original_price": null
   },
   {
-   "id": "H0075",
+   "id": "H0077",
    "description": "E-Waste Mixed",
    "category_key": "ewaste",
    "direction": "sell",
@@ -18467,7 +18493,7 @@
    "original_price": null
   },
   {
-   "id": "H0076",
+   "id": "H0078",
    "description": "First Aid Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -18480,7 +18506,7 @@
    "original_price": null
   },
   {
-   "id": "H0077",
+   "id": "H0079",
    "description": "Portable Projector Full HD",
    "category_key": "24321900",
    "direction": "buy",
@@ -18493,7 +18519,7 @@
    "original_price": null
   },
   {
-   "id": "H0078",
+   "id": "H0080",
    "description": "Cardboard And Paper Scrap",
    "category_key": "paper",
    "direction": "sell",
@@ -18506,7 +18532,7 @@
    "original_price": null
   },
   {
-   "id": "H0079",
+   "id": "H0081",
    "description": "Lubricant Grease 18 Kg Pail",
    "category_key": "40101800",
    "direction": "buy",
@@ -18519,7 +18545,7 @@
    "original_price": null
   },
   {
-   "id": "H0080",
+   "id": "H0082",
    "description": "Used Oil Drums",
    "category_key": "oil",
    "direction": "sell",
@@ -18532,7 +18558,7 @@
    "original_price": null
   },
   {
-   "id": "H0081",
+   "id": "H0083",
    "description": "Copper Mixed Scrap",
    "category_key": "copper",
    "direction": "sell",
@@ -18545,7 +18571,7 @@
    "original_price": null
   },
   {
-   "id": "H0082",
+   "id": "H0084",
    "description": "Guest Refreshment Counter Setup",
    "category_key": "41120214",
    "direction": "buy",
@@ -18558,7 +18584,7 @@
    "original_price": null
   },
   {
-   "id": "H0083",
+   "id": "H0085",
    "description": "HDMI Cable 3 Mtr",
    "category_key": "43211500",
    "direction": "buy",
@@ -18571,7 +18597,7 @@
    "original_price": null
   },
   {
-   "id": "H0084",
+   "id": "H0086",
    "description": "Housekeeping Service Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -18584,7 +18610,7 @@
    "original_price": null
   },
   {
-   "id": "H0085",
+   "id": "H0087",
    "description": "USB C Docking Station",
    "category_key": "43211500",
    "direction": "buy",
@@ -18597,7 +18623,7 @@
    "original_price": null
   },
   {
-   "id": "H0086",
+   "id": "H0088",
    "description": "Meals For Training Batch",
    "category_key": "25200000",
    "direction": "buy",
@@ -18610,7 +18636,7 @@
    "original_price": null
   },
   {
-   "id": "H0087",
+   "id": "H0089",
    "description": "Rubber Scrap",
    "category_key": "rubber",
    "direction": "sell",
@@ -18623,7 +18649,7 @@
    "original_price": null
   },
   {
-   "id": "H0088",
+   "id": "H0090",
    "description": "Safety Gloves Pairs",
    "category_key": "40101800",
    "direction": "buy",
@@ -18636,7 +18662,7 @@
    "original_price": null
   },
   {
-   "id": "H0089",
+   "id": "H0091",
    "description": "Soft Skills Workshop Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -18649,7 +18675,7 @@
    "original_price": null
   },
   {
-   "id": "H0090",
+   "id": "H0092",
    "description": "Tea And Snacks For Review Meeting",
    "category_key": "25200000",
    "direction": "buy",
@@ -18662,7 +18688,7 @@
    "original_price": null
   },
   {
-   "id": "H0091",
+   "id": "H0093",
    "description": "Visitor Brochure Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -18675,7 +18701,7 @@
    "original_price": null
   },
   {
-   "id": "H0092",
+   "id": "H0094",
    "description": "Whiteboard Markers Box",
    "category_key": "44121600",
    "direction": "buy",
@@ -18688,7 +18714,7 @@
    "original_price": null
   },
   {
-   "id": "H0093",
+   "id": "H0095",
    "description": "Aluminium Extrusion Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -18701,7 +18727,7 @@
    "original_price": null
   },
   {
-   "id": "H0094",
+   "id": "H0096",
    "description": "Mixed Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -18714,7 +18740,7 @@
    "original_price": null
   },
   {
-   "id": "H0095",
+   "id": "H0097",
    "description": "PVC Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -18727,7 +18753,7 @@
    "original_price": null
   },
   {
-   "id": "H0096",
+   "id": "H0098",
    "description": "Pest Control Annual Contract",
    "category_key": "90101500",
    "direction": "buy",
@@ -18740,7 +18766,7 @@
    "original_price": null
   },
   {
-   "id": "H0097",
+   "id": "H0099",
    "description": "Delegation Lunch Buffet",
    "category_key": "25200000",
    "direction": "buy",
@@ -18753,7 +18779,7 @@
    "original_price": 274.0
   },
   {
-   "id": "H0098",
+   "id": "H0100",
    "description": "Aluminium Turnings",
    "category_key": "aluminium",
    "direction": "sell",
@@ -18766,7 +18792,7 @@
    "original_price": 158.0
   },
   {
-   "id": "H0099",
+   "id": "H0101",
    "description": "Dinner Buffet Day 1",
    "category_key": "25200000",
    "direction": "buy",
@@ -18779,7 +18805,7 @@
    "original_price": null
   },
   {
-   "id": "H0100",
+   "id": "H0102",
    "description": "Welcome Tea And Snacks",
    "category_key": "25200000",
    "direction": "buy",
@@ -18792,7 +18818,20 @@
    "original_price": null
   },
   {
-   "id": "H0101",
+   "id": "H0103",
+   "description": "Cast Iron Scrap",
+   "category_key": "cast_iron",
+   "direction": "sell",
+   "vendor_id": "V035",
+   "unit_price": 27.33,
+   "qty": 2450.0,
+   "unit": "KG",
+   "closed_date": "2025-10-31",
+   "negotiated": false,
+   "original_price": null
+  },
+  {
+   "id": "H0104",
    "description": "Plant Visit Refreshment Kits",
    "category_key": "25200000",
    "direction": "buy",
@@ -18805,7 +18844,7 @@
    "original_price": null
   },
   {
-   "id": "H0102",
+   "id": "H0105",
    "description": "Excel Advanced Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -18818,7 +18857,7 @@
    "original_price": 34936.0
   },
   {
-   "id": "H0103",
+   "id": "H0106",
    "description": "Safety Poster Printing A2",
    "category_key": "82121500",
    "direction": "buy",
@@ -18831,7 +18870,7 @@
    "original_price": 168.0
   },
   {
-   "id": "H0104",
+   "id": "H0107",
    "description": "Annual Day Event Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -18844,7 +18883,7 @@
    "original_price": 444.0
   },
   {
-   "id": "H0105",
+   "id": "H0108",
    "description": "PVC Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -18857,7 +18896,7 @@
    "original_price": 19.93
   },
   {
-   "id": "H0106",
+   "id": "H0109",
    "description": "Portable Projector Full HD",
    "category_key": "24321900",
    "direction": "buy",
@@ -18870,7 +18909,7 @@
    "original_price": 38129.0
   },
   {
-   "id": "H0107",
+   "id": "H0110",
    "description": "Steel Turnings",
    "category_key": "steel",
    "direction": "sell",
@@ -18883,7 +18922,7 @@
    "original_price": 25.54
   },
   {
-   "id": "H0108",
+   "id": "H0111",
    "description": "Tea And Snacks For Review Meeting",
    "category_key": "25200000",
    "direction": "buy",
@@ -18896,7 +18935,7 @@
    "original_price": 81.18
   },
   {
-   "id": "H0109",
+   "id": "H0112",
    "description": "Whiteboard Markers Box",
    "category_key": "44121600",
    "direction": "buy",
@@ -18909,7 +18948,7 @@
    "original_price": 255.0
   },
   {
-   "id": "H0110",
+   "id": "H0113",
    "description": "Aluminium Cast Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -18922,7 +18961,7 @@
    "original_price": 162.0
   },
   {
-   "id": "H0111",
+   "id": "H0114",
    "description": "Cotton Waste Bale",
    "category_key": "40101800",
    "direction": "buy",
@@ -18935,7 +18974,7 @@
    "original_price": 955.0
   },
   {
-   "id": "H0112",
+   "id": "H0115",
    "description": "Guest Refreshment Counter Setup",
    "category_key": "41120214",
    "direction": "buy",
@@ -18948,7 +18987,7 @@
    "original_price": 15252.0
   },
   {
-   "id": "H0113",
+   "id": "H0116",
    "description": "Lubricant Grease 18 Kg Pail",
    "category_key": "40101800",
    "direction": "buy",
@@ -18961,7 +19000,7 @@
    "original_price": 5474.0
   },
   {
-   "id": "H0114",
+   "id": "H0117",
    "description": "Mixed Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -18974,7 +19013,7 @@
    "original_price": 17.23
   },
   {
-   "id": "H0115",
+   "id": "H0118",
    "description": "Rubber Scrap",
    "category_key": "rubber",
    "direction": "sell",
@@ -18987,7 +19026,7 @@
    "original_price": 11.49
   },
   {
-   "id": "H0116",
+   "id": "H0119",
    "description": "Courier Charges Bulk Dispatch",
    "category_key": "78101800",
    "direction": "buy",
@@ -19000,7 +19039,7 @@
    "original_price": 23616.0
   },
   {
-   "id": "H0117",
+   "id": "H0120",
    "description": "File Folders",
    "category_key": "44121600",
    "direction": "buy",
@@ -19013,7 +19052,7 @@
    "original_price": 46.14
   },
   {
-   "id": "H0118",
+   "id": "H0121",
    "description": "Garden Maintenance Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -19026,7 +19065,7 @@
    "original_price": 29880.0
   },
   {
-   "id": "H0119",
+   "id": "H0122",
    "description": "Tripod Stand Projector Screen 10x8 Ft",
    "category_key": "24321900",
    "direction": "buy",
@@ -19039,7 +19078,7 @@
    "original_price": 13365.0
   },
   {
-   "id": "H0120",
+   "id": "H0123",
    "description": "Cardboard And Paper Scrap",
    "category_key": "paper",
    "direction": "sell",
@@ -19052,7 +19091,7 @@
    "original_price": 11.38
   },
   {
-   "id": "H0121",
+   "id": "H0124",
    "description": "Used Oil Drums",
    "category_key": "oil",
    "direction": "sell",
@@ -19065,7 +19104,7 @@
    "original_price": 28.1
   },
   {
-   "id": "H0122",
+   "id": "H0125",
    "description": "Copper Bare Bright",
    "category_key": "copper",
    "direction": "sell",
@@ -19078,7 +19117,7 @@
    "original_price": 696.0
   },
   {
-   "id": "H0123",
+   "id": "H0126",
    "description": "Employee Handbook Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -19091,7 +19130,7 @@
    "original_price": 231.0
   },
   {
-   "id": "H0124",
+   "id": "H0127",
    "description": "Brass Scrap",
    "category_key": "brass",
    "direction": "sell",
@@ -19104,7 +19143,7 @@
    "original_price": 434.0
   },
   {
-   "id": "H0125",
+   "id": "H0128",
    "description": "Housekeeping Service Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -19117,7 +19156,7 @@
    "original_price": 70863.0
   },
   {
-   "id": "H0126",
+   "id": "H0129",
    "description": "USB C Docking Station",
    "category_key": "43211500",
    "direction": "buy",
@@ -19130,7 +19169,7 @@
    "original_price": 5748.0
   },
   {
-   "id": "H0127",
+   "id": "H0130",
    "description": "Client Dinner Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -19143,7 +19182,7 @@
    "original_price": 56328.0
   },
   {
-   "id": "H0128",
+   "id": "H0131",
    "description": "Employee Shuttle Hire Monthly",
    "category_key": "78101800",
    "direction": "buy",
@@ -19156,7 +19195,7 @@
    "original_price": 65308.0
   },
   {
-   "id": "H0129",
+   "id": "H0132",
    "description": "First Aid Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -19169,7 +19208,7 @@
    "original_price": 22483.0
   },
   {
-   "id": "H0130",
+   "id": "H0133",
    "description": "PP Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -19182,7 +19221,7 @@
    "original_price": 33.97
   },
   {
-   "id": "H0131",
+   "id": "H0134",
    "description": "Stainless Steel 304 Scrap",
    "category_key": "stainless",
    "direction": "sell",
@@ -19195,7 +19234,7 @@
    "original_price": 89.55
   },
   {
-   "id": "H0132",
+   "id": "H0135",
    "description": "Visitor Cab Hire Package",
    "category_key": "78101800",
    "direction": "buy",
@@ -19208,7 +19247,7 @@
    "original_price": 12156.0
   },
   {
-   "id": "H0133",
+   "id": "H0136",
    "description": "Working Lunch Boxes",
    "category_key": "25200000",
    "direction": "buy",
@@ -19221,7 +19260,7 @@
    "original_price": 227.0
   },
   {
-   "id": "H0134",
+   "id": "H0137",
    "description": "Copper Mixed Scrap",
    "category_key": "copper",
    "direction": "sell",
@@ -19234,7 +19273,7 @@
    "original_price": 678.0
   },
   {
-   "id": "H0135",
+   "id": "H0138",
    "description": "Pest Control Annual Contract",
    "category_key": "90101500",
    "direction": "buy",
@@ -19247,7 +19286,7 @@
    "original_price": 50975.0
   },
   {
-   "id": "H0136",
+   "id": "H0139",
    "description": "Soft Skills Workshop Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -19260,7 +19299,7 @@
    "original_price": 44140.0
   },
   {
-   "id": "H0137",
+   "id": "H0140",
    "description": "Wooden Pallet Scrap",
    "category_key": "wood",
    "direction": "sell",
@@ -19273,7 +19312,7 @@
    "original_price": 7.18
   },
   {
-   "id": "H0138",
+   "id": "H0141",
    "description": "E-Waste Mixed",
    "category_key": "ewaste",
    "direction": "sell",
@@ -19286,7 +19325,7 @@
    "original_price": 61.95
   },
   {
-   "id": "H0139",
+   "id": "H0142",
    "description": "HDMI Cable 3 Mtr",
    "category_key": "43211500",
    "direction": "buy",
@@ -19299,7 +19338,7 @@
    "original_price": 287.0
   },
   {
-   "id": "H0140",
+   "id": "H0143",
    "description": "MS HMS Scrap",
    "category_key": "steel",
    "direction": "sell",
@@ -19312,7 +19351,7 @@
    "original_price": 32.39
   },
   {
-   "id": "H0141",
+   "id": "H0144",
    "description": "Safety Gloves Pairs",
    "category_key": "40101800",
    "direction": "buy",
@@ -19325,7 +19364,7 @@
    "original_price": 84.77
   },
   {
-   "id": "H0142",
+   "id": "H0145",
    "description": "Wireless Presenter Clicker",
    "category_key": "24321900",
    "direction": "buy",
@@ -19338,7 +19377,7 @@
    "original_price": 2803.0
   },
   {
-   "id": "H0143",
+   "id": "H0146",
    "description": "A4 Copier Paper 75 GSM Ream",
    "category_key": "44121600",
    "direction": "buy",
@@ -19351,7 +19390,7 @@
    "original_price": 273.0
   },
   {
-   "id": "H0144",
+   "id": "H0147",
    "description": "Aluminium Extrusion Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -19364,7 +19403,7 @@
    "original_price": 178.0
   },
   {
-   "id": "H0145",
+   "id": "H0148",
    "description": "Cast Iron Scrap",
    "category_key": "cast_iron",
    "direction": "sell",
@@ -19377,7 +19416,7 @@
    "original_price": 28.97
   },
   {
-   "id": "H0146",
+   "id": "H0149",
    "description": "Meals For Training Batch",
    "category_key": "25200000",
    "direction": "buy",
@@ -19390,7 +19429,7 @@
    "original_price": 253.0
   },
   {
-   "id": "H0147",
+   "id": "H0150",
    "description": "Visitor Brochure Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -19403,7 +19442,7 @@
    "original_price": 40.86
   },
   {
-   "id": "H0148",
+   "id": "H0151",
    "description": "Wireless Keyboard Mouse Combo",
    "category_key": "43211500",
    "direction": "buy",
@@ -19416,7 +19455,7 @@
    "original_price": 1601.0
   },
   {
-   "id": "H0149",
+   "id": "H0152",
    "description": "Delegation Lunch Buffet",
    "category_key": "25200000",
    "direction": "buy",
@@ -19429,7 +19468,7 @@
    "original_price": null
   },
   {
-   "id": "H0150",
+   "id": "H0153",
    "description": "Aluminium Turnings",
    "category_key": "aluminium",
    "direction": "sell",
@@ -19442,7 +19481,33 @@
    "original_price": null
   },
   {
-   "id": "H0151",
+   "id": "H0154",
+   "description": "File Folders",
+   "category_key": "44121600",
+   "direction": "buy",
+   "vendor_id": "V012",
+   "unit_price": 40.87,
+   "qty": 239.0,
+   "unit": "EA",
+   "closed_date": "2025-11-29",
+   "negotiated": false,
+   "original_price": null
+  },
+  {
+   "id": "H0155",
+   "description": "Cast Iron Scrap",
+   "category_key": "cast_iron",
+   "direction": "sell",
+   "vendor_id": "V035",
+   "unit_price": 28.9,
+   "qty": 7380.0,
+   "unit": "KG",
+   "closed_date": "2025-12-09",
+   "negotiated": false,
+   "original_price": null
+  },
+  {
+   "id": "H0156",
    "description": "Service Staff And Live Counters",
    "category_key": "25200000",
    "direction": "buy",
@@ -19455,7 +19520,7 @@
    "original_price": null
   },
   {
-   "id": "H0152",
+   "id": "H0157",
    "description": "Mineral Water 1 Ltr Cartons",
    "category_key": "25200000",
    "direction": "buy",
@@ -19468,7 +19533,7 @@
    "original_price": null
   },
   {
-   "id": "H0153",
+   "id": "H0158",
    "description": "A4 Copier Paper 75 GSM Ream",
    "category_key": "44121600",
    "direction": "buy",
@@ -19481,7 +19546,7 @@
    "original_price": null
   },
   {
-   "id": "H0154",
+   "id": "H0159",
    "description": "Cotton Waste Bale",
    "category_key": "40101800",
    "direction": "buy",
@@ -19494,7 +19559,7 @@
    "original_price": null
   },
   {
-   "id": "H0155",
+   "id": "H0160",
    "description": "MS HMS Scrap",
    "category_key": "steel",
    "direction": "sell",
@@ -19507,7 +19572,7 @@
    "original_price": null
   },
   {
-   "id": "H0156",
+   "id": "H0161",
    "description": "Mixed Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -19520,7 +19585,7 @@
    "original_price": null
   },
   {
-   "id": "H0157",
+   "id": "H0162",
    "description": "Visitor Brochure Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -19533,7 +19598,7 @@
    "original_price": null
   },
   {
-   "id": "H0158",
+   "id": "H0163",
    "description": "Wooden Pallet Scrap",
    "category_key": "wood",
    "direction": "sell",
@@ -19546,7 +19611,7 @@
    "original_price": null
   },
   {
-   "id": "H0159",
+   "id": "H0164",
    "description": "Copper Mixed Scrap",
    "category_key": "copper",
    "direction": "sell",
@@ -19559,7 +19624,7 @@
    "original_price": null
   },
   {
-   "id": "H0160",
+   "id": "H0165",
    "description": "First Aid Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -19572,7 +19637,7 @@
    "original_price": null
   },
   {
-   "id": "H0161",
+   "id": "H0166",
    "description": "HDMI Cable 3 Mtr",
    "category_key": "43211500",
    "direction": "buy",
@@ -19585,7 +19650,7 @@
    "original_price": null
   },
   {
-   "id": "H0162",
+   "id": "H0167",
    "description": "Tea And Snacks For Review Meeting",
    "category_key": "25200000",
    "direction": "buy",
@@ -19598,7 +19663,7 @@
    "original_price": null
   },
   {
-   "id": "H0163",
+   "id": "H0168",
    "description": "USB C Docking Station",
    "category_key": "43211500",
    "direction": "buy",
@@ -19611,7 +19676,7 @@
    "original_price": null
   },
   {
-   "id": "H0164",
+   "id": "H0169",
    "description": "Annual Day Event Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -19624,7 +19689,7 @@
    "original_price": null
   },
   {
-   "id": "H0165",
+   "id": "H0170",
    "description": "Meals For Training Batch",
    "category_key": "25200000",
    "direction": "buy",
@@ -19637,7 +19702,7 @@
    "original_price": null
   },
   {
-   "id": "H0166",
+   "id": "H0171",
    "description": "Pest Control Annual Contract",
    "category_key": "90101500",
    "direction": "buy",
@@ -19650,7 +19715,7 @@
    "original_price": null
   },
   {
-   "id": "H0167",
+   "id": "H0172",
    "description": "Stainless Steel 304 Scrap",
    "category_key": "stainless",
    "direction": "sell",
@@ -19663,7 +19728,7 @@
    "original_price": null
   },
   {
-   "id": "H0168",
+   "id": "H0173",
    "description": "Wireless Presenter Clicker",
    "category_key": "24321900",
    "direction": "buy",
@@ -19676,7 +19741,7 @@
    "original_price": null
   },
   {
-   "id": "H0169",
+   "id": "H0174",
    "description": "Brass Scrap",
    "category_key": "brass",
    "direction": "sell",
@@ -19689,7 +19754,7 @@
    "original_price": null
   },
   {
-   "id": "H0170",
+   "id": "H0175",
    "description": "E-Waste Mixed",
    "category_key": "ewaste",
    "direction": "sell",
@@ -19702,7 +19767,7 @@
    "original_price": null
   },
   {
-   "id": "H0171",
+   "id": "H0176",
    "description": "PP Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -19715,7 +19780,7 @@
    "original_price": null
   },
   {
-   "id": "H0172",
+   "id": "H0177",
    "description": "Aluminium Extrusion Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -19728,7 +19793,7 @@
    "original_price": null
   },
   {
-   "id": "H0173",
+   "id": "H0178",
    "description": "File Folders",
    "category_key": "44121600",
    "direction": "buy",
@@ -19741,7 +19806,7 @@
    "original_price": null
   },
   {
-   "id": "H0174",
+   "id": "H0179",
    "description": "Garden Maintenance Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -19754,7 +19819,7 @@
    "original_price": null
   },
   {
-   "id": "H0175",
+   "id": "H0180",
    "description": "Safety Gloves Pairs",
    "category_key": "40101800",
    "direction": "buy",
@@ -19767,7 +19832,7 @@
    "original_price": null
   },
   {
-   "id": "H0176",
+   "id": "H0181",
    "description": "Wireless Keyboard Mouse Combo",
    "category_key": "43211500",
    "direction": "buy",
@@ -19780,7 +19845,7 @@
    "original_price": null
   },
   {
-   "id": "H0177",
+   "id": "H0182",
    "description": "Aluminium Cast Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -19793,7 +19858,7 @@
    "original_price": null
   },
   {
-   "id": "H0178",
+   "id": "H0183",
    "description": "Employee Shuttle Hire Monthly",
    "category_key": "78101800",
    "direction": "buy",
@@ -19806,7 +19871,20 @@
    "original_price": null
   },
   {
-   "id": "H0179",
+   "id": "H0184",
+   "description": "MS HMS Scrap",
+   "category_key": "steel",
+   "direction": "sell",
+   "vendor_id": "V033",
+   "unit_price": 34.62,
+   "qty": 1860.0,
+   "unit": "KG",
+   "closed_date": "2026-02-14",
+   "negotiated": false,
+   "original_price": null
+  },
+  {
+   "id": "H0185",
    "description": "Whiteboard Markers Box",
    "category_key": "44121600",
    "direction": "buy",
@@ -19819,7 +19897,7 @@
    "original_price": null
   },
   {
-   "id": "H0180",
+   "id": "H0186",
    "description": "Guest Refreshment Counter Setup",
    "category_key": "41120214",
    "direction": "buy",
@@ -19832,7 +19910,7 @@
    "original_price": null
   },
   {
-   "id": "H0181",
+   "id": "H0187",
    "description": "Tripod Stand Projector Screen 10x8 Ft",
    "category_key": "24321900",
    "direction": "buy",
@@ -19845,7 +19923,7 @@
    "original_price": null
   },
   {
-   "id": "H0182",
+   "id": "H0188",
    "description": "Used Oil Drums",
    "category_key": "oil",
    "direction": "sell",
@@ -19858,7 +19936,7 @@
    "original_price": null
   },
   {
-   "id": "H0183",
+   "id": "H0189",
    "description": "Visitor Cab Hire Package",
    "category_key": "78101800",
    "direction": "buy",
@@ -19871,7 +19949,7 @@
    "original_price": null
   },
   {
-   "id": "H0184",
+   "id": "H0190",
    "description": "Working Lunch Boxes",
    "category_key": "25200000",
    "direction": "buy",
@@ -19884,7 +19962,7 @@
    "original_price": null
   },
   {
-   "id": "H0185",
+   "id": "H0191",
    "description": "Cardboard And Paper Scrap",
    "category_key": "paper",
    "direction": "sell",
@@ -19897,7 +19975,7 @@
    "original_price": null
   },
   {
-   "id": "H0186",
+   "id": "H0192",
    "description": "Cast Iron Scrap",
    "category_key": "cast_iron",
    "direction": "sell",
@@ -19910,7 +19988,7 @@
    "original_price": null
   },
   {
-   "id": "H0187",
+   "id": "H0193",
    "description": "Copper Bare Bright",
    "category_key": "copper",
    "direction": "sell",
@@ -19923,7 +20001,7 @@
    "original_price": null
   },
   {
-   "id": "H0188",
+   "id": "H0194",
    "description": "Excel Advanced Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -19936,7 +20014,7 @@
    "original_price": null
   },
   {
-   "id": "H0189",
+   "id": "H0195",
    "description": "Portable Projector Full HD",
    "category_key": "24321900",
    "direction": "buy",
@@ -19949,7 +20027,7 @@
    "original_price": null
   },
   {
-   "id": "H0190",
+   "id": "H0196",
    "description": "Steel Turnings",
    "category_key": "steel",
    "direction": "sell",
@@ -19962,7 +20040,7 @@
    "original_price": null
   },
   {
-   "id": "H0191",
+   "id": "H0197",
    "description": "Courier Charges Bulk Dispatch",
    "category_key": "78101800",
    "direction": "buy",
@@ -19975,7 +20053,7 @@
    "original_price": null
   },
   {
-   "id": "H0192",
+   "id": "H0198",
    "description": "Employee Handbook Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -19988,7 +20066,7 @@
    "original_price": null
   },
   {
-   "id": "H0193",
+   "id": "H0199",
    "description": "Lubricant Grease 18 Kg Pail",
    "category_key": "40101800",
    "direction": "buy",
@@ -20001,7 +20079,7 @@
    "original_price": null
   },
   {
-   "id": "H0194",
+   "id": "H0200",
    "description": "PVC Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -20014,7 +20092,7 @@
    "original_price": null
   },
   {
-   "id": "H0195",
+   "id": "H0201",
    "description": "Client Dinner Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -20027,7 +20105,7 @@
    "original_price": null
   },
   {
-   "id": "H0196",
+   "id": "H0202",
    "description": "Rubber Scrap",
    "category_key": "rubber",
    "direction": "sell",
@@ -20040,7 +20118,7 @@
    "original_price": null
   },
   {
-   "id": "H0197",
+   "id": "H0203",
    "description": "Safety Poster Printing A2",
    "category_key": "82121500",
    "direction": "buy",
@@ -20053,7 +20131,7 @@
    "original_price": null
   },
   {
-   "id": "H0198",
+   "id": "H0204",
    "description": "Soft Skills Workshop Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -20066,7 +20144,7 @@
    "original_price": null
   },
   {
-   "id": "H0199",
+   "id": "H0205",
    "description": "Housekeeping Service Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -20079,7 +20157,7 @@
    "original_price": null
   },
   {
-   "id": "H0200",
+   "id": "H0206",
    "description": "Aluminium Turnings",
    "category_key": "aluminium",
    "direction": "sell",
@@ -20092,7 +20170,7 @@
    "original_price": 164.0
   },
   {
-   "id": "H0201",
+   "id": "H0207",
    "description": "Delegation Lunch Buffet",
    "category_key": "25200000",
    "direction": "buy",
@@ -20105,7 +20183,7 @@
    "original_price": 276.0
   },
   {
-   "id": "H0202",
+   "id": "H0208",
    "description": "Dinner Buffet Day 1",
    "category_key": "25200000",
    "direction": "buy",
@@ -20118,7 +20196,20 @@
    "original_price": 328.0
   },
   {
-   "id": "H0203",
+   "id": "H0209",
+   "description": "Stainless Steel 304 Scrap",
+   "category_key": "stainless",
+   "direction": "sell",
+   "vendor_id": "V035",
+   "unit_price": 95.94,
+   "qty": 2320.0,
+   "unit": "KG",
+   "closed_date": "2026-03-18",
+   "negotiated": true,
+   "original_price": 92.12
+  },
+  {
+   "id": "H0210",
    "description": "Welcome Tea And Snacks",
    "category_key": "25200000",
    "direction": "buy",
@@ -20131,7 +20222,7 @@
    "original_price": 49.44
   },
   {
-   "id": "H0204",
+   "id": "H0211",
    "description": "Plant Visit Refreshment Kits",
    "category_key": "25200000",
    "direction": "buy",
@@ -20144,7 +20235,7 @@
    "original_price": 114.0
   },
   {
-   "id": "H0205",
+   "id": "H0212",
    "description": "Aluminium Cast Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -20157,7 +20248,7 @@
    "original_price": null
   },
   {
-   "id": "H0206",
+   "id": "H0213",
    "description": "Cardboard And Paper Scrap",
    "category_key": "paper",
    "direction": "sell",
@@ -20170,7 +20261,7 @@
    "original_price": null
   },
   {
-   "id": "H0207",
+   "id": "H0214",
    "description": "Copper Bare Bright",
    "category_key": "copper",
    "direction": "sell",
@@ -20183,7 +20274,7 @@
    "original_price": null
   },
   {
-   "id": "H0208",
+   "id": "H0215",
    "description": "File Folders",
    "category_key": "44121600",
    "direction": "buy",
@@ -20196,7 +20287,7 @@
    "original_price": null
   },
   {
-   "id": "H0209",
+   "id": "H0216",
    "description": "First Aid Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -20209,7 +20300,7 @@
    "original_price": null
   },
   {
-   "id": "H0210",
+   "id": "H0217",
    "description": "Brass Scrap",
    "category_key": "brass",
    "direction": "sell",
@@ -20222,7 +20313,7 @@
    "original_price": null
   },
   {
-   "id": "H0211",
+   "id": "H0218",
    "description": "Housekeeping Service Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -20235,7 +20326,7 @@
    "original_price": null
   },
   {
-   "id": "H0212",
+   "id": "H0219",
    "description": "PVC Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -20248,7 +20339,7 @@
    "original_price": null
   },
   {
-   "id": "H0213",
+   "id": "H0220",
    "description": "USB C Docking Station",
    "category_key": "43211500",
    "direction": "buy",
@@ -20261,7 +20352,7 @@
    "original_price": null
   },
   {
-   "id": "H0214",
+   "id": "H0221",
    "description": "Whiteboard Markers Box",
    "category_key": "44121600",
    "direction": "buy",
@@ -20274,7 +20365,7 @@
    "original_price": null
   },
   {
-   "id": "H0215",
+   "id": "H0222",
    "description": "Annual Day Event Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -20287,7 +20378,7 @@
    "original_price": null
   },
   {
-   "id": "H0216",
+   "id": "H0223",
    "description": "Cotton Waste Bale",
    "category_key": "40101800",
    "direction": "buy",
@@ -20300,7 +20391,7 @@
    "original_price": null
   },
   {
-   "id": "H0217",
+   "id": "H0224",
    "description": "MS HMS Scrap",
    "category_key": "steel",
    "direction": "sell",
@@ -20313,7 +20404,7 @@
    "original_price": null
   },
   {
-   "id": "H0218",
+   "id": "H0225",
    "description": "Pest Control Annual Contract",
    "category_key": "90101500",
    "direction": "buy",
@@ -20326,7 +20417,7 @@
    "original_price": null
   },
   {
-   "id": "H0219",
+   "id": "H0226",
    "description": "Safety Poster Printing A2",
    "category_key": "82121500",
    "direction": "buy",
@@ -20339,7 +20430,7 @@
    "original_price": null
   },
   {
-   "id": "H0220",
+   "id": "H0227",
    "description": "Wireless Presenter Clicker",
    "category_key": "24321900",
    "direction": "buy",
@@ -20352,7 +20443,7 @@
    "original_price": null
   },
   {
-   "id": "H0221",
+   "id": "H0228",
    "description": "Employee Handbook Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -20365,7 +20456,7 @@
    "original_price": null
   },
   {
-   "id": "H0222",
+   "id": "H0229",
    "description": "Tea And Snacks For Review Meeting",
    "category_key": "25200000",
    "direction": "buy",
@@ -20378,7 +20469,7 @@
    "original_price": null
   },
   {
-   "id": "H0223",
+   "id": "H0230",
    "description": "Soft Skills Workshop Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -20391,7 +20482,7 @@
    "original_price": null
   },
   {
-   "id": "H0224",
+   "id": "H0231",
    "description": "Copper Mixed Scrap",
    "category_key": "copper",
    "direction": "sell",
@@ -20404,7 +20495,7 @@
    "original_price": null
   },
   {
-   "id": "H0225",
+   "id": "H0232",
    "description": "Garden Maintenance Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -20417,7 +20508,7 @@
    "original_price": null
   },
   {
-   "id": "H0226",
+   "id": "H0233",
    "description": "Safety Gloves Pairs",
    "category_key": "40101800",
    "direction": "buy",
@@ -20430,7 +20521,7 @@
    "original_price": null
   },
   {
-   "id": "H0227",
+   "id": "H0234",
    "description": "Steel Turnings",
    "category_key": "steel",
    "direction": "sell",
@@ -20443,7 +20534,7 @@
    "original_price": null
   },
   {
-   "id": "H0228",
+   "id": "H0235",
    "description": "Aluminium Turnings",
    "category_key": "aluminium",
    "direction": "sell",
@@ -20456,7 +20547,7 @@
    "original_price": null
   },
   {
-   "id": "H0229",
+   "id": "H0236",
    "description": "Employee Shuttle Hire Monthly",
    "category_key": "78101800",
    "direction": "buy",
@@ -20469,7 +20560,7 @@
    "original_price": null
   },
   {
-   "id": "H0230",
+   "id": "H0237",
    "description": "PP Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -20482,7 +20573,7 @@
    "original_price": null
   },
   {
-   "id": "H0231",
+   "id": "H0238",
    "description": "Rubber Scrap",
    "category_key": "rubber",
    "direction": "sell",
@@ -20495,7 +20586,7 @@
    "original_price": null
   },
   {
-   "id": "H0232",
+   "id": "H0239",
    "description": "Stainless Steel 304 Scrap",
    "category_key": "stainless",
    "direction": "sell",
@@ -20508,7 +20599,7 @@
    "original_price": null
   },
   {
-   "id": "H0233",
+   "id": "H0240",
    "description": "Visitor Cab Hire Package",
    "category_key": "78101800",
    "direction": "buy",
@@ -20521,7 +20612,7 @@
    "original_price": null
   },
   {
-   "id": "H0234",
+   "id": "H0241",
    "description": "A4 Copier Paper 75 GSM Ream",
    "category_key": "44121600",
    "direction": "buy",
@@ -20534,7 +20625,7 @@
    "original_price": null
   },
   {
-   "id": "H0235",
+   "id": "H0242",
    "description": "Lubricant Grease 18 Kg Pail",
    "category_key": "40101800",
    "direction": "buy",
@@ -20547,7 +20638,7 @@
    "original_price": null
   },
   {
-   "id": "H0236",
+   "id": "H0243",
    "description": "Wooden Pallet Scrap",
    "category_key": "wood",
    "direction": "sell",
@@ -20560,7 +20651,7 @@
    "original_price": null
   },
   {
-   "id": "H0237",
+   "id": "H0244",
    "description": "Aluminium Extrusion Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -20573,7 +20664,7 @@
    "original_price": null
   },
   {
-   "id": "H0238",
+   "id": "H0245",
    "description": "Client Dinner Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -20586,7 +20677,7 @@
    "original_price": null
   },
   {
-   "id": "H0239",
+   "id": "H0246",
    "description": "Courier Charges Bulk Dispatch",
    "category_key": "78101800",
    "direction": "buy",
@@ -20599,7 +20690,7 @@
    "original_price": null
   },
   {
-   "id": "H0240",
+   "id": "H0247",
    "description": "E-Waste Mixed",
    "category_key": "ewaste",
    "direction": "sell",
@@ -20612,7 +20703,7 @@
    "original_price": null
   },
   {
-   "id": "H0241",
+   "id": "H0248",
    "description": "Mixed Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -20625,7 +20716,7 @@
    "original_price": null
   },
   {
-   "id": "H0242",
+   "id": "H0249",
    "description": "Portable Projector Full HD",
    "category_key": "24321900",
    "direction": "buy",
@@ -20638,7 +20729,7 @@
    "original_price": null
   },
   {
-   "id": "H0243",
+   "id": "H0250",
    "description": "Tripod Stand Projector Screen 10x8 Ft",
    "category_key": "24321900",
    "direction": "buy",
@@ -20651,7 +20742,7 @@
    "original_price": null
   },
   {
-   "id": "H0244",
+   "id": "H0251",
    "description": "Used Oil Drums",
    "category_key": "oil",
    "direction": "sell",
@@ -20664,7 +20755,7 @@
    "original_price": null
   },
   {
-   "id": "H0245",
+   "id": "H0252",
    "description": "Cast Iron Scrap",
    "category_key": "cast_iron",
    "direction": "sell",
@@ -20677,7 +20768,7 @@
    "original_price": null
   },
   {
-   "id": "H0246",
+   "id": "H0253",
    "description": "Excel Advanced Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -20690,7 +20781,7 @@
    "original_price": null
   },
   {
-   "id": "H0247",
+   "id": "H0254",
    "description": "Guest Refreshment Counter Setup",
    "category_key": "41120214",
    "direction": "buy",
@@ -20703,7 +20794,7 @@
    "original_price": null
   },
   {
-   "id": "H0248",
+   "id": "H0255",
    "description": "HDMI Cable 3 Mtr",
    "category_key": "43211500",
    "direction": "buy",
@@ -20716,7 +20807,7 @@
    "original_price": null
   },
   {
-   "id": "H0249",
+   "id": "H0256",
    "description": "Meals For Training Batch",
    "category_key": "25200000",
    "direction": "buy",
@@ -20729,7 +20820,7 @@
    "original_price": null
   },
   {
-   "id": "H0250",
+   "id": "H0257",
    "description": "Visitor Brochure Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -20742,7 +20833,7 @@
    "original_price": null
   },
   {
-   "id": "H0251",
+   "id": "H0258",
    "description": "Wireless Keyboard Mouse Combo",
    "category_key": "43211500",
    "direction": "buy",
@@ -20755,7 +20846,7 @@
    "original_price": null
   },
   {
-   "id": "H0252",
+   "id": "H0259",
    "description": "Working Lunch Boxes",
    "category_key": "25200000",
    "direction": "buy",
@@ -20768,7 +20859,7 @@
    "original_price": null
   },
   {
-   "id": "H0253",
+   "id": "H0260",
    "description": "Delegation Lunch Buffet",
    "category_key": "25200000",
    "direction": "buy",
@@ -20781,7 +20872,7 @@
    "original_price": null
   },
   {
-   "id": "H0254",
+   "id": "H0261",
    "description": "Service Staff And Live Counters",
    "category_key": "25200000",
    "direction": "buy",
@@ -20794,7 +20885,7 @@
    "original_price": 17505.0
   },
   {
-   "id": "H0255",
+   "id": "H0262",
    "description": "Mineral Water 1 Ltr Cartons",
    "category_key": "25200000",
    "direction": "buy",
@@ -20807,7 +20898,7 @@
    "original_price": 252.0
   },
   {
-   "id": "H0256",
+   "id": "H0263",
    "description": "Plant Visit Refreshment Kits",
    "category_key": "25200000",
    "direction": "buy",
@@ -20820,7 +20911,7 @@
    "original_price": null
   },
   {
-   "id": "H0257",
+   "id": "H0264",
    "description": "Aluminium Turnings",
    "category_key": "aluminium",
    "direction": "sell",
@@ -20833,7 +20924,7 @@
    "original_price": 163.0
   },
   {
-   "id": "H0258",
+   "id": "H0265",
    "description": "Delegation Lunch Buffet",
    "category_key": "25200000",
    "direction": "buy",
@@ -20846,7 +20937,7 @@
    "original_price": 272.0
   },
   {
-   "id": "H0259",
+   "id": "H0266",
    "description": "Courier Charges Bulk Dispatch",
    "category_key": "78101800",
    "direction": "buy",
@@ -20859,7 +20950,7 @@
    "original_price": 26648.0
   },
   {
-   "id": "H0260",
+   "id": "H0267",
    "description": "Visitor Brochure Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -20872,7 +20963,7 @@
    "original_price": 42.33
   },
   {
-   "id": "H0261",
+   "id": "H0268",
    "description": "Aluminium Cast Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -20885,7 +20976,7 @@
    "original_price": 160.0
   },
   {
-   "id": "H0262",
+   "id": "H0269",
    "description": "Cardboard And Paper Scrap",
    "category_key": "paper",
    "direction": "sell",
@@ -20898,7 +20989,7 @@
    "original_price": 11.07
   },
   {
-   "id": "H0263",
+   "id": "H0270",
    "description": "Cast Iron Scrap",
    "category_key": "cast_iron",
    "direction": "sell",
@@ -20911,7 +21002,7 @@
    "original_price": 28.4
   },
   {
-   "id": "H0264",
+   "id": "H0271",
    "description": "Copper Bare Bright",
    "category_key": "copper",
    "direction": "sell",
@@ -20924,7 +21015,7 @@
    "original_price": 780.0
   },
   {
-   "id": "H0265",
+   "id": "H0272",
    "description": "Employee Handbook Printing",
    "category_key": "82121500",
    "direction": "buy",
@@ -20937,7 +21028,7 @@
    "original_price": 235.0
   },
   {
-   "id": "H0266",
+   "id": "H0273",
    "description": "Employee Shuttle Hire Monthly",
    "category_key": "78101800",
    "direction": "buy",
@@ -20950,7 +21041,7 @@
    "original_price": 68659.0
   },
   {
-   "id": "H0267",
+   "id": "H0274",
    "description": "Guest Refreshment Counter Setup",
    "category_key": "41120214",
    "direction": "buy",
@@ -20963,7 +21054,7 @@
    "original_price": 14840.0
   },
   {
-   "id": "H0268",
+   "id": "H0275",
    "description": "Stainless Steel 304 Scrap",
    "category_key": "stainless",
    "direction": "sell",
@@ -20976,7 +21067,7 @@
    "original_price": 91.78
   },
   {
-   "id": "H0269",
+   "id": "H0276",
    "description": "Wooden Pallet Scrap",
    "category_key": "wood",
    "direction": "sell",
@@ -20989,7 +21080,7 @@
    "original_price": 6.98
   },
   {
-   "id": "H0270",
+   "id": "H0277",
    "description": "Client Dinner Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -21002,7 +21093,7 @@
    "original_price": 56853.0
   },
   {
-   "id": "H0271",
+   "id": "H0278",
    "description": "Visitor Cab Hire Package",
    "category_key": "78101800",
    "direction": "buy",
@@ -21015,7 +21106,7 @@
    "original_price": 12992.0
   },
   {
-   "id": "H0272",
+   "id": "H0279",
    "description": "Wireless Presenter Clicker",
    "category_key": "24321900",
    "direction": "buy",
@@ -21028,7 +21119,7 @@
    "original_price": 3002.0
   },
   {
-   "id": "H0273",
+   "id": "H0280",
    "description": "Used Oil Drums",
    "category_key": "oil",
    "direction": "sell",
@@ -21041,7 +21132,7 @@
    "original_price": 26.71
   },
   {
-   "id": "H0274",
+   "id": "H0281",
    "description": "A4 Copier Paper 75 GSM Ream",
    "category_key": "44121600",
    "direction": "buy",
@@ -21054,7 +21145,7 @@
    "original_price": 278.0
   },
   {
-   "id": "H0275",
+   "id": "H0282",
    "description": "Copper Mixed Scrap",
    "category_key": "copper",
    "direction": "sell",
@@ -21067,7 +21158,7 @@
    "original_price": 631.0
   },
   {
-   "id": "H0276",
+   "id": "H0283",
    "description": "HDMI Cable 3 Mtr",
    "category_key": "43211500",
    "direction": "buy",
@@ -21080,7 +21171,7 @@
    "original_price": 309.0
   },
   {
-   "id": "H0277",
+   "id": "H0284",
    "description": "Pest Control Annual Contract",
    "category_key": "90101500",
    "direction": "buy",
@@ -21093,7 +21184,7 @@
    "original_price": 53741.0
   },
   {
-   "id": "H0278",
+   "id": "H0285",
    "description": "Wireless Keyboard Mouse Combo",
    "category_key": "43211500",
    "direction": "buy",
@@ -21106,7 +21197,7 @@
    "original_price": 1673.0
   },
   {
-   "id": "H0279",
+   "id": "H0286",
    "description": "First Aid Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -21119,7 +21210,7 @@
    "original_price": 24008.0
   },
   {
-   "id": "H0280",
+   "id": "H0287",
    "description": "PVC Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -21132,7 +21223,7 @@
    "original_price": 21.98
   },
   {
-   "id": "H0281",
+   "id": "H0288",
    "description": "Safety Poster Printing A2",
    "category_key": "82121500",
    "direction": "buy",
@@ -21145,7 +21236,7 @@
    "original_price": 177.0
   },
   {
-   "id": "H0282",
+   "id": "H0289",
    "description": "Aluminium Extrusion Scrap",
    "category_key": "aluminium",
    "direction": "sell",
@@ -21158,7 +21249,7 @@
    "original_price": 183.0
   },
   {
-   "id": "H0283",
+   "id": "H0290",
    "description": "Cotton Waste Bale",
    "category_key": "40101800",
    "direction": "buy",
@@ -21171,7 +21262,7 @@
    "original_price": 942.0
   },
   {
-   "id": "H0284",
+   "id": "H0291",
    "description": "Safety Gloves Pairs",
    "category_key": "40101800",
    "direction": "buy",
@@ -21184,7 +21275,7 @@
    "original_price": 89.65
   },
   {
-   "id": "H0285",
+   "id": "H0292",
    "description": "Tea And Snacks For Review Meeting",
    "category_key": "25200000",
    "direction": "buy",
@@ -21197,7 +21288,7 @@
    "original_price": 82.91
   },
   {
-   "id": "H0286",
+   "id": "H0293",
    "description": "Rubber Scrap",
    "category_key": "rubber",
    "direction": "sell",
@@ -21210,7 +21301,7 @@
    "original_price": 11.25
   },
   {
-   "id": "H0287",
+   "id": "H0294",
    "description": "Working Lunch Boxes",
    "category_key": "25200000",
    "direction": "buy",
@@ -21223,7 +21314,7 @@
    "original_price": 229.0
   },
   {
-   "id": "H0288",
+   "id": "H0295",
    "description": "Brass Scrap",
    "category_key": "brass",
    "direction": "sell",
@@ -21236,7 +21327,7 @@
    "original_price": 428.0
   },
   {
-   "id": "H0289",
+   "id": "H0296",
    "description": "E-Waste Mixed",
    "category_key": "ewaste",
    "direction": "sell",
@@ -21249,7 +21340,7 @@
    "original_price": 61.9
   },
   {
-   "id": "H0290",
+   "id": "H0297",
    "description": "Excel Advanced Training Per Batch",
    "category_key": "86101700",
    "direction": "buy",
@@ -21262,7 +21353,7 @@
    "original_price": 33594.0
   },
   {
-   "id": "H0291",
+   "id": "H0298",
    "description": "File Folders",
    "category_key": "44121600",
    "direction": "buy",
@@ -21275,7 +21366,7 @@
    "original_price": 47.91
   },
   {
-   "id": "H0292",
+   "id": "H0299",
    "description": "Housekeeping Service Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -21288,7 +21379,7 @@
    "original_price": 76962.0
   },
   {
-   "id": "H0293",
+   "id": "H0300",
    "description": "MS HMS Scrap",
    "category_key": "steel",
    "direction": "sell",
@@ -21301,7 +21392,7 @@
    "original_price": 30.93
   },
   {
-   "id": "H0294",
+   "id": "H0301",
    "description": "Mixed Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -21314,7 +21405,7 @@
    "original_price": 17.46
   },
   {
-   "id": "H0295",
+   "id": "H0302",
    "description": "Portable Projector Full HD",
    "category_key": "24321900",
    "direction": "buy",
@@ -21327,7 +21418,7 @@
    "original_price": 39810.0
   },
   {
-   "id": "H0296",
+   "id": "H0303",
    "description": "Steel Turnings",
    "category_key": "steel",
    "direction": "sell",
@@ -21340,7 +21431,7 @@
    "original_price": 23.47
   },
   {
-   "id": "H0297",
+   "id": "H0304",
    "description": "Tripod Stand Projector Screen 10x8 Ft",
    "category_key": "24321900",
    "direction": "buy",
@@ -21353,7 +21444,7 @@
    "original_price": 13137.0
   },
   {
-   "id": "H0298",
+   "id": "H0305",
    "description": "USB C Docking Station",
    "category_key": "43211500",
    "direction": "buy",
@@ -21366,7 +21457,7 @@
    "original_price": 6151.0
   },
   {
-   "id": "H0299",
+   "id": "H0306",
    "description": "Whiteboard Markers Box",
    "category_key": "44121600",
    "direction": "buy",
@@ -21379,7 +21470,7 @@
    "original_price": 288.0
   },
   {
-   "id": "H0300",
+   "id": "H0307",
    "description": "Annual Day Event Catering",
    "category_key": "41120214",
    "direction": "buy",
@@ -21392,7 +21483,7 @@
    "original_price": 472.0
   },
   {
-   "id": "H0301",
+   "id": "H0308",
    "description": "Garden Maintenance Monthly",
    "category_key": "90101500",
    "direction": "buy",
@@ -21405,7 +21496,7 @@
    "original_price": 30900.0
   },
   {
-   "id": "H0302",
+   "id": "H0309",
    "description": "Lubricant Grease 18 Kg Pail",
    "category_key": "40101800",
    "direction": "buy",
@@ -21418,7 +21509,7 @@
    "original_price": 5647.0
   },
   {
-   "id": "H0303",
+   "id": "H0310",
    "description": "Meals For Training Batch",
    "category_key": "25200000",
    "direction": "buy",
@@ -21431,7 +21522,7 @@
    "original_price": 285.0
   },
   {
-   "id": "H0304",
+   "id": "H0311",
    "description": "PP Plastic Scrap",
    "category_key": "plastic",
    "direction": "sell",
@@ -21444,7 +21535,7 @@
    "original_price": 33.95
   },
   {
-   "id": "H0305",
+   "id": "H0312",
    "description": "Soft Skills Workshop Per Batch",
    "category_key": "86101700",
    "direction": "buy",

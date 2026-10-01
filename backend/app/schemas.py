@@ -127,10 +127,19 @@ class HistoryPoint(BaseModel):
     description: str
     vendor_id: str
     vendor_name: str
+    direction: Direction
+    category_key: str
+    unit: Unit
     unit_price: float
     qty: float
+    value: float  # quantity x price
     negotiated: bool
     original_price: Optional[float]
+    benchmark: Optional[float]  # what the deal is judged against: the original quote, or the average of similar deals
+    basis: str  # which of the two the benchmark is
+    result: Optional[float]  # gain (+) or loss (-) against the benchmark, in rupees
+    result_pct: Optional[float]
+    decision: Optional[Literal["gain", "even", "loss"]]
 
 
 class HistoryStats(BaseModel):
@@ -293,6 +302,7 @@ class VendorBidRow(BaseModel):
 class VendorDetail(BaseModel):
     vendor: VendorView
     history: list[HistoryPoint]
+    history_summary: HistorySummary
     recent_bids: list[VendorBidRow]
 
 
@@ -315,10 +325,24 @@ class ItemRow(ItemView):
 
 
 class HistoryRow(HistoryPoint):
-    direction: Direction
-    category_key: str
-    unit: Unit
     value_delta: Optional[float]
+
+
+class HistorySummary(BaseModel):
+    deals: int
+    negotiated_deals: int
+    gains: int
+    evens: int
+    losses: int
+    net_result: float  # total gain or loss across the deals judged
+
+
+class HistoryDeal(BaseModel):
+    deal: HistoryPoint
+    similar: list[HistoryPoint]  # other past deals for the same item, newest first
+    average_similar: Optional[float]
+    vendor_rating: float
+    explanation: str
 
 
 # --- negotiation sessions ------------------------------------------------------------------

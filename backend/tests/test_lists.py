@@ -39,7 +39,7 @@ def test_items_list_filters(client, seed_dataset: Dataset):
 
 def test_history_list(client, seed_dataset: Dataset):
     rows = client.get("/api/history").json()
-    assert len(rows) == len(seed_dataset.history) == 305
+    assert len(rows) == len(seed_dataset.history) == 312  # 305 plus the extras that give every vendor four deals
     dates = [r["date"] for r in rows]
     assert dates == sorted(dates, reverse=True)
     assert {"vendor_name", "direction", "category_key", "unit", "value_delta"} <= set(rows[0])

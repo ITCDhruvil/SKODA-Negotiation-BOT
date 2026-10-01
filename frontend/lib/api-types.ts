@@ -192,6 +192,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/history/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History Deal */
+        get: operations["history_deal_api_history__record_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/items/{item_id}/history": {
         parameters: {
             query?: never;
@@ -912,6 +929,18 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** HistoryDeal */
+        HistoryDeal: {
+            deal: components["schemas"]["HistoryPoint"];
+            /** Similar */
+            similar: components["schemas"]["HistoryPoint"][];
+            /** Average Similar */
+            average_similar: number | null;
+            /** Vendor Rating */
+            vendor_rating: number;
+            /** Explanation */
+            explanation: string;
+        };
         /** HistoryPoint */
         HistoryPoint: {
             /** Id */
@@ -927,14 +956,38 @@ export interface components {
             vendor_id: string;
             /** Vendor Name */
             vendor_name: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "buy" | "sell";
+            /** Category Key */
+            category_key: string;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "EA" | "AU" | "KG" | "TON" | "LOT";
             /** Unit Price */
             unit_price: number;
             /** Qty */
             qty: number;
+            /** Value */
+            value: number;
             /** Negotiated */
             negotiated: boolean;
             /** Original Price */
             original_price: number | null;
+            /** Benchmark */
+            benchmark: number | null;
+            /** Basis */
+            basis: string;
+            /** Result */
+            result: number | null;
+            /** Result Pct */
+            result_pct: number | null;
+            /** Decision */
+            decision: ("gain" | "even" | "loss") | null;
         };
         /** HistoryRow */
         HistoryRow: {
@@ -951,14 +1004,6 @@ export interface components {
             vendor_id: string;
             /** Vendor Name */
             vendor_name: string;
-            /** Unit Price */
-            unit_price: number;
-            /** Qty */
-            qty: number;
-            /** Negotiated */
-            negotiated: boolean;
-            /** Original Price */
-            original_price: number | null;
             /**
              * Direction
              * @enum {string}
@@ -971,6 +1016,26 @@ export interface components {
              * @enum {string}
              */
             unit: "EA" | "AU" | "KG" | "TON" | "LOT";
+            /** Unit Price */
+            unit_price: number;
+            /** Qty */
+            qty: number;
+            /** Value */
+            value: number;
+            /** Negotiated */
+            negotiated: boolean;
+            /** Original Price */
+            original_price: number | null;
+            /** Benchmark */
+            benchmark: number | null;
+            /** Basis */
+            basis: string;
+            /** Result */
+            result: number | null;
+            /** Result Pct */
+            result_pct: number | null;
+            /** Decision */
+            decision: ("gain" | "even" | "loss") | null;
             /** Value Delta */
             value_delta: number | null;
         };
@@ -991,6 +1056,21 @@ export interface components {
              * Format: date
              */
             last_date: string;
+        };
+        /** HistorySummary */
+        HistorySummary: {
+            /** Deals */
+            deals: number;
+            /** Negotiated Deals */
+            negotiated_deals: number;
+            /** Gains */
+            gains: number;
+            /** Evens */
+            evens: number;
+            /** Losses */
+            losses: number;
+            /** Net Result */
+            net_result: number;
         };
         /** HistoryView */
         HistoryView: {
@@ -1729,6 +1809,7 @@ export interface components {
             vendor: components["schemas"]["VendorView"];
             /** History */
             history: components["schemas"]["HistoryPoint"][];
+            history_summary: components["schemas"]["HistorySummary"];
             /** Recent Bids */
             recent_bids: components["schemas"]["VendorBidRow"][];
         };
@@ -2143,6 +2224,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ComparisonView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_deal_api_history__record_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryDeal"];
                 };
             };
             /** @description Validation Error */

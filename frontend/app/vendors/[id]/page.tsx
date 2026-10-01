@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { pastDealColumns } from "@/components/history/PastDeals";
+import { useRouter } from "next/navigation";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { api, type HistoryPoint, type VendorDetail } from "@/lib/api";
 import { dateShort, money, moneyCompact, num } from "@/lib/format";
@@ -13,6 +15,7 @@ type BidRow = VendorDetail["recent_bids"][number];
 
 function Body({ data }: { data: VendorDetail }) {
   const v = data.vendor;
+  const router = useRouter();
   const bidColumns: Column<BidRow>[] = [
     {
       key: "item",
@@ -27,13 +30,8 @@ function Body({ data }: { data: VendorDetail }) {
     { key: "price", header: "Quote", align: "right", cell: (b) => <span className="tabular-nums font-semibold">{money(b.unit_price)}</span> },
     { key: "event", header: "Event", hideOnMobile: true, cell: (b) => <Link href={`/events/${b.event_id}`} className="text-muted hover:underline">{b.event_id}</Link> },
   ];
-  const histColumns: Column<HistoryPoint>[] = [
-    { key: "date", header: "Date", cell: (h) => dateShort(h.date) },
-    { key: "item", header: "Item", cell: (h) => h.description },
-    { key: "qty", header: "Qty", align: "right", hideOnMobile: true, cell: (h) => num(h.qty) },
-    { key: "price", header: "Price", align: "right", cell: (h) => <span className="tabular-nums font-semibold">{money(h.unit_price)}</span> },
-    { key: "neg", header: "", cell: (h) => (h.negotiated ? <Pill tone="ok">Negotiated</Pill> : null) },
-  ];
+  const histColumns = pastDealColumns();
+  const hs = data.history_summary;
   return (
     <>
       <PageHeader
@@ -59,9 +57,17 @@ function Body({ data }: { data: VendorDetail }) {
         >
           <DataTable columns={bidColumns} rows={data.recent_bids} rowKey={(b) => `${b.item_id}`} empty="No live quotes." dense />
         </Panel>
-        <Panel title="Past deals" flush>
-          <DataTable columns={histColumns} rows={data.history.slice(0, 15)} rowKey={(h) => h.id} empty="No past deals." dense />
-        </Panel>
+        <div className="grid gap-4 xl:col-span-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiCard icon="history" tone="info" label="Past deals" value={hs.deals} facts={[`${hs.negotiated_deals} negotiated`]} />
+            <KpiCard icon="trend" tone={hs.net_result < 0 ? "red" : "ok"} label="Net profit / loss" value={`${hs.net_result < 0 ? "−" : hs.net_result > 0 ? "+" : ""}${money(Math.abs(hs.net_result))}`} facts={["against each deal's benchmark"]} />
+            <KpiCard icon="check" tone="ok" label="Gains" value={hs.gains} facts={[`${hs.evens} about even`]} />
+            <KpiCard icon="close" tone="red" label="Losses" value={hs.losses} />
+          </div>
+          <Panel title="Past deals" flush>
+            <DataTable columns={histColumns} rows={data.history} rowKey={(h) => h.id} onRowClick={(h) => router.push(`/history/${h.id}`)} empty="No past deals." dense paginate noun="deals" />
+          </Panel>
+        </div>
       </div>
     </>
   );

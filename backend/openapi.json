@@ -787,6 +787,45 @@
     }
    }
   },
+  "/api/history/{record_id}": {
+   "get": {
+    "summary": "History Deal",
+    "operationId": "history_deal_api_history__record_id__get",
+    "parameters": [
+     {
+      "name": "record_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Record Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HistoryDeal"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/items/{item_id}/history": {
    "get": {
     "summary": "Item History",
@@ -2642,6 +2681,48 @@
     ],
     "title": "Health"
    },
+   "HistoryDeal": {
+    "properties": {
+     "deal": {
+      "$ref": "#/components/schemas/HistoryPoint"
+     },
+     "similar": {
+      "items": {
+       "$ref": "#/components/schemas/HistoryPoint"
+      },
+      "type": "array",
+      "title": "Similar"
+     },
+     "average_similar": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Average Similar"
+     },
+     "vendor_rating": {
+      "type": "number",
+      "title": "Vendor Rating"
+     },
+     "explanation": {
+      "type": "string",
+      "title": "Explanation"
+     }
+    },
+    "type": "object",
+    "required": [
+     "deal",
+     "similar",
+     "average_similar",
+     "vendor_rating",
+     "explanation"
+    ],
+    "title": "HistoryDeal"
+   },
    "HistoryPoint": {
     "properties": {
      "id": {
@@ -2665,6 +2746,29 @@
       "type": "string",
       "title": "Vendor Name"
      },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Direction"
+     },
+     "category_key": {
+      "type": "string",
+      "title": "Category Key"
+     },
+     "unit": {
+      "type": "string",
+      "enum": [
+       "EA",
+       "AU",
+       "KG",
+       "TON",
+       "LOT"
+      ],
+      "title": "Unit"
+     },
      "unit_price": {
       "type": "number",
       "title": "Unit Price"
@@ -2672,6 +2776,10 @@
      "qty": {
       "type": "number",
       "title": "Qty"
+     },
+     "value": {
+      "type": "number",
+      "title": "Value"
      },
      "negotiated": {
       "type": "boolean",
@@ -2687,6 +2795,59 @@
        }
       ],
       "title": "Original Price"
+     },
+     "benchmark": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Benchmark"
+     },
+     "basis": {
+      "type": "string",
+      "title": "Basis"
+     },
+     "result": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result"
+     },
+     "result_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result Pct"
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "gain",
+         "even",
+         "loss"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
      }
     },
     "type": "object",
@@ -2696,10 +2857,19 @@
      "description",
      "vendor_id",
      "vendor_name",
+     "direction",
+     "category_key",
+     "unit",
      "unit_price",
      "qty",
+     "value",
      "negotiated",
-     "original_price"
+     "original_price",
+     "benchmark",
+     "basis",
+     "result",
+     "result_pct",
+     "decision"
     ],
     "title": "HistoryPoint"
    },
@@ -2726,29 +2896,6 @@
       "type": "string",
       "title": "Vendor Name"
      },
-     "unit_price": {
-      "type": "number",
-      "title": "Unit Price"
-     },
-     "qty": {
-      "type": "number",
-      "title": "Qty"
-     },
-     "negotiated": {
-      "type": "boolean",
-      "title": "Negotiated"
-     },
-     "original_price": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Original Price"
-     },
      "direction": {
       "type": "string",
       "enum": [
@@ -2772,6 +2919,86 @@
       ],
       "title": "Unit"
      },
+     "unit_price": {
+      "type": "number",
+      "title": "Unit Price"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "value": {
+      "type": "number",
+      "title": "Value"
+     },
+     "negotiated": {
+      "type": "boolean",
+      "title": "Negotiated"
+     },
+     "original_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Original Price"
+     },
+     "benchmark": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Benchmark"
+     },
+     "basis": {
+      "type": "string",
+      "title": "Basis"
+     },
+     "result": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result"
+     },
+     "result_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result Pct"
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "gain",
+         "even",
+         "loss"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     },
      "value_delta": {
       "anyOf": [
        {
@@ -2791,13 +3018,19 @@
      "description",
      "vendor_id",
      "vendor_name",
-     "unit_price",
-     "qty",
-     "negotiated",
-     "original_price",
      "direction",
      "category_key",
      "unit",
+     "unit_price",
+     "qty",
+     "value",
+     "negotiated",
+     "original_price",
+     "benchmark",
+     "basis",
+     "result",
+     "result_pct",
+     "decision",
      "value_delta"
     ],
     "title": "HistoryRow"
@@ -2840,6 +3073,44 @@
      "last_date"
     ],
     "title": "HistoryStats"
+   },
+   "HistorySummary": {
+    "properties": {
+     "deals": {
+      "type": "integer",
+      "title": "Deals"
+     },
+     "negotiated_deals": {
+      "type": "integer",
+      "title": "Negotiated Deals"
+     },
+     "gains": {
+      "type": "integer",
+      "title": "Gains"
+     },
+     "evens": {
+      "type": "integer",
+      "title": "Evens"
+     },
+     "losses": {
+      "type": "integer",
+      "title": "Losses"
+     },
+     "net_result": {
+      "type": "number",
+      "title": "Net Result"
+     }
+    },
+    "type": "object",
+    "required": [
+     "deals",
+     "negotiated_deals",
+     "gains",
+     "evens",
+     "losses",
+     "net_result"
+    ],
+    "title": "HistorySummary"
    },
    "HistoryView": {
     "properties": {
@@ -4993,6 +5264,9 @@
       "type": "array",
       "title": "History"
      },
+     "history_summary": {
+      "$ref": "#/components/schemas/HistorySummary"
+     },
      "recent_bids": {
       "items": {
        "$ref": "#/components/schemas/VendorBidRow"
@@ -5005,6 +5279,7 @@
     "required": [
      "vendor",
      "history",
+     "history_summary",
      "recent_bids"
     ],
     "title": "VendorDetail"

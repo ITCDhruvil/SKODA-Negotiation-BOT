@@ -161,6 +161,7 @@ export const api = {
   }) =>
     request<ItemRow[]>(`/api/items${qs(p)}`),
   item: (id: string) => request<ItemDetail>(`/api/items/${id}`),
+  pastDeal: (id: string) => request<S["HistoryDeal"]>(`/api/history/${id}`),
   itemHistory: (id: string) => request<HistoryView>(`/api/items/${id}/history`),
   setPoints: (id: string, body: { target: number; limit: number; objective?: Objective | null }) =>
     request<ItemDetail>(`/api/items/${id}/points`, { method: "PUT", body: JSON.stringify(body) }),

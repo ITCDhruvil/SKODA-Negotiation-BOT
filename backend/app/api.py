@@ -205,6 +205,10 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     def item_comparison(item_id: str):
         return detail(item_id).comparison
 
+    @app.get("/api/history/{record_id}", response_model=sch.HistoryDeal)
+    def history_deal(record_id: str):
+        return readmodel.history_deal(snap(), record_id)
+
     @app.get("/api/items/{item_id}/history", response_model=sch.HistoryView)
     def item_history(item_id: str):
         s = snap()

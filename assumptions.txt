@@ -363,3 +363,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 121. In drop-downs the enter (and back) icons sit inside the add box, as plain icons with no background. Long lists hide the scroll bar and show a soft fade at the bottom while more options lie below (and at the top once scrolled), so it is clear that the list continues.
     Reason: cleaner look; the fade replaces the scroll bar as the hint.
+
+122. Past deals carry a profit or loss. Each past deal is judged against a benchmark: the original quote when it was negotiated, otherwise the average of similar past deals (same item, then same category). The result is the money gained (+) or lost (-) on the deal's quantity, in our favour when we paid less (buy) or received more (sell), and the decision is Gain (1% or better than the benchmark), Loss (1% or worse) or Even. Vendor pages show a summary (deals, net profit or loss, gains, losses) and the table; clicking a row, here or on the History page, opens a deal page with breadcrumbs (Vendors / vendor / Past deals / deal), a Back button, the explanation, the deal facts, a price chart against similar deals and the similar deals. Every vendor now has at least four past deals (7 extra generated for vendors that had fewer).
+    Reason: show whether the dealings with each vendor have paid off, with the reasoning visible.

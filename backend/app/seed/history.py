@@ -6,7 +6,7 @@ from datetime import timedelta
 from app.seed import heroes
 from app.models import HistoryRecord, Vendor
 from app.seed.catalog import BUY_CATEGORIES, SCRAP_MATERIALS
-from app.seed.constants import HARD_VENDORS, TODAY
+from app.seed.constants import HARD_VENDORS, SEED, TODAY
 from app.seed.pricing import round_price, step
 from app.seed.vendors import pool
 
@@ -65,6 +65,30 @@ def build_history(rng: random.Random, vendors: list[Vendor]) -> list[HistoryReco
                 negotiated=original is not None,
                 original_price=None if original is None else float(original),
             ))
+    # A vendor with only a couple of past deals gets a few more, so every vendor page has a record to show.
+    from collections import Counter
+
+    counts = Counter(r.vendor_id for r in rows)
+    extra = random.Random(SEED + 313)
+    for v in vendors:
+        mine = [s for s in specs if s[1] in v.categories] or [s for s in specs if (s[0] == "buy") == (v.type == "supplier")]
+        for k in range(max(0, 4 - counts.get(v.id, 0))):
+            direction, key, desc, unit, lo, hi, qlo, qhi = extra.choice(mine)
+            if desc in heroes.HERO_HISTORY_DESCRIPTIONS:
+                continue
+            price = round_price(((lo + hi) / 2) * (1 + extra.uniform(-0.05, 0.05)))
+            negotiated = k % 2 == 1
+            original = None
+            if negotiated:
+                if direction == "buy":
+                    original = max(round_price(price / (1 - extra.uniform(0.03, 0.07))), round(price + step(price), 2))
+                else:
+                    original = min(round_price(price / (1 + extra.uniform(0.03, 0.06))), round(price - step(price), 2))
+            qty = extra.randint(qlo, qhi)
+            rows.append(HistoryRecord(
+                id="", description=desc, category_key=key, direction=direction, vendor_id=v.id, unit_price=price,
+                qty=float(qty // 10 * 10 if direction == "sell" else qty), unit=unit,
+                closed_date=TODAY - timedelta(days=extra.randint(40, 500)), negotiated=negotiated, original_price=original))
     rows.sort(key=lambda r: (r.closed_date, r.description))
     # Vendors known to be hard to move gave away very little in the past: their negotiated deals show it.
     # (No random draws here, so the rest of the generated history is unchanged.)

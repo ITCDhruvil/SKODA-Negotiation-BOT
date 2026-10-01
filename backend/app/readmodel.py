@@ -9,6 +9,7 @@ from typing import Optional
 from app import deal, eligibility, lifecycle
 from app import schemas as sch
 from app.models import Bid, Event, HistoryRecord, Item, Outcome, Vendor
+from app.services import NotFound
 from app.store import Repo
 
 
@@ -231,12 +232,60 @@ def comparison(snap: Snapshot, item: Item) -> sch.ComparisonView:
             if bids and not closed else 0.0))
 
 
+def _benchmark(snap: Snapshot, h: HistoryRecord) -> tuple[Optional[float], str]:
+    """What a past deal is judged against: the quote before negotiation, else the average of similar deals."""
+    if h.negotiated and h.original_price:
+        return h.original_price, "the original quote"
+    same = [x.unit_price for x in snap.history if x.id != h.id and x.direction == h.direction and x.description == h.description]
+    if len(same) >= 2:
+        return deal.average(same), "the average of similar deals"
+    cat = [x.unit_price for x in snap.history if x.id != h.id and x.direction == h.direction and x.category_key == h.category_key]
+    if cat:
+        return deal.average(cat), "the average of deals in the category"
+    return None, ""
+
+
 def _point(snap: Snapshot, h: HistoryRecord) -> sch.HistoryPoint:
+    bench, basis = _benchmark(snap, h)
+    result = pct = decision = None
+    if bench:
+        amount, share, decision = deal.deal_result(h.direction, bench, h.unit_price, h.qty)
+        result, pct = amount, round(share * 100, 2)
     return sch.HistoryPoint(
         id=h.id, date=h.closed_date, description=h.description, vendor_id=h.vendor_id,
-        vendor_name=_vendor_name(snap, h.vendor_id),
-        unit_price=h.unit_price, qty=h.qty, negotiated=h.negotiated,
-        original_price=h.original_price)
+        vendor_name=_vendor_name(snap, h.vendor_id), direction=h.direction, category_key=h.category_key,
+        unit=h.unit, unit_price=h.unit_price, qty=h.qty, value=deal.value(h.qty, h.unit_price),
+        negotiated=h.negotiated, original_price=h.original_price, benchmark=bench, basis=basis,
+        result=result, result_pct=pct, decision=decision)
+
+
+def history_summary(points: list[sch.HistoryPoint]) -> sch.HistorySummary:
+    judged = [p for p in points if p.decision]
+    return sch.HistorySummary(
+        deals=len(points), negotiated_deals=sum(1 for p in points if p.negotiated),
+        gains=sum(1 for p in judged if p.decision == "gain"), evens=sum(1 for p in judged if p.decision == "even"),
+        losses=sum(1 for p in judged if p.decision == "loss"), net_result=deal.net_result(p.result for p in judged))
+
+
+def history_deal(snap: Snapshot, record_id: str) -> sch.HistoryDeal:
+    h = next((x for x in snap.history if x.id == record_id), None)
+    if h is None:
+        raise NotFound(f"past deal {record_id} not found")
+    point = _point(snap, h)
+    similar = [_point(snap, x) for x in sorted(snap.history, key=lambda x: (x.closed_date, x.id), reverse=True)
+               if x.id != h.id and x.direction == h.direction and x.description == h.description][:12]
+    v = snap.vendors.get(h.vendor_id)
+    side = "paid" if h.direction == "buy" else "received"
+    if point.decision is None:
+        why = "There is no earlier deal to compare this one with."
+    else:
+        amount = abs(point.result or 0)
+        verdict = {"gain": "a gain", "even": "about even", "loss": "a loss"}[point.decision]
+        why = (f"We {side} {point.unit_price:g} per {h.unit} against {point.basis} of {point.benchmark:g}: {verdict}"
+               + (f" of about {amount:,.0f} rupees on {h.qty:,.0f} {h.unit}." if point.decision != "even" else "."))
+    return sch.HistoryDeal(
+        deal=point, similar=similar, average_similar=deal.average([p.unit_price for p in similar]) if similar else None,
+        vendor_rating=v.rating if v else 0.0, explanation=why)
 
 
 def history_view(snap: Snapshot, item: Item) -> sch.HistoryView:
@@ -409,7 +458,8 @@ def vendor_detail(snap: Snapshot, v: Vendor) -> sch.VendorDetail:
                              unit_price=b.unit_price, qty=i.qty)
             for bids in snap.bids_by_item.values() for b in bids if b.vendor_id == v.id
             for i in [snap.item_by_id[b.item_id]]]
-    return sch.VendorDetail(vendor=vendor_view(snap, v), history=[_point(snap, h) for h in history],
+    points = [_point(snap, h) for h in history]
+    return sch.VendorDetail(vendor=vendor_view(snap, v), history=points, history_summary=history_summary(points),
                             recent_bids=bids[:20])
 
 
@@ -457,7 +507,5 @@ def history_rows(snap: Snapshot, *, direction: Optional[str] = None,
             continue
         delta = (deal.realised_delta(h.direction, h.original_price, h.unit_price, h.qty)
                  if h.negotiated and h.original_price is not None else None)
-        out.append(sch.HistoryRow(
-            **_point(snap, h).model_dump(),
-            direction=h.direction, category_key=h.category_key, unit=h.unit, value_delta=delta))
+        out.append(sch.HistoryRow(**_point(snap, h).model_dump(), value_delta=delta))
     return out[:limit] if limit else out

@@ -242,6 +242,30 @@ def same_amount(a: float, b: float, tolerance: float = 0.005) -> bool:
     return abs(a - b) < tolerance
 
 
+# --- what a past deal turned out to be worth ------------------------------------------------------
+
+GAIN_SHARE = 0.01  # a deal this much better than its benchmark is a gain; this much worse, a loss
+
+
+def deal_result(direction: Direction, benchmark: float, price: float, qty: float) -> tuple[float, float, str]:
+    """(amount, share of the benchmark, "gain" | "even" | "loss") for a deal done at `price` against `benchmark`.
+
+    Positive means better for us: a lower price than the benchmark when we buy, a higher one when we sell.
+    """
+    share = concession_share(direction, benchmark, price)
+    amount = realised_delta(direction, benchmark, price, qty)
+    decision = "gain" if share >= GAIN_SHARE else "loss" if share <= -GAIN_SHARE else "even"
+    return amount, share, decision
+
+
+def average(values: Sequence[float]) -> float:
+    return round(sum(values) / len(values), 2)
+
+
+def net_result(values: Iterable[float]) -> float:
+    return round(sum(values), 2)
+
+
 # --- how hard a vendor has been to move, from past negotiated deals -------------------------------
 
 TOUGH_MIN_DEALS = 3  # fewer negotiated deals than this and we do not judge
