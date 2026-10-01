@@ -261,6 +261,23 @@ def history_view(snap: Snapshot, item: Item) -> sch.HistoryView:
         last_negotiated=_point(snap, negotiated[-1]) if negotiated else None)
 
 
+def vendor_toughness(history: list[HistoryRecord], vendor_id: str) -> sch.Toughness:
+    """From a vendor's negotiated past deals: how far the price moved on average, and what that suggests."""
+    shares = [deal.concession_share(h.direction, h.original_price, h.unit_price)
+              for h in history if h.vendor_id == vendor_id and h.negotiated and h.original_price]
+    avg = sum(shares) / len(shares) if shares else None
+    level = deal.toughness_level(avg, len(shares))
+    pct = None if avg is None else round(avg * 100, 1)
+    note = {
+        "unknown": "Not enough negotiated deals on record to judge how this vendor negotiates.",
+        "hard": (f"Hard to crack: in {len(shares)} negotiated deals the price moved only {pct}% on average. "
+                 "Expect a long conversation; consider trading payment terms or keeping another quote warm."),
+        "firm": f"Firm: in {len(shares)} negotiated deals the price moved {pct}% on average. Expect a few rounds.",
+        "flexible": f"Flexible: in {len(shares)} negotiated deals the price moved {pct}% on average.",
+    }[level]
+    return sch.Toughness(level=level, negotiated_deals=len(shares), average_concession_pct=pct, note=note)
+
+
 def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:
     event = snap.event_by_id[item.event_id]
     invited = [(b, False) for b in snap.scripted_by_item.get(item.id, [])]
@@ -270,7 +287,8 @@ def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:
         v = snap.vendors.get(b.vendor_id)
         invitees.append(sch.Invitee(
             vendor_id=b.vendor_id, vendor_name=_vendor_name(snap, b.vendor_id),
-            rating=v.rating if v else 0.0, language=b.language, responded=responded))
+            rating=v.rating if v else 0.0, language=b.language, responded=responded,
+            toughness=vendor_toughness(snap.history, b.vendor_id)))
     outcome = snap.outcomes.get(item.id)
     val = eligibility.check_value(event_reference_value(snap, event))
     n_bids = eligibility.check_bids(len(snap.bids_by_item.get(item.id, [])))
@@ -380,7 +398,8 @@ def vendor_view(snap: Snapshot, v: Vendor) -> sch.VendorView:
         rating=v.rating, payment_pref=v.payment_pref, past_deals=v.past_deals,
         live_bid_count=len(live), quoted_value=deal.reference_value((i.qty, b.unit_price) for i, b in live),
         closed_deals=sum(1 for o in snap.outcomes.values() if o.vendor_id == v.id),
-        history_deals=sum(1 for h in snap.history if h.vendor_id == v.id))
+        history_deals=sum(1 for h in snap.history if h.vendor_id == v.id),
+        toughness=vendor_toughness(snap.history, v.id))
 
 
 def vendor_detail(snap: Snapshot, v: Vendor) -> sch.VendorDetail:

@@ -240,3 +240,31 @@ def within_pct(a: float, b: float, pct: float) -> bool:
 def same_amount(a: float, b: float, tolerance: float = 0.005) -> bool:
     """True when two amounts are equal to within half a paisa."""
     return abs(a - b) < tolerance
+
+
+# --- how hard a vendor has been to move, from past negotiated deals -------------------------------
+
+TOUGH_MIN_DEALS = 3  # fewer negotiated deals than this and we do not judge
+HARD_BELOW = 0.025  # on average the price moved less than this share of the original quote
+FIRM_BELOW = 0.045
+
+
+def concession_share(direction: Direction, original: float, final: float) -> float:
+    """The share of the original price that negotiation moved in our favour (negative when it moved against us)."""
+    _check(direction)
+    if original <= 0:
+        raise ValueError("the original price must be positive")
+    per_unit = original - final if direction == "buy" else final - original
+    return per_unit / original
+
+
+def toughness_level(average_share: Optional[float], deals: int) -> str:
+    """"unknown", "hard", "firm" or "flexible" from the average share the price moved in past negotiations."""
+    if average_share is None or deals < TOUGH_MIN_DEALS:
+        return "unknown"
+    if average_share < HARD_BELOW:
+        return "hard"
+    if average_share < FIRM_BELOW:
+        return "firm"
+    return "flexible"
+

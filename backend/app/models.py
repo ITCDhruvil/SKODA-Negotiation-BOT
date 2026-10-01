@@ -177,6 +177,11 @@ class Session(_Model):
     vendor_final: bool
     continuing: bool = False  # the buyer asked to keep going after the vendor had agreed
     vendor_question: Optional[str] = None  # topics the vendor asked about that our next message answers
+    stall_count: int = 0  # replies in a row (after the first) in which the vendor did not move its price
+    bluff_called: bool = False
+    trade_used: bool = False
+    leverage_used: bool = False
+    split_used: bool = False
     agreed_price: Optional[float]
     agreed_payment: Optional[str]
     handback_reason: Optional[str]
@@ -194,6 +199,7 @@ class Turn(_Model):
     price: Optional[float]
     payment_code: Optional[str]
     at: datetime
+    tactic: Optional[str] = None  # what our message was doing (buyer-only label)
 
 
 class Draft(_Model):
@@ -206,5 +212,6 @@ class Draft(_Model):
     payment_code: Optional[str]
     text: str
     rationale: str  # buyer-only reasoning; never sent to the vendor
+    tactic: Optional[str] = None
     created: datetime
     status: Literal["pending", "sent", "discarded"]

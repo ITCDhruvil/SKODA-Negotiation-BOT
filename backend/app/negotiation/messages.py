@@ -285,14 +285,14 @@ _REASONS: dict[str, list[str]] = {
         "We are giving the whole quantity to one vendor, so I would like the rate to reflect that.",
         "We prefer long-term vendors and would like to build a regular relationship with you.",
         "I have to justify this rate internally, and the current number is hard to explain.",
-        "We have other offers that are closer to what we expected.",
+        "We are hoping to settle this order this week.",
     ],
     "sell": [
         "Current market rates for this grade are higher than the bid.",
         "The lot is clean and the full quantity goes to one buyer, so I would like the rate to reflect that.",
         "We would like to work with a regular buyer for our scrap and would take a good offer.",
         "I have to justify this rate internally, and the current number is hard to explain.",
-        "We have other interest in the lot that is closer to what we expected.",
+        "We would like to clear this lot this month.",
     ],
 }
 
@@ -327,6 +327,12 @@ _ASKS = {
 }
 
 _HONORIFICS = {"m/s", "mr", "mr.", "shree", "sri", "the"}
+
+
+from app.negotiation import tactic_messages as _tm  # noqa: E402
+
+_OURS.update(_tm.OURS)
+_OURS_ALT.update(_tm.ALT)
 
 
 def short_name(vendor_name: str) -> str:
@@ -386,4 +392,6 @@ def vendor_message(
     text = template.format(
         price=money(price), unit=_UNIT[lang].get(unit, unit),
         pay=_agreed_payment(lang, payment) if payment else "")
+    if payment and kind in ("counter", "hold"):
+        text += _agreed_payment(lang, payment)  # it also moved on payment terms
     return (answer + " " if answer else "") + text + (" " + ask if ask else "")

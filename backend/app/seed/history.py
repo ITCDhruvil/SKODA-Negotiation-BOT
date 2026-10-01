@@ -6,7 +6,7 @@ from datetime import timedelta
 from app.seed import heroes
 from app.models import HistoryRecord, Vendor
 from app.seed.catalog import BUY_CATEGORIES, SCRAP_MATERIALS
-from app.seed.constants import TODAY
+from app.seed.constants import HARD_VENDORS, TODAY
 from app.seed.pricing import round_price, step
 from app.seed.vendors import pool
 
@@ -66,4 +66,19 @@ def build_history(rng: random.Random, vendors: list[Vendor]) -> list[HistoryReco
                 original_price=None if original is None else float(original),
             ))
     rows.sort(key=lambda r: (r.closed_date, r.description))
+    # Vendors known to be hard to move gave away very little in the past: their negotiated deals show it.
+    # (No random draws here, so the rest of the generated history is unchanged.)
+    tough_moves = (0.006, 0.011, 0.016, 0.009, 0.019, 0.013)
+    seen = 0
+    for idx, r in enumerate(rows):
+        if r.negotiated and r.original_price is not None and r.vendor_id in HARD_VENDORS:
+            share = tough_moves[seen % len(tough_moves)]
+            seen += 1
+            wide = round_price(r.unit_price / (1 - share)) if r.direction == "buy" else round_price(r.unit_price / (1 + share))
+            floor_gap = round(step(r.unit_price), 2)
+            if r.direction == "buy":
+                wide = max(wide, round(r.unit_price + floor_gap, 2))
+            else:
+                wide = min(wide, round(r.unit_price - floor_gap, 2))
+            rows[idx] = r.model_copy(update={"original_price": wide})
     return [r.model_copy(update={"id": f"H{i + 1:04d}"}) for i, r in enumerate(rows)]

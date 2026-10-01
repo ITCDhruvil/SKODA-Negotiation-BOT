@@ -2258,6 +2258,17 @@
       "type": "string",
       "title": "Rationale"
      },
+     "tactic": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tactic"
+     },
      "created": {
       "type": "string",
       "format": "date-time",
@@ -2949,6 +2960,9 @@
      "responded": {
       "type": "boolean",
       "title": "Responded"
+     },
+     "toughness": {
+      "$ref": "#/components/schemas/Toughness"
      }
     },
     "type": "object",
@@ -2957,7 +2971,8 @@
      "vendor_name",
      "rating",
      "language",
-     "responded"
+     "responded",
+     "toughness"
     ],
     "title": "Invitee"
    },
@@ -4532,6 +4547,9 @@
      },
      "intelligence": {
       "$ref": "#/components/schemas/Intelligence"
+     },
+     "strategy": {
+      "$ref": "#/components/schemas/Strategy"
      }
     },
     "type": "object",
@@ -4565,7 +4583,8 @@
      "ended_at",
      "turns",
      "pending_draft",
-     "intelligence"
+     "intelligence",
+     "strategy"
     ],
     "title": "SessionView"
    },
@@ -4612,6 +4631,120 @@
     },
     "type": "object",
     "title": "StartIn"
+   },
+   "Strategy": {
+    "properties": {
+     "round": {
+      "type": "integer",
+      "title": "Round"
+     },
+     "max_rounds": {
+      "type": "integer",
+      "title": "Max Rounds"
+     },
+     "phase": {
+      "type": "string",
+      "enum": [
+       "opening",
+       "probing",
+       "trading",
+       "pressing",
+       "closing",
+       "done"
+      ],
+      "title": "Phase"
+     },
+     "stance": {
+      "type": "string",
+      "enum": [
+       "unknown",
+       "open",
+       "firm",
+       "open_on_terms"
+      ],
+      "title": "Stance"
+     },
+     "stance_note": {
+      "type": "string",
+      "title": "Stance Note"
+     },
+     "tactics_used": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Tactics Used"
+     },
+     "alternative": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Alternative"
+     },
+     "history": {
+      "$ref": "#/components/schemas/Toughness"
+     }
+    },
+    "type": "object",
+    "required": [
+     "round",
+     "max_rounds",
+     "phase",
+     "stance",
+     "stance_note",
+     "tactics_used",
+     "alternative",
+     "history"
+    ],
+    "title": "Strategy",
+    "description": "Where the conversation stands, from what the vendor has actually done (never its hidden settings)."
+   },
+   "Toughness": {
+    "properties": {
+     "level": {
+      "type": "string",
+      "enum": [
+       "unknown",
+       "flexible",
+       "firm",
+       "hard"
+      ],
+      "title": "Level"
+     },
+     "negotiated_deals": {
+      "type": "integer",
+      "title": "Negotiated Deals"
+     },
+     "average_concession_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Average Concession Pct"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "level",
+     "negotiated_deals",
+     "average_concession_pct",
+     "note"
+    ],
+    "title": "Toughness",
+    "description": "How hard a vendor has been to move, judged from its past negotiated deals."
    },
    "TurnView": {
     "properties": {
@@ -4666,6 +4799,17 @@
       "type": "string",
       "format": "date-time",
       "title": "At"
+     },
+     "tactic": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tactic"
      }
     },
     "type": "object",
@@ -4858,6 +5002,9 @@
      "history_deals": {
       "type": "integer",
       "title": "History Deals"
+     },
+     "toughness": {
+      "$ref": "#/components/schemas/Toughness"
      }
     },
     "type": "object",
@@ -4873,7 +5020,8 @@
      "live_bid_count",
      "quoted_value",
      "closed_deals",
-     "history_deals"
+     "history_deals",
+     "toughness"
     ],
     "title": "VendorView"
    }

@@ -6,7 +6,7 @@ from typing import Optional
 from app import deal
 from app import schemas as sch
 from app.models import Draft, Session, Turn
-from app.negotiation import service
+from app.negotiation import service, tactics
 from app.negotiation.messages import money
 from app.services import NotFound
 from app.store import Repo
@@ -21,12 +21,12 @@ def summary(repo: Repo, s: Session) -> sch.SessionSummary:
 
 def _turn(t: Turn) -> sch.TurnView:
     return sch.TurnView(seq=t.seq, speaker=t.speaker, author=t.author, text=t.text, price=t.price,
-                        payment_code=t.payment_code, at=t.at)
+                        payment_code=t.payment_code, at=t.at, tactic=t.tactic)
 
 
 def _draft(d: Draft) -> sch.DraftView:
     return sch.DraftView(id=d.id, kind=d.kind, price=d.price, payment_code=d.payment_code,
-                         text=d.text, rationale=d.rationale, created=d.created)
+                         text=d.text, rationale=d.rationale, tactic=d.tactic, created=d.created)
 
 
 def _recommendation(s: Session, draft: Optional[Draft]) -> str:
@@ -42,6 +42,28 @@ def _recommendation(s: Session, draft: Optional[Draft]) -> str:
     if s.mode == "auto":
         return "Running automatically. You can stop and take over at any time."
     return "Ready to prepare the next move for your approval."
+
+
+def _phase(s: Session) -> str:
+    if s.status != "active":
+        return "done"
+    r = s.round
+    return "opening" if r < 1 else "probing" if r < 3 else "trading" if r < 6 else "pressing" if r < 9 else "closing"
+
+
+def _stance(s: Session) -> tuple[str, str]:
+    """What the vendor has shown so far (observed behaviour only)."""
+    if s.round < 2:
+        return "unknown", "Too early to tell: the vendor has only replied once."
+    moved = abs(s.vendor_offer - s.original_price) / s.original_price
+    terms = s.vendor_payment != s.original_payment
+    if s.stall_count >= 2:
+        return "firm", f"Firm: the vendor has not moved in its last {s.stall_count} replies."
+    if terms and moved < 0.01:
+        return "open_on_terms", "Open on terms: the price has barely moved, but the vendor has eased its payment terms."
+    if moved / max(s.round, 1) < 0.004:
+        return "firm", "Firm: the price has moved very little over several rounds."
+    return "open", "Open: the vendor keeps moving toward us."
 
 
 def session_view(repo: Repo, session_id: str) -> sch.SessionView:
@@ -82,7 +104,8 @@ def session_view(repo: Repo, session_id: str) -> sch.SessionView:
         agreed_value=deal.value(item.qty, s.agreed_price) if s.agreed_price is not None else None,
         handback_reason=s.handback_reason, ended_at=s.ended_at,
         turns=[_turn(t) for t in service.turns(repo, s.id)],
-        pending_draft=_draft(draft) if draft else None, intelligence=intelligence)
+        pending_draft=_draft(draft) if draft else None, intelligence=intelligence,
+        strategy=_strategy(repo, s, item, event))
 
 
 def summaries_for_event(repo: Repo, event_id: str) -> list[sch.SessionSummary]:
@@ -92,6 +115,21 @@ def summaries_for_event(repo: Repo, event_id: str) -> list[sch.SessionSummary]:
     for item in sorted(repo.fetch("item", parent=event_id), key=lambda i: i.position):
         out.extend(summaries_for_item(repo, item.id))
     return out
+
+
+def _strategy(repo: Repo, s: Session, item, event) -> sch.Strategy:
+    from app import readmodel
+
+    stance, note = _stance(s)
+    others = [b for b in repo.fetch("bid", parent=item.id) if b.vendor_id != s.vendor_id]
+    alt = None
+    if others:
+        best = deal.best_first(event.direction, sorted(others, key=lambda b: b.id), key=lambda b: b.unit_price)[0]
+        alt = f"{service.vendor_name(repo, best.vendor_id)} at {money(best.unit_price)}"
+    used = [t.tactic for t in service.turns(repo, s.id) if t.speaker == "us" and t.tactic]
+    return sch.Strategy(
+        round=s.round, max_rounds=tactics.MAX_ROUNDS, phase=_phase(s), stance=stance, stance_note=note,
+        tactics_used=used, alternative=alt, history=readmodel.vendor_toughness(repo.fetch("history"), s.vendor_id))
 
 
 def summaries_for_item(repo: Repo, item_id: str) -> list[sch.SessionSummary]:

@@ -166,12 +166,21 @@ class OutcomeView(BaseModel):
     duration_minutes: int
 
 
+class Toughness(BaseModel):
+    """How hard a vendor has been to move, judged from its past negotiated deals."""
+    level: Literal["unknown", "flexible", "firm", "hard"]
+    negotiated_deals: int
+    average_concession_pct: Optional[float]  # average share of the original price the negotiation moved, in %
+    note: str
+
+
 class Invitee(BaseModel):
     vendor_id: str
     vendor_name: str
     rating: float
     language: Language
     responded: bool
+    toughness: Toughness
 
 
 class ItemDetail(BaseModel):
@@ -270,6 +279,7 @@ class VendorView(BaseModel):
     quoted_value: float
     closed_deals: int
     history_deals: int
+    toughness: Toughness
 
 
 class VendorBidRow(BaseModel):
@@ -321,6 +331,7 @@ class TurnView(BaseModel):
     price: Optional[float]
     payment_code: Optional[str]
     at: datetime
+    tactic: Optional[str] = None  # what the message was doing, for the buyer
 
 
 class DraftView(BaseModel):
@@ -330,6 +341,7 @@ class DraftView(BaseModel):
     payment_code: Optional[str]
     text: str
     rationale: str  # shown to the buyer only
+    tactic: Optional[str] = None
     created: datetime
 
 
@@ -344,6 +356,18 @@ class Intelligence(BaseModel):
     delta_if_accepted: Optional[float]
     within_limit: bool
     recommendation: str
+
+
+class Strategy(BaseModel):
+    """Where the conversation stands, from what the vendor has actually done (never its hidden settings)."""
+    round: int
+    max_rounds: int
+    phase: Literal["opening", "probing", "trading", "pressing", "closing", "done"]
+    stance: Literal["unknown", "open", "firm", "open_on_terms"]
+    stance_note: str
+    tactics_used: list[str]
+    alternative: Optional[str]  # the next-best quote, if another vendor quoted
+    history: Toughness
 
 
 class SessionSummary(BaseModel):
@@ -403,3 +427,4 @@ class SessionView(SessionSummary):
     turns: list[TurnView]
     pending_draft: Optional[DraftView]
     intelligence: Intelligence
+    strategy: Strategy

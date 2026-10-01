@@ -7,13 +7,17 @@ from app.negotiation import guardrails, messages, tactics, vendor_sim
 
 
 def play(direction, *, target, limit, quote, reserve, flex, objective="reduce_price",
-         vendor_payment="ZD30", max_turns=12):
-    """Run the bot against the simulated vendor until someone agrees or the bot hands back."""
+         vendor_payment="ZD30", max_turns=16, persona="cooperative", has_alternative=False):
+    """Run the buyer's tactics against the simulated vendor until someone agrees or we hand back."""
     v_price, v_prev, v_pay, v_final, our, rnd = quote, quote, vendor_payment, False, None, 0
+    stalls, flags = 0, {"bluff": False, "trade": False, "leverage": False, "split": False}
     log = []
     for _ in range(max_turns):
         ctx = tactics.Context(direction, target, limit, objective, rnd, our, v_price, v_prev,
-                              v_pay, v_final, quote)
+                              v_pay, v_final, quote, stalls=stalls, bluff_called=flags["bluff"],
+                              trade_used=flags["trade"], leverage_used=flags["leverage"],
+                              split_used=flags["split"], has_alternative=has_alternative,
+                              alternative="Other Vendor at ₹100" if has_alternative else "")
         dec = tactics.opening(ctx) if our is None else tactics.respond(ctx)
         log.append(("us", dec.kind, dec.price, dec.payment))
         if dec.kind == "accept":
@@ -21,10 +25,14 @@ def play(direction, *, target, limit, quote, reserve, flex, objective="reduce_pr
         if dec.kind == "handback":
             return "handback", None, None, log
         our = dec.price
+        if dec.tactic in flags:
+            flags[dec.tactic] = True
         r = vendor_sim.reply(direction, reserve=reserve, flex=flex, vendor_price=v_price,
                              vendor_payment=v_pay, offer_price=our, offer_payment=dec.payment,
-                             round_no=rnd)
+                             round_no=rnd, persona=persona)
         log.append(("vendor", r.kind, r.price, r.payment))
+        moved = r.price != v_price or r.payment != v_pay
+        stalls = stalls + 1 if (not moved and rnd >= 1 and r.kind != "accept") else 0
         rnd += 1
         v_prev, v_price, v_pay, v_final = v_price, r.price, r.payment, r.final
         if r.kind == "accept":

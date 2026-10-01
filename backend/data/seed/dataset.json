@@ -18750,7 +18750,7 @@
    "unit": "EA",
    "closed_date": "2025-08-15",
    "negotiated": true,
-   "original_price": 281.0
+   "original_price": 274.0
   },
   {
    "id": "H0098",
@@ -18828,7 +18828,7 @@
    "unit": "EA",
    "closed_date": "2025-11-05",
    "negotiated": true,
-   "original_price": 175.0
+   "original_price": 168.0
   },
   {
    "id": "H0104",
@@ -18893,7 +18893,7 @@
    "unit": "EA",
    "closed_date": "2025-11-06",
    "negotiated": true,
-   "original_price": 82.96
+   "original_price": 81.18
   },
   {
    "id": "H0109",
@@ -18984,7 +18984,7 @@
    "unit": "KG",
    "closed_date": "2025-11-07",
    "negotiated": true,
-   "original_price": 11.0
+   "original_price": 11.49
   },
   {
    "id": "H0116",
@@ -18997,7 +18997,7 @@
    "unit": "AU",
    "closed_date": "2025-11-08",
    "negotiated": true,
-   "original_price": 23889.0
+   "original_price": 23616.0
   },
   {
    "id": "H0117",
@@ -19036,7 +19036,7 @@
    "unit": "EA",
    "closed_date": "2025-11-08",
    "negotiated": true,
-   "original_price": 13795.0
+   "original_price": 13365.0
   },
   {
    "id": "H0120",
@@ -19179,7 +19179,7 @@
    "unit": "KG",
    "closed_date": "2025-11-12",
    "negotiated": true,
-   "original_price": 33.03
+   "original_price": 33.97
   },
   {
    "id": "H0131",
@@ -19205,7 +19205,7 @@
    "unit": "AU",
    "closed_date": "2025-11-12",
    "negotiated": true,
-   "original_price": 12964.0
+   "original_price": 12156.0
   },
   {
    "id": "H0133",
@@ -19231,7 +19231,7 @@
    "unit": "KG",
    "closed_date": "2025-11-13",
    "negotiated": true,
-   "original_price": 644.0
+   "original_price": 678.0
   },
   {
    "id": "H0135",
@@ -19244,7 +19244,7 @@
    "unit": "AU",
    "closed_date": "2025-11-13",
    "negotiated": true,
-   "original_price": 54090.0
+   "original_price": 50975.0
   },
   {
    "id": "H0136",
@@ -19283,7 +19283,7 @@
    "unit": "KG",
    "closed_date": "2025-11-14",
    "negotiated": true,
-   "original_price": 61.06
+   "original_price": 61.95
   },
   {
    "id": "H0139",
@@ -19296,7 +19296,7 @@
    "unit": "EA",
    "closed_date": "2025-11-14",
    "negotiated": true,
-   "original_price": 294.0
+   "original_price": 287.0
   },
   {
    "id": "H0140",
@@ -19387,7 +19387,7 @@
    "unit": "EA",
    "closed_date": "2025-11-15",
    "negotiated": true,
-   "original_price": 268.0
+   "original_price": 253.0
   },
   {
    "id": "H0147",
@@ -19413,7 +19413,7 @@
    "unit": "EA",
    "closed_date": "2025-11-15",
    "negotiated": true,
-   "original_price": 1709.0
+   "original_price": 1601.0
   },
   {
    "id": "H0149",
@@ -20089,7 +20089,7 @@
    "unit": "KG",
    "closed_date": "2026-02-21",
    "negotiated": true,
-   "original_price": 161.0
+   "original_price": 164.0
   },
   {
    "id": "H0201",
@@ -20115,7 +20115,7 @@
    "unit": "EA",
    "closed_date": "2026-03-13",
    "negotiated": true,
-   "original_price": 342.0
+   "original_price": 328.0
   },
   {
    "id": "H0203",
@@ -20128,7 +20128,7 @@
    "unit": "EA",
    "closed_date": "2026-04-02",
    "negotiated": true,
-   "original_price": 52.0
+   "original_price": 49.44
   },
   {
    "id": "H0204",
@@ -20141,7 +20141,7 @@
    "unit": "EA",
    "closed_date": "2026-05-02",
    "negotiated": true,
-   "original_price": 121.0
+   "original_price": 114.0
   },
   {
    "id": "H0205",
@@ -20791,7 +20791,7 @@
    "unit": "AU",
    "closed_date": "2026-06-21",
    "negotiated": true,
-   "original_price": 18400.0
+   "original_price": 17505.0
   },
   {
    "id": "H0255",
@@ -20804,7 +20804,7 @@
    "unit": "EA",
    "closed_date": "2026-07-01",
    "negotiated": true,
-   "original_price": 261.0
+   "original_price": 252.0
   },
   {
    "id": "H0256",
@@ -20869,7 +20869,7 @@
    "unit": "EA",
    "closed_date": "2026-08-20",
    "negotiated": true,
-   "original_price": 45.11
+   "original_price": 42.33
   },
   {
    "id": "H0261",
@@ -20882,7 +20882,7 @@
    "unit": "KG",
    "closed_date": "2026-08-21",
    "negotiated": true,
-   "original_price": 152.0
+   "original_price": 160.0
   },
   {
    "id": "H0262",
@@ -20921,7 +20921,7 @@
    "unit": "KG",
    "closed_date": "2026-08-21",
    "negotiated": true,
-   "original_price": 752.0
+   "original_price": 780.0
   },
   {
    "id": "H0265",
@@ -20973,7 +20973,7 @@
    "unit": "KG",
    "closed_date": "2026-08-21",
    "negotiated": true,
-   "original_price": 90.2
+   "original_price": 91.78
   },
   {
    "id": "H0269",
@@ -21064,7 +21064,7 @@
    "unit": "KG",
    "closed_date": "2026-08-24",
    "negotiated": true,
-   "original_price": 607.0
+   "original_price": 631.0
   },
   {
    "id": "H0276",
@@ -21090,7 +21090,7 @@
    "unit": "AU",
    "closed_date": "2026-08-24",
    "negotiated": true,
-   "original_price": 55049.0
+   "original_price": 53741.0
   },
   {
    "id": "H0278",
@@ -21103,7 +21103,7 @@
    "unit": "EA",
    "closed_date": "2026-08-24",
    "negotiated": true,
-   "original_price": 1761.0
+   "original_price": 1673.0
   },
   {
    "id": "H0279",
@@ -21194,7 +21194,7 @@
    "unit": "EA",
    "closed_date": "2026-08-26",
    "negotiated": true,
-   "original_price": 87.01
+   "original_price": 82.91
   },
   {
    "id": "H0286",
@@ -21207,7 +21207,7 @@
    "unit": "KG",
    "closed_date": "2026-08-27",
    "negotiated": true,
-   "original_price": 11.07
+   "original_price": 11.25
   },
   {
    "id": "H0287",
@@ -21246,7 +21246,7 @@
    "unit": "KG",
    "closed_date": "2026-08-29",
    "negotiated": true,
-   "original_price": 59.31
+   "original_price": 61.9
   },
   {
    "id": "H0290",
@@ -21311,7 +21311,7 @@
    "unit": "KG",
    "closed_date": "2026-08-29",
    "negotiated": true,
-   "original_price": 16.99
+   "original_price": 17.46
   },
   {
    "id": "H0295",
@@ -21350,7 +21350,7 @@
    "unit": "EA",
    "closed_date": "2026-08-29",
    "negotiated": true,
-   "original_price": 13419.0
+   "original_price": 13137.0
   },
   {
    "id": "H0298",
@@ -21402,7 +21402,7 @@
    "unit": "AU",
    "closed_date": "2026-08-30",
    "negotiated": true,
-   "original_price": 32007.0
+   "original_price": 30900.0
   },
   {
    "id": "H0302",

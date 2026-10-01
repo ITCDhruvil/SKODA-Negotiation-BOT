@@ -14,7 +14,7 @@ from typing import Optional
 
 from app import clock, deal, lifecycle
 from app.models import Bid, Draft, Event, Item, Mode, Outcome, Session, Turn
-from app.negotiation import guardrails, info, messages, tactics, vendor_sim
+from app.negotiation import guardrails, info, messages, personas, tactics, vendor_sim
 from app.services import Conflict, NotFound
 from app.store import Repo
 
@@ -75,21 +75,33 @@ def _move_item(repo: Repo, item: Item, new_state: str) -> Item:
 
 
 def _add_turn(repo: Repo, s: Session, speaker: str, author: str, text: str,
-              price: Optional[float], payment: Optional[str]) -> Turn:
+              price: Optional[float], payment: Optional[str], tactic: Optional[str] = None) -> Turn:
     seq = len(repo.fetch("turn", parent=s.id)) + 1
     t = Turn(id=f"{s.id}-T{seq:02d}", session_id=s.id, seq=seq, speaker=speaker, author=author,
-             text=text, price=price, payment_code=payment, at=clock.now())
+             text=text, price=price, payment_code=payment, at=clock.now(), tactic=tactic)
     repo.put("turn", t.id, t, parent=s.id)
     return t
 
 
-def _context(s: Session, item: Item, event: Event) -> tactics.Context:
+def _alternative(repo: Repo, s: Session, event: Event) -> tuple[bool, str]:
+    """Whether another vendor has really quoted on this item, and the best of those quotes as text."""
+    others = [b for b in repo.fetch("bid", parent=s.item_id) if b.vendor_id != s.vendor_id]
+    if not others:
+        return False, ""
+    best = deal.best_first(event.direction, sorted(others, key=lambda b: b.id), key=lambda b: b.unit_price)[0]
+    return True, f"{vendor_name(repo, best.vendor_id)} at {messages.money(best.unit_price)}"
+
+
+def _context(repo: Repo, s: Session, item: Item, event: Event) -> tactics.Context:
     target, limit = _points(item)
+    has_alt, alt = _alternative(repo, s, event)
     return tactics.Context(
         direction=event.direction, target=target, limit=limit, objective=item.objective,
         round=s.round, our_offer=s.our_offer, vendor_offer=s.vendor_offer,
         previous_vendor_offer=s.previous_vendor_offer, vendor_payment=s.vendor_payment,
-        vendor_final=s.vendor_final, original_price=s.original_price, continuing=s.continuing)
+        vendor_final=s.vendor_final, original_price=s.original_price, continuing=s.continuing,
+        stalls=s.stall_count, bluff_called=s.bluff_called, trade_used=s.trade_used,
+        leverage_used=s.leverage_used, split_used=s.split_used, has_alternative=has_alt, alternative=alt)
 
 
 def _facts(repo: Repo, s: Session, item: Item, event: Event) -> info.Facts:
@@ -213,7 +225,7 @@ def _finish(repo: Repo, s: Session, item: Item, *, agreed: bool, price: Optional
 
 
 def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], text: Optional[str],
-                author: str) -> Session:
+                author: str, tactic: Optional[str] = None) -> Session:
     item = _item(repo, s.item_id)
     _require_negotiating(item)
     event = _event(repo, item)
@@ -233,12 +245,12 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         _check_text(repo, s, item, text, price=price, payment=payment, limit=limit, target=target)
     except (guardrails.GuardrailError, ValueError) as e:
         raise Conflict(str(e)) from e
-    _add_turn(repo, s, "us", author, text, price, payment)
+    _add_turn(repo, s, "us", author, text, price, payment, tactic or ("manual" if author == "human" else None))
     reserve = repo.get("reserve", s.bid_id)
     reply = vendor_sim.reply(
         event.direction, reserve=reserve, flex=vendor_sim.flexibility(s.bid_id),
         vendor_price=s.vendor_offer, vendor_payment=s.vendor_payment, offer_price=price,
-        offer_payment=payment, round_no=s.round)
+        offer_payment=payment, round_no=s.round, persona=personas.persona_for(s.bid_id, s.vendor_id))
     changed_payment = reply.payment if reply.payment != s.vendor_payment else None
     facts = _facts(repo, s, item, event)
     asked = info.topics_in(text, include_payment=author == "human")
@@ -250,7 +262,15 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
         unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question),
         reply.price, reply.payment)
+    # Movement means a lower (buy) or higher (sell) price, or a better payment term; the very first reply does not count.
+    moved = reply.price != s.vendor_offer or reply.payment != s.vendor_payment
+    stalls = s.stall_count + 1 if (not moved and s.round >= 1 and reply.kind != "accept") else 0
     s = s.model_copy(update={
+        "stall_count": stalls,
+        "bluff_called": s.bluff_called or tactic == "bluff",
+        "trade_used": s.trade_used or tactic == "trade",
+        "leverage_used": s.leverage_used or tactic == "leverage",
+        "split_used": s.split_used or tactic == "split",
         "vendor_question": info.VENDOR_QUESTION_TOPICS if question else None,
         "our_offer": price, "our_payment": payment, "round": s.round + 1,
         "previous_vendor_offer": s.vendor_offer, "vendor_offer": reply.price,
@@ -288,7 +308,7 @@ def _hand_back(repo: Repo, s: Session, reason: str) -> Session:
 def _prepare_draft(repo: Repo, s: Session) -> Draft:
     item = _item(repo, s.item_id)
     event = _event(repo, item)
-    ctx = _context(s, item, event)
+    ctx = _context(repo, s, item, event)
     decision = tactics.opening(ctx) if s.our_offer is None else tactics.respond(ctx)
     text = ""
     if decision.kind == "offer":
@@ -300,7 +320,7 @@ def _prepare_draft(repo: Repo, s: Session) -> Draft:
     n = len(repo.fetch("draft", parent=s.id)) + 1
     d = Draft(id=f"{s.id}-D{n:02d}", session_id=s.id, kind=decision.kind, price=decision.price,
               payment_code=decision.payment, text=text, rationale=decision.rationale,
-              created=clock.now(), status="pending")
+              tactic=decision.tactic or None, created=clock.now(), status="pending")
     repo.put("draft", d.id, d, parent=s.id)
     return d
 
@@ -318,7 +338,8 @@ def _execute(repo: Repo, s: Session, d: Draft, *, price: Optional[float] = None,
         rewording = (price is not None and price != d.price) or (payment is not None and payment != d.payment_code)
         return _send_offer(repo, s, price if price is not None else d.price,
                            payment if payment is not None else d.payment_code,
-                           text if text is not None else (None if rewording else d.text), author)
+                           text if text is not None else (None if rewording else d.text), author,
+                           None if edited and rewording else d.tactic)
     if d.kind == "accept":
         return _accept(repo, s, d.text, author)
     return _hand_back(repo, s, d.rationale)
