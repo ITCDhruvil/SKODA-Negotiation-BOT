@@ -15,6 +15,20 @@ export function moneyCompact(v: number | null | undefined): string {
   return money(v);
 }
 
+/** Minutes as plain words: "35 minutes", "3 hours 20 min", "1 day 4 hours". */
+export function duration(minutes: number): string {
+  const m = Math.max(0, Math.round(minutes));
+  if (m < 60) return `${m} minute${m === 1 ? "" : "s"}`;
+  if (m < 1440) {
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return `${h} hour${h === 1 ? "" : "s"}${r >= 10 ? ` ${r} min` : ""}`;
+  }
+  const d = Math.floor(m / 1440);
+  const h = Math.floor((m % 1440) / 60);
+  return `${d} day${d === 1 ? "" : "s"}${h > 0 ? ` ${h} hour${h === 1 ? "" : "s"}` : ""}`;
+}
+
 export const pct = (v: number | null | undefined, digits = 1): string =>
   v == null ? "—" : `${(v * 100).toFixed(digits)}%`;
 

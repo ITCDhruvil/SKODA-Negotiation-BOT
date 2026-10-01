@@ -151,3 +151,21 @@ def test_every_analysed_item_ends_cleanly_whatever_the_vendor_is_like(client, re
         assert s["status"] in ("agreed", "handed_back") and s["round"] <= 12
         n += 1
     assert n >= 20
+
+
+def test_a_vendor_that_goes_to_check_replies_hours_or_days_later(client):
+    analyzed(client, BUY, 250, 280)
+    s = run_auto(client, BUY, vendor="V008")
+    turns = s["turns"]
+    elapsed = [t["elapsed_minutes"] for t in turns]
+    assert elapsed == sorted(elapsed) and elapsed[0] == 0 and turns[0]["delay_minutes"] == 0
+    for a, b in zip(turns, turns[1:]):
+        assert b["elapsed_minutes"] - a["elapsed_minutes"] == b["delay_minutes"]
+    pauses = [i for i, t in enumerate(turns) if t["speaker"] == "vendor" and t["price"] is None]
+    assert pauses
+    for i in pauses:
+        assert turns[i]["delay_minutes"] < 30            # saying "let me check" is quick
+        assert turns[i + 1]["delay_minutes"] >= 60       # the answer takes hours or days
+    quick = [t["delay_minutes"] for i, t in enumerate(turns) if t["speaker"] == "vendor" and t["price"] is not None and i - 1 not in pauses and i > 0]
+    assert quick and max(quick) <= 40
+    assert s["strategy"]["elapsed_minutes"] == turns[-1]["elapsed_minutes"] > 0

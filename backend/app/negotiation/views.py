@@ -21,7 +21,8 @@ def summary(repo: Repo, s: Session) -> sch.SessionSummary:
 
 def _turn(t: Turn) -> sch.TurnView:
     return sch.TurnView(seq=t.seq, speaker=t.speaker, author=t.author, text=t.text, price=t.price,
-                        payment_code=t.payment_code, at=t.at, tactic=t.tactic)
+                        payment_code=t.payment_code, at=t.at, tactic=t.tactic,
+                        delay_minutes=t.delay_minutes, elapsed_minutes=t.elapsed_minutes)
 
 
 def _draft(d: Draft) -> sch.DraftView:
@@ -126,10 +127,11 @@ def _strategy(repo: Repo, s: Session, item, event) -> sch.Strategy:
     if others:
         best = deal.best_first(event.direction, sorted(others, key=lambda b: b.id), key=lambda b: b.unit_price)[0]
         alt = f"{service.vendor_name(repo, best.vendor_id)} at {money(best.unit_price)}"
-    used = [t.tactic for t in service.turns(repo, s.id) if t.speaker == "us" and t.tactic]
+    all_turns = service.turns(repo, s.id)
+    used = [t.tactic for t in all_turns if t.speaker == "us" and t.tactic]
     return sch.Strategy(
         round=s.round, max_rounds=tactics.MAX_ROUNDS, phase=_phase(s), stance=stance, stance_note=note,
-        tactics_used=used, alternative=alt, history=readmodel.vendor_toughness(repo.fetch("history"), s.vendor_id))
+        tactics_used=used, elapsed_minutes=all_turns[-1].elapsed_minutes if all_turns else 0, alternative=alt, history=readmodel.vendor_toughness(repo.fetch("history"), s.vendor_id))
 
 
 def summaries_for_item(repo: Repo, item_id: str) -> list[sch.SessionSummary]:

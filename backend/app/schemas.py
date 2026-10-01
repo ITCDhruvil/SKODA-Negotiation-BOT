@@ -356,6 +356,8 @@ class TurnView(BaseModel):
     payment_code: Optional[str]
     at: datetime
     tactic: Optional[str] = None  # what the message was doing, for the buyer
+    delay_minutes: int = 0  # how long after the previous message this one came (conversation time)
+    elapsed_minutes: int = 0  # since the first message
 
 
 class DraftView(BaseModel):
@@ -390,6 +392,7 @@ class Strategy(BaseModel):
     stance: Literal["unknown", "open", "firm", "open_on_terms"]
     stance_note: str
     tactics_used: list[str]
+    elapsed_minutes: int  # conversation time so far
     alternative: Optional[str]  # the next-best quote, if another vendor quoted
     history: Toughness
 

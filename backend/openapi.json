@@ -5037,6 +5037,10 @@
       "type": "array",
       "title": "Tactics Used"
      },
+     "elapsed_minutes": {
+      "type": "integer",
+      "title": "Elapsed Minutes"
+     },
      "alternative": {
       "anyOf": [
        {
@@ -5060,6 +5064,7 @@
      "stance",
      "stance_note",
      "tactics_used",
+     "elapsed_minutes",
      "alternative",
      "history"
     ],
@@ -5172,6 +5177,16 @@
        }
       ],
       "title": "Tactic"
+     },
+     "delay_minutes": {
+      "type": "integer",
+      "title": "Delay Minutes",
+      "default": 0
+     },
+     "elapsed_minutes": {
+      "type": "integer",
+      "title": "Elapsed Minutes",
+      "default": 0
      }
     },
     "type": "object",

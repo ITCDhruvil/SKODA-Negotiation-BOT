@@ -1,5 +1,6 @@
 import { Panel, Pill } from "@/components/ui/basics";
 import type { Strategy } from "@/lib/api";
+import { duration } from "@/lib/format";
 import { PHASE_LABEL, STANCE_LABEL, STANCE_TONE, TACTIC_LABEL, TOUGH_LABEL, TOUGH_TONE } from "@/lib/labels";
 
 /** Where the conversation stands: round, phase, what the vendor has shown, history advice and the options. */
@@ -15,6 +16,11 @@ export function StrategyPanel({ strategy }: { strategy: Strategy }) {
             <span className="font-semibold text-ink">{PHASE_LABEL[phase] ?? phase}</span>
             <span className="text-xs text-muted tabular-nums">Round {round} of {max}</span>
           </div>
+          {strategy.elapsed_minutes > 0 && (
+            <div className="mb-1 text-xs text-muted">
+              Time so far: <b className="text-ink">{duration(strategy.elapsed_minutes)}</b>
+            </div>
+          )}
           <div className="h-1.5 overflow-hidden rounded-full bg-raise" role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={round} aria-label="Rounds used">
             <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${share}%` }} />
           </div>

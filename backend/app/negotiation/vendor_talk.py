@@ -6,6 +6,7 @@ the gap, never on chance. Nothing here names a limit, a reserve or software.
 """
 from __future__ import annotations
 
+import zlib
 from typing import Optional
 
 # How far our offer was from the vendor's price, as a share of the vendor's price.
@@ -74,3 +75,34 @@ def pause(lang: str, variant: int) -> str:
 def pauses_before(round_no: int, kind: str) -> bool:
     """Every third reply that moves the price is preceded by a pause (the first reply never is)."""
     return kind == "counter" and round_no >= 1 and round_no % 3 == 1
+
+
+# --- how long replies take (conversation time, not real time) -------------------------------------
+# A reply to a plain offer comes within the hour. When the vendor says it will check and come back, the answer
+# takes hours or days, depending on how the vendor behaves. Minutes, chosen from the bid and round only.
+_BACK_RANGE = {  # persona -> (shortest, longest) wait after "let me check and come back"
+    "cooperative": (120, 360), "deadline": (60, 240), "relationship": (180, 600),
+    "terms": (360, 1200), "bluffer": (480, 1440), "anchor": (1440, 4320),
+}
+
+
+def _pick(seed: str, lo: int, hi: int) -> int:
+    return lo + zlib.crc32(seed.encode("utf-8")) % max(1, hi - lo)
+
+
+def our_delay(bid_id: str, round_no: int) -> int:
+    """Minutes between the vendor's last message and ours."""
+    return _pick(f"us:{bid_id}:{round_no}", 4, 26)
+
+
+def reply_delay(persona: str, bid_id: str, round_no: int, after_pause: bool) -> int:
+    """Minutes between our message (or the vendor's pause message) and the vendor's answer."""
+    if after_pause:
+        lo, hi = _BACK_RANGE.get(persona, _BACK_RANGE["cooperative"])
+        return _pick(f"back:{bid_id}:{round_no}", lo, hi)
+    return _pick(f"reply:{bid_id}:{round_no}", 5, 41)
+
+
+def pause_delay(bid_id: str, round_no: int) -> int:
+    """The "let me check" message itself comes quickly."""
+    return _pick(f"pause:{bid_id}:{round_no}", 3, 12)

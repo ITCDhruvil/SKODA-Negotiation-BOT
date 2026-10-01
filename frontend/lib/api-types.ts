@@ -1733,6 +1733,8 @@ export interface components {
             stance_note: string;
             /** Tactics Used */
             tactics_used: string[];
+            /** Elapsed Minutes */
+            elapsed_minutes: number;
             /** Alternative */
             alternative: string | null;
             history: components["schemas"]["Toughness"];
@@ -1781,6 +1783,16 @@ export interface components {
             at: string;
             /** Tactic */
             tactic?: string | null;
+            /**
+             * Delay Minutes
+             * @default 0
+             */
+            delay_minutes: number;
+            /**
+             * Elapsed Minutes
+             * @default 0
+             */
+            elapsed_minutes: number;
         };
         /** ValidationError */
         ValidationError: {

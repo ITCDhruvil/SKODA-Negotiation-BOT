@@ -75,10 +75,14 @@ def _move_item(repo: Repo, item: Item, new_state: str) -> Item:
 
 
 def _add_turn(repo: Repo, s: Session, speaker: str, author: str, text: str,
-              price: Optional[float], payment: Optional[str], tactic: Optional[str] = None) -> Turn:
-    seq = len(repo.fetch("turn", parent=s.id)) + 1
+              price: Optional[float], payment: Optional[str], tactic: Optional[str] = None,
+              delay: int = 0) -> Turn:
+    before = repo.fetch("turn", parent=s.id)
+    seq = len(before) + 1
+    elapsed = (max(t.elapsed_minutes for t in before) if before else 0) + (delay if before else 0)
     t = Turn(id=f"{s.id}-T{seq:02d}", session_id=s.id, seq=seq, speaker=speaker, author=author,
-             text=text, price=price, payment_code=payment, at=clock.now(), tactic=tactic)
+             text=text, price=price, payment_code=payment, at=clock.now(), tactic=tactic,
+             delay_minutes=delay if before else 0, elapsed_minutes=elapsed)
     repo.put("turn", t.id, t, parent=s.id)
     return t
 
@@ -245,7 +249,8 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         _check_text(repo, s, item, text, price=price, payment=payment, limit=limit, target=target)
     except (guardrails.GuardrailError, ValueError) as e:
         raise Conflict(str(e)) from e
-    _add_turn(repo, s, "us", author, text, price, payment, tactic or ("manual" if author == "human" else None))
+    _add_turn(repo, s, "us", author, text, price, payment, tactic or ("manual" if author == "human" else None),
+              delay=vendor_talk.our_delay(s.bid_id, s.round))
     reserve = repo.get("reserve", s.bid_id)
     reply = vendor_sim.reply(
         event.direction, reserve=reserve, flex=vendor_sim.flexibility(s.bid_id),
@@ -260,12 +265,15 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         question = info.ask_vendor(facts)  # the vendor wants to know a few things before it moves
     if vendor_talk.pauses_before(s.round, reply.kind):
         # Before moving, the vendor says it will check with someone: a short message of its own.
-        _add_turn(repo, s, "vendor", "vendor", vendor_talk.pause(s.language, s.round), None, None)
+        _add_turn(repo, s, "vendor", "vendor", vendor_talk.pause(s.language, s.round), None, None,
+                  delay=vendor_talk.pause_delay(s.bid_id, s.round))
     gap = abs(s.vendor_offer - price) / s.vendor_offer if (s.vendor_offer and s.round >= 1) else None  # nothing to react to at first
     _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
         unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question, gap=gap),
-        reply.price, reply.payment)
+        reply.price, reply.payment,
+        delay=vendor_talk.reply_delay(personas.persona_for(s.bid_id, s.vendor_id), s.bid_id, s.round,
+                                      vendor_talk.pauses_before(s.round, reply.kind)))
     # Movement means a lower (buy) or higher (sell) price, or a better payment term; the very first reply does not count.
     moved = reply.price != s.vendor_offer or reply.payment != s.vendor_payment
     stalls = s.stall_count + 1 if (not moved and s.round >= 1 and reply.kind != "accept") else 0
@@ -299,7 +307,7 @@ def _accept(repo: Repo, s: Session, text: Optional[str], author: str) -> Session
                     limit=limit, target=target)
     except guardrails.GuardrailError as e:
         raise Conflict(str(e)) from e
-    _add_turn(repo, s, "us", author, text, s.vendor_offer, s.vendor_payment)
+    _add_turn(repo, s, "us", author, text, s.vendor_offer, s.vendor_payment, delay=vendor_talk.our_delay(s.bid_id, s.round))
     return _finish(repo, s, item, agreed=True, price=s.vendor_offer, payment=s.vendor_payment)
 
 
@@ -420,8 +428,9 @@ def ask_question(repo: Repo, session_id: str, text: str) -> Session:
         except guardrails.GuardrailError as e:
             raise Conflict(str(e)) from e
         facts = _facts(repo, s, item, event)
-        _add_turn(repo, s, "us", "human", text, None, None)
-        _add_turn(repo, s, "vendor", "vendor", info.vendor_answers(text, facts), None, None)
+        _add_turn(repo, s, "us", "human", text, None, None, delay=vendor_talk.our_delay(s.bid_id, s.round))
+        _add_turn(repo, s, "vendor", "vendor", info.vendor_answers(text, facts), None, None,
+                  delay=vendor_talk.reply_delay("cooperative", s.bid_id, s.round + 100, False))
         return s
 
 

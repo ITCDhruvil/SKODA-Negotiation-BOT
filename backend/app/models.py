@@ -200,6 +200,8 @@ class Turn(_Model):
     payment_code: Optional[str]
     at: datetime
     tactic: Optional[str] = None  # what our message was doing (buyer-only label)
+    delay_minutes: int = 0  # conversation time since the previous message
+    elapsed_minutes: int = 0  # conversation time since the first message
 
 
 class Draft(_Model):
