@@ -40,6 +40,7 @@ export type EventOptions = {
   requestors: string[];
   incoterms: string[];
   min_vendors: number;
+  next_cart_no: string;
 };
 export type Toughness = S["Toughness"];
 export type Strategy = S["Strategy"];

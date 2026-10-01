@@ -87,10 +87,11 @@ function Form({ options }: { options: EventOptions }) {
   const [categoryKey, setCategoryKey] = useState("");
   const [orgIdx, setOrgIdx] = useState("0");
   const [title, setTitle] = useState("");
-  const [requestor, setRequestor] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
+  const [requestor, setRequestor] = useState("Dhruvil Patel");
   const [costCentre, setCostCentre] = useState("");
-  const [due, setDue] = useState("");
-  const [cartNo, setCartNo] = useState("");
+  const [due, setDue] = useState(inDays(14));
+  const [cartNo, setCartNo] = useState(options.next_cart_no);
   const [items, setItems] = useState<ItemRow[]>([blankItem(direction)]);
   const [picked, setPicked] = useState<string[]>([]);
   const [vq, setVq] = useState("");
@@ -110,6 +111,9 @@ function Form({ options }: { options: EventOptions }) {
     setAttempted(false);
     setCustomised(false);
     setSuggestions(null);
+    setTitle("");
+    setTitleTouched(false);
+    setCartNo(options.next_cart_no);
   }, [direction, options]);
   const org = orgs[Number(orgIdx)] ?? orgs[0];
   useEffect(() => setCostCentre(org?.cost_centre ?? ""), [org]);
@@ -190,7 +194,8 @@ function Form({ options }: { options: EventOptions }) {
     setRequestor(pickOne(options.requestors));
     setDue(inDays([7, 10, 14, 21, 30][Math.floor(Math.random() * 5)]));
     setTitle("");
-    setCartNo("");
+    setTitleTouched(false);
+    setCartNo(options.next_cart_no);
     setItems(rows);
     setPicked(cat.vendors.map((v) => v.id)); // replaced by the ranked suggestions as soon as they load
     setCustomised(false);
@@ -205,7 +210,7 @@ function Form({ options }: { options: EventOptions }) {
     setError(null);
     const body: NewEvent = {
       direction,
-      title: title.trim() || null,
+      title: eventTitle || null,
       category_key: category.key.startsWith("custom:") ? "custom" : category.key,
       category_label: category.key.startsWith("custom:") ? category.key.slice(7) : null,
       company_id: org.company_id,
@@ -230,7 +235,17 @@ function Form({ options }: { options: EventOptions }) {
   };
 
   const unitOptions = (direction === "buy" ? BUY_UNITS : SELL_UNITS).map((u) => ({ value: u, label: u }));
-  const eventTitle = title.trim() || (items[0]?.description.trim() ? items[0].description.trim() + (items.length > 1 ? ` (+${items.length - 1} more)` : "") : "");
+  // A scrap lot is titled "Scrap - ..."; a purchase cart takes its first item's name. Typing a title replaces it.
+  const first = items[0];
+  const defaultTitle =
+    direction === "sell"
+      ? first?.description.trim()
+        ? `Scrap - ${first.description.trim()}${positive(first.qty) ? ` Lot - ${num(Number(first.qty))} ${first.unit.toLowerCase()}` : ""}`
+        : `Scrap - ${(category?.label ?? "").replace(/^Scrap - /, "")}`.trim()
+      : first?.description.trim()
+        ? first.description.trim() + (items.length > 1 ? ` (+${items.length - 1} more)` : "")
+        : "";
+  const eventTitle = titleTouched && title.trim() ? title.trim() : defaultTitle;
   const rank = new Map((suggestions ?? []).map((x, i) => [x.id, i]));
   const vendorList = (category?.vendors ?? [])
     .filter((v) => !vq || v.name.toLowerCase().includes(vq.toLowerCase()))
@@ -296,8 +311,8 @@ function Form({ options }: { options: EventOptions }) {
                   <Labeled label="Category" required>
                     <Select value={categoryKey} onChange={setCategoryKey} ariaLabel="Category" scroll={false} addLabel="Add category" onAdd={addCategory} options={cats.map((c) => ({ value: c.key, label: c.label }))} />
                   </Labeled>
-                  <Labeled label="Event title" hint="Optional. Left empty, the first item names the event.">
-                    <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder={eventTitle || "For example, Training lunch for batch 12"} />
+                  <Labeled label="Event title" hint={direction === "sell" ? "Starts with Scrap and follows the lot. Edit it if you like." : "Follows the first item. Edit it if you like."}>
+                    <input className={inputClass} value={titleTouched ? title : defaultTitle} onChange={(e) => { setTitle(e.target.value); setTitleTouched(true); }} maxLength={120} placeholder="For example, Training lunch for batch 12" />
                   </Labeled>
                 </div>
               </Section>
@@ -336,8 +351,8 @@ function Form({ options }: { options: EventOptions }) {
                     <DatePicker ariaLabel="Needed by" value={due} onChange={setDue} min={todayIso()} invalid={Boolean(err(problems.due))} />
                   </Labeled>
                   {direction === "buy" && (
-                    <Labeled label="Shopping cart number" hint="Optional. A number is generated if left empty.">
-                      <input className={inputClass} value={cartNo} onChange={(e) => setCartNo(e.target.value.replace(/\D/g, ""))} maxLength={20} inputMode="numeric" placeholder="For example 1012358189" />
+                    <Labeled label="Shopping cart number" hint="The next free number, filled in for you. Change it if you have your own.">
+                      <input className={inputClass} value={cartNo} onChange={(e) => setCartNo(e.target.value.replace(/\D/g, ""))} maxLength={20} inputMode="numeric" placeholder={options.next_cart_no} />
                     </Labeled>
                   )}
                 </div>

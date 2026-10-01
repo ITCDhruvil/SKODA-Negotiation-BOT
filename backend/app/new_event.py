@@ -97,7 +97,9 @@ def options(repo: Repo) -> dict:
         orgs.setdefault(key, {"direction": e.direction, "company_id": e.company_id, "company": e.company,
                               "plant": e.plant, "purch_org": e.purch_org, "purch_group": e.purch_group,
                               "cost_centre": e.cost_centre})
+    carts = [int(e.source_cart_no) for e in repo.fetch("event") if (e.source_cart_no or "").isdigit()]
     return {
+        "next_cart_no": str(max(carts) + 1) if carts else "1012400000",  # the next free shopping cart number
         "categories": buy + sell,
         "organisations": list(orgs.values()),
         "requestors": list(REQUESTORS),
@@ -203,6 +205,9 @@ def create_event(repo: Repo, body: NewEvent) -> str:
         raise Conflict("purchase items are counted in units, not weight")
     if body.due < clock.today():
         raise Conflict("the due date cannot be in the past")
+    cart = (body.source_cart_no or "").strip()
+    if cart and any(e.source_cart_no == cart for e in repo.fetch("event")):
+        raise Conflict(f"shopping cart number {cart} is already used by another event")
 
     n = _next_number(repo)
     event_id = f"EVT-2026-{n:03d}"

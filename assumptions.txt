@@ -348,3 +348,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 116. A category can be added from the Add event form: the last row of the Category list is "Add category", which turns into a text box with an enter button in the same place; the list shows every option without a scroll bar. A typed-in category has no history or examples, so any vendor of the right kind (suppliers for a purchase, scrap buyers for a scrap lot) can be invited and the vendors are ranked by rating and dealings only. It lives with the events created from it (category "Custom - Name" for a purchase, "Scrap - Name" for a lot); it is not kept as a reusable option for later forms.
     Reason: the fixed list cannot cover every request in a demo.
+
+117. The Add event form starts with defaults: the requestor is the signed-in buyer, the needed-by date is two weeks out, a purchase cart gets the next free shopping cart number (editable; a number already used by another event is refused), and the event title is filled in and follows the first item until it is edited (a scrap lot starts with "Scrap - ", for example "Scrap - Aluminium Turnings Lot - 5,000 kg"; a purchase cart takes its first item's name). Auto fill resets the title and cart number to these defaults.
+    Reason: fewer fields to type, and consistent naming and numbering.

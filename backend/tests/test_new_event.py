@@ -109,3 +109,14 @@ def test_a_category_typed_by_the_buyer_works_with_any_vendor_of_the_right_kind(c
     item = r.json()["items"][0]["id"]
     assert len(client.get(f"/api/items/{item}").json()["invitees"]) >= 3
     assert client.post("/api/events", json={**body, "category_label": " "}).status_code == 409
+
+
+def test_the_next_free_cart_number_is_offered_and_cannot_be_reused(client):
+    o = client.get("/api/event-options").json()
+    nxt = o["next_cart_no"]
+    assert nxt.isdigit()
+    body = payload(client, "buy", source_cart_no=nxt)
+    assert client.post("/api/events", json=body).status_code == 200
+    again = client.post("/api/events", json=body)
+    assert again.status_code == 409 and "already used" in again.json()["detail"]
+    assert int(client.get("/api/event-options").json()["next_cart_no"]) == int(nxt) + 1
