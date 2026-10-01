@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Delta, DirectionBadge, inputClass, Panel, Pill } from "@/components/ui/basics";
@@ -55,18 +56,8 @@ export default function ComparisonPage() {
       <RangeNotice />
       <Panel flush>
         <div className="flex flex-wrap items-center gap-3 px-5 pb-3">
-          <select value={direction} onChange={(e) => setDirection(e.target.value)} aria-label="Type" className={`${inputClass} w-auto`}>
-            <option value="">Buy and sell</option>
-            <option value="buy">Buy</option>
-            <option value="sell">Sell</option>
-          </select>
-          <select value={recommendation} onChange={(e) => setRecommendation(e.target.value)} aria-label="Recommendation" className={`${inputClass} w-auto`}>
-            <option value="">Any recommendation</option>
-            <option value="negotiate">Negotiation recommended</option>
-            <option value="accept">Best quote acceptable</option>
-            <option value="review">Buyer review needed</option>
-            <option value="done">Done</option>
-          </select>
+          <Select compact value={direction} onChange={setDirection} ariaLabel="Type" options={[{ value: "", label: "Buy and sell" }, { value: "buy", label: "Buy" }, { value: "sell", label: "Sell" }]} />
+          <Select compact value={recommendation} onChange={setRecommendation} ariaLabel="Recommendation" options={[{ value: "", label: "Any recommendation" }, { value: "negotiate", label: "Negotiation recommended" }, { value: "accept", label: "Best quote acceptable" }, { value: "review", label: "Buyer review needed" }, { value: "done", label: "Done" }]} />
           {data && <span className="text-xs text-muted">{data.length} items</span>}
         </div>
         {loading && !data && <Loading label="Loading comparison" />}

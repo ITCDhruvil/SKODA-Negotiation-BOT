@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { EventsTable } from "@/components/events/EventsTable";
@@ -37,17 +38,8 @@ function EventsInner() {
             aria-label="Search events"
             className={`${inputClass} max-w-sm`}
           />
-          <select value={direction} onChange={(e) => setDirection(e.target.value)} aria-label="Type" className={`${inputClass} w-auto`}>
-            <option value="">All types</option>
-            <option value="buy">Buy</option>
-            <option value="sell">Sell</option>
-          </select>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status" className={`${inputClass} w-auto`}>
-            <option value="">All statuses</option>
-            <option value="received">Received</option>
-            <option value="in_progress">In progress</option>
-            <option value="closed">Closed</option>
-          </select>
+          <Select compact value={direction} onChange={setDirection} ariaLabel="Type" options={[{ value: "", label: "All types" }, { value: "buy", label: "Buy" }, { value: "sell", label: "Sell" }]} />
+          <Select compact value={status} onChange={setStatus} ariaLabel="Status" options={[{ value: "", label: "All statuses" }, { value: "received", label: "Received" }, { value: "in_progress", label: "In progress" }, { value: "closed", label: "Closed" }]} />
           {data && <span className="text-xs text-muted">{data.length} events</span>}
         </div>
         {loading && !data && <Loading label="Loading events" />}

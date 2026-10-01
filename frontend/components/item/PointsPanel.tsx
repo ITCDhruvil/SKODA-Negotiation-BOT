@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useEffect, useState } from "react";
 import { api, type ItemDetail, type Objective } from "@/lib/api";
 import { money } from "@/lib/format";
@@ -110,23 +111,16 @@ export function PointsPanel({
           </Field>
         </div>
         <Field label="Negotiation objective">
-          <select
+          <Select<Objective | "">
             value={objective}
-            onChange={(e) => {
-              setObjective(e.target.value as Objective | "");
+            onChange={(v) => {
+              setObjective(v);
               setSaved(false);
             }}
             disabled={!editable || busy}
-            className={inputClass}
-            aria-label="Negotiation objective"
-          >
-            <option value="">No preference</option>
-            {objectiveOptions(eventDirection).map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            ariaLabel="Negotiation objective"
+            options={[{ value: "", label: "No preference" }, ...objectiveOptions(eventDirection)]}
+          />
         </Field>
         {error && <Notice tone="red">{error}</Notice>}
         {saved && !error && <Notice tone="ok">Points saved.</Notice>}

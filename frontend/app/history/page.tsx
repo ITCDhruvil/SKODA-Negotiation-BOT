@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import { DirectionBadge, inputClass, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -61,16 +62,8 @@ export default function HistoryPage() {
       <Panel flush>
         <div className="flex flex-wrap items-center gap-3 px-5 pb-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search item…" aria-label="Search history" className={`${inputClass} max-w-sm`} />
-          <select value={direction} onChange={(e) => setDirection(e.target.value)} aria-label="Type" className={`${inputClass} w-auto`}>
-            <option value="">Buy and sell</option>
-            <option value="buy">Buy</option>
-            <option value="sell">Sell</option>
-          </select>
-          <select value={negotiated} onChange={(e) => setNegotiated(e.target.value)} aria-label="Negotiated" className={`${inputClass} w-auto`}>
-            <option value="">All deals</option>
-            <option value="yes">Negotiated only</option>
-            <option value="no">Not negotiated</option>
-          </select>
+          <Select compact value={direction} onChange={setDirection} ariaLabel="Type" options={[{ value: "", label: "Buy and sell" }, { value: "buy", label: "Buy" }, { value: "sell", label: "Sell" }]} />
+          <Select compact value={negotiated} onChange={setNegotiated} ariaLabel="Negotiated" options={[{ value: "", label: "All deals" }, { value: "yes", label: "Negotiated only" }, { value: "no", label: "Not negotiated" }]} />
           {data && <span className="text-xs text-muted">{data.length} deals</span>}
         </div>
         {loading && !data && <Loading label="Loading history" />}

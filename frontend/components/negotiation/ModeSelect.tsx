@@ -1,6 +1,6 @@
 import type { Mode } from "@/lib/api";
 import { MODE_HINT, MODE_LABEL } from "@/lib/labels";
-import { inputClass } from "@/components/ui/basics";
+import { Select } from "@/components/ui/Select";
 
 const MODES: Mode[] = ["auto", "approve", "manual"];
 
@@ -17,21 +17,14 @@ export function ModeSelect({
 }) {
   return (
     <div className="grid gap-1">
-      <select
+      <Select<Mode>
         id={id}
-        aria-label="Permission level"
-        aria-describedby={`${id}-hint`}
-        className={`${inputClass} min-h-[44px]`}
+        ariaLabel="Permission level"
         value={value}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value as Mode)}
-      >
-        {MODES.map((m) => (
-          <option key={m} value={m}>
-            {MODE_LABEL[m]}
-          </option>
-        ))}
-      </select>
+        onChange={onChange}
+        options={MODES.map((m) => ({ value: m, label: MODE_LABEL[m], hint: MODE_HINT[m] }))}
+      />
       <span id={`${id}-hint`} className="text-xs text-muted">
         {MODE_HINT[value]}
       </span>

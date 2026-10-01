@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { inputClass, Panel, Pill } from "@/components/ui/basics";
@@ -49,11 +50,7 @@ export default function VendorsPage() {
       <Panel flush>
         <div className="flex flex-wrap items-center gap-3 px-5 pb-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or SAP number…" aria-label="Search vendors" className={`${inputClass} max-w-sm`} />
-          <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Vendor type" className={`${inputClass} w-auto`}>
-            <option value="">All vendors</option>
-            <option value="supplier">Suppliers</option>
-            <option value="scrap_buyer">Scrap buyers</option>
-          </select>
+          <Select compact value={type} onChange={setType} ariaLabel="Vendor type" options={[{ value: "", label: "All vendors" }, { value: "supplier", label: "Suppliers" }, { value: "scrap_buyer", label: "Scrap buyers" }]} />
           {data && <span className="text-xs text-muted">{rows.length} vendors</span>}
         </div>
         {loading && !data && <Loading label="Loading vendors" />}

@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useMemo, useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui/basics";
 import { Dialog } from "@/components/ui/Dialog";
@@ -111,11 +112,12 @@ export function SupplierDialog({
         {step === "invite" ? (
           <>
             <Field label="Channel">
-              <select className={`${inputClass} min-h-[44px]`} value={channel} onChange={(e) => setChannel(e.target.value as (typeof CHANNELS)[number])}>
-                {CHANNELS.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
+              <Select
+                value={channel}
+                onChange={setChannel}
+                ariaLabel="Channel"
+                options={CHANNELS.map((c) => ({ value: c, label: c }))}
+              />
             </Field>
             <div>
               <p className="mb-1 font-semibold text-ink">Message preview ({lang.toUpperCase()}, {channel})</p>

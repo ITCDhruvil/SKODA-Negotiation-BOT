@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui/basics";
@@ -53,14 +54,15 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
   return (
     <div className="grid gap-3">
       <Field label="Negotiate with" hint="Defaults to the best quote.">
-        <select className={`${inputClass} min-h-[44px]`} value={vendorId} onChange={(e) => setVendorId(e.target.value)}>
-          <option value="">Best quote (recommended)</option>
-          {responded.map((v) => (
-            <option key={v.vendor_id} value={v.vendor_id}>
-              {v.vendor_name}
-            </option>
-          ))}
-        </select>
+        <Select
+          value={vendorId}
+          onChange={setVendorId}
+          ariaLabel="Negotiate with"
+          options={[
+            { value: "", label: "Best quote (recommended)" },
+            ...responded.map((v) => ({ value: v.vendor_id, label: v.vendor_name })),
+          ]}
+        />
       </Field>
       <Field label="Who sends the messages?">
         <ModeSelect id="start-mode" value={mode} onChange={setMode} />
