@@ -19,6 +19,12 @@ export type VendorView = S["VendorView"];
 export type VendorDetail = S["VendorDetail"];
 export type Kpis = S["Kpis"];
 
+export type SessionView = S["SessionView"];
+export type SessionSummary = S["SessionSummary"];
+export type TurnView = S["TurnView"];
+export type DraftView = S["DraftView"];
+export type Mode = SessionView["mode"];
+
 export type Direction = EventView["direction"];
 export type EventStatus = EventView["status"];
 export type ItemState = ItemView["state"];
@@ -112,5 +118,23 @@ export const api = {
   vendor: (id: string) => request<VendorDetail>(`/api/vendors/${id}`),
   history: (p: { direction?: string; category_key?: string; q?: string; negotiated?: boolean; limit?: number }) =>
     request<HistoryRow[]>(`/api/history${qs(p)}`),
+  sessionsForItem: (itemId: string) => request<SessionSummary[]>(`/api/items/${itemId}/sessions`),
+  startNegotiation: (itemId: string, body: { vendor_id?: string | null; mode: Mode }) =>
+    post<SessionView>(`/api/items/${itemId}/negotiations`, body),
+  session: (id: string) => request<SessionView>(`/api/sessions/${id}`),
+  setMode: (id: string, mode: Mode) =>
+    request<SessionView>(`/api/sessions/${id}/mode`, { method: "PUT", body: JSON.stringify({ mode }) }),
+  advance: (id: string) => post<SessionView>(`/api/sessions/${id}/advance`),
+  approveDraft: (id: string, draftId: string, edit?: { price?: number; payment_code?: string | null; text?: string | null }) =>
+    post<SessionView>(`/api/sessions/${id}/drafts/${draftId}/approve`, edit ?? {}),
+  discardDraft: (id: string, draftId: string) => post<SessionView>(`/api/sessions/${id}/drafts/${draftId}/discard`),
+  sendMessage: (id: string, body: { price: number; payment_code?: string | null; text?: string | null }) =>
+    post<SessionView>(`/api/sessions/${id}/messages`, body),
+  acceptOffer: (id: string) => post<SessionView>(`/api/sessions/${id}/accept-offer`),
+  handBack: (id: string, reason?: string) => post<SessionView>(`/api/sessions/${id}/hand-back`, { reason: reason ?? null }),
+  continueNegotiation: (itemId: string) => post<SessionView>(`/api/items/${itemId}/continue`),
+  acceptDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/accept-deal`),
+  closeWithoutDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/close-without-deal`),
+  approveEvent: (eventId: string) => post<EventDetail>(`/api/events/${eventId}/approve`),
   reset: () => post<S["ResetResult"]>("/api/admin/reset"),
 };

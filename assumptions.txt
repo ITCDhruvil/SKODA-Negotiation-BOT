@@ -267,3 +267,15 @@ Append new points at the bottom. Format: number, statement, reason.
 
 89. Known wrinkle: `negotiations_in_progress` on the dashboard counts every item awaiting approval, including quotes accepted as they stand without a conversation.
     Reason: recorded rather than hidden; to be revisited when the workspace is built.
+
+90. The supplier invite, consent and one-time code are a frontend-only simulation (channel choice, message preview in the vendor's language, a demo code shown on screen). Nothing is sent. Finishing it releases that one vendor's quote through the existing release route.
+    Reason: the POC has no real messaging services; "Load all scripted replies" stays as a shortcut.
+
+91. The contact-hours rule (Mon to Sat, 9:00 to 20:00 IST) is checked in the browser for the supplier simulation, with a demo override.
+    Reason: it is a display rule for the story; the backend does not enforce it.
+
+92. The negotiation workspace shows the agreed result inline (accept deal / keep negotiating) instead of on a separate result page. Approval lives at /events/{id}/approve and closing returns to the event page, which already shows the closed summary.
+    Reason: fewer screens for the same story.
+
+93. In full auto the browser calls the advance route once per round with a short pause and a typing indicator. Switching mode, any error or a status change stops the loop. The pause is cosmetic and is not a backend delay.
+    Reason: keeps the backend stateless between calls and gives the buyer a stop control.

@@ -85,3 +85,15 @@ export const STEPS: { key: string; label: string; states: ItemState[] }[] = [
   { key: "approval", label: "Approval", states: ["awaiting_approval"] },
   { key: "closed", label: "Closed", states: ["closed"] },
 ];
+
+export const MODE_LABEL: Record<"auto" | "approve" | "manual", string> = {
+  auto: "Full auto",
+  approve: "Approve each message",
+  manual: "Manual",
+};
+
+export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
+  auto: "The assistant runs the whole conversation. You can stop and take over at any time.",
+  approve: "The assistant drafts each message; you review, edit and send it.",
+  manual: "You write every message yourself.",
+};

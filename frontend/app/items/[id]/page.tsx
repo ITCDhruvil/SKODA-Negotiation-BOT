@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { HistoryTab } from "@/components/item/HistoryTab";
 import { OpportunityPanel } from "@/components/item/OpportunityPanel";
+import { SupplierDialog } from "@/components/item/SupplierDialog";
 import { PointsPanel } from "@/components/item/PointsPanel";
 import { Stepper } from "@/components/item/Stepper";
 import { Button, DirectionBadge, Panel, Pill } from "@/components/ui/basics";
@@ -22,6 +23,7 @@ function QuotesTab({ detail, onChanged }: { detail: ItemDetail; onChanged: () =>
   const { item, event, invitees, comparison } = detail;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inviting, setInviting] = useState<string | null>(null);
   const pending = invitees.filter((i) => !i.responded);
   const canCollect = (item.state === "points_reviewed" || item.state === "awaiting_bids") && pending.length > 0;
   const noneAvailable = item.state === "awaiting_bids" && pending.length === 0;
@@ -78,6 +80,11 @@ function QuotesTab({ detail, onChanged }: { detail: ItemDetail; onChanged: () =>
               <span className="text-muted">Rating {v.rating.toFixed(1)}</span>
               <span className="text-muted">{LANG[v.language] ?? v.language}</span>
               <Pill tone={v.responded ? "ok" : "muted"}>{v.responded ? "Responded" : "Invited"}</Pill>
+              {!v.responded && canCollect && (
+                <Button size="sm" disabled={busy} onClick={() => setInviting(v.vendor_id)}>
+                  Simulate response
+                </Button>
+              )}
             </li>
           ))}
           {invitees.length === 0 && <li className="px-5 py-6 text-sm text-muted">No vendors invited for this item.</li>}
@@ -94,17 +101,70 @@ function QuotesTab({ detail, onChanged }: { detail: ItemDetail; onChanged: () =>
             {canCollect && (
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="primary" disabled={busy} onClick={() => act(() => api.releaseBids(item.id))}>
-                  Collect vendor responses (demo)
+                  Load all scripted replies (demo)
                 </Button>
                 <span className="text-xs text-muted">
-                  The supplier invite, consent and OTP flow arrives in the next release. For now this loads the scripted vendor replies.
+                  Or simulate each supplier above: invite, consent and one-time code are mocked on screen only.
                 </span>
               </div>
             )}
           </div>
         )}
       </Panel>
+      <SupplierDialog
+        vendor={invitees.find((v) => v.vendor_id === inviting) ?? null}
+        direction={event.direction}
+        onClose={() => setInviting(null)}
+        onConfirmed={async (vid) => {
+          await api.releaseBids(item.id, [vid]);
+          await onChanged();
+        }}
+      />
     </div>
+  );
+}
+
+function ItemActions({ detail, onChanged }: { detail: ItemDetail; onChanged: () => Promise<void> }) {
+  const { item } = detail;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const canAccept = item.state === "analyzed" && item.within_limit === true;
+  const canClose = item.state === "handed_back";
+  const awaiting = item.state === "awaiting_approval";
+  if (!canAccept && !canClose && !awaiting) return null;
+  const act = async (fn: () => Promise<unknown>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+      await onChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Panel title="Other actions">
+      <div className="grid gap-2">
+        {error && <Notice tone="red">{error}</Notice>}
+        {canAccept && (
+          <Button disabled={busy} onClick={() => act(() => api.acceptDeal(item.id))}>
+            Accept best quote as it stands
+          </Button>
+        )}
+        {canClose && (
+          <Button variant="danger" disabled={busy} onClick={() => act(() => api.closeWithoutDeal(item.id))}>
+            Close without a deal
+          </Button>
+        )}
+        {awaiting && (
+          <Link href={`/events/${detail.event.id}/approve`} className="rounded-m border border-line bg-panel px-4 py-2 text-center text-sm font-semibold text-ink hover:border-brand">
+            Review & approve
+          </Link>
+        )}
+      </div>
+    </Panel>
   );
 }
 
@@ -183,6 +243,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
         <div className="grid content-start gap-5">
           <OpportunityPanel detail={detail} />
           <PointsPanel detail={detail} eventDirection={event.direction} onChanged={reload} />
+          <ItemActions detail={detail} onChanged={reload} />
           <OutcomePanel detail={detail} />
         </div>
       </div>
