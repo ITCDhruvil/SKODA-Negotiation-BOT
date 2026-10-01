@@ -131,7 +131,7 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
         }}
         className={`relative grid h-10 w-10 place-items-center rounded-m border bg-panel text-ink hover:border-brand ${active ? "border-brand" : "border-line"}`}
       >
-        <Icon name="sliders" size={18} />
+        <Icon name="sliders" size={20} />
         {active > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-on-brand">{active}</span>}
       </button>
       {open && (
