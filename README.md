@@ -54,6 +54,14 @@ No model needs training. Keep the decisions in code and use a hosted model throu
 5. **Make the channel real.** Email or WhatsApp Business, one thread per vendor and item, real delays, reminders and "no reply" handling.
 6. **Test on history, not by training.** Replay anonymised past threads and compare the bot's decisions with what buyers did. Roll out in stages: drafts for review, then approve each message, then automatic for small deals only.
 
+## Deploy on Render
+
+Both services run on Render from `render.yaml` (a Blueprint): the API (`negotiation-api`) and the web app (`negotiation-web`).
+
+1. Push this repo to GitHub, then in Render choose New > Blueprint and select it.
+2. After the first deploy, set `NEXT_PUBLIC_API_URL` on the web service to the API address, and `NEGOTIATION_CORS_ORIGINS` on the API to the web address. Redeploy the web service (the API address is baked in at build time).
+3. The demo data is re-seeded whenever the API starts, so a restart resets any negotiations. On the free plan the API sleeps after about 15 minutes idle; a ping to `/api/health` every 5 to 10 minutes keeps it awake.
+
 ## Layout
 
 - `backend/`: FastAPI, SQLite store, deal maths in `app/deal.py`, negotiation engine in `app/negotiation/`, export in `app/export.py`. See `backend/README.md`.

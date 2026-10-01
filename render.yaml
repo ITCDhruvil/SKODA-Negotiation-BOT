@@ -1,0 +1,29 @@
+# Both services on Render. Deploy with a Blueprint (New > Blueprint, pick this repo).
+# After the first deploy, set the two values marked "set after" (see README, Deploy on Render).
+services:
+  - type: web
+    name: negotiation-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: NEGOTIATION_DB
+        value: /tmp/app.db  # the demo data is re-seeded on every start, so a temporary disk is enough
+      - key: NEGOTIATION_CORS_ORIGINS
+        sync: false  # set after: the web service address, e.g. https://negotiation-web.onrender.com
+
+  - type: web
+    name: negotiation-web
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start -- -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_PUBLIC_API_URL
+        sync: false  # set after: the API address, e.g. https://negotiation-api.onrender.com (then redeploy)
