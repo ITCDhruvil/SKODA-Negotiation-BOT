@@ -1,9 +1,32 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Icon } from "./Icon";
 
 export type SelectOption<V extends string = string> = { value: V; label: string; hint?: string };
+
+/** One line of text, cut off with an ellipsis; while `play` is on it slides right to left to reveal the rest. */
+function Marquee({ text, play, className = "" }: { text: string; play: boolean; className?: string }) {
+  const box = useRef<HTMLSpanElement>(null);
+  const inner = useRef<HTMLSpanElement>(null);
+  const [shift, setShift] = useState(0);
+  useLayoutEffect(() => {
+    if (!play || !box.current || !inner.current) {
+      setShift(0);
+      return;
+    }
+    setShift(Math.max(0, inner.current.scrollWidth - box.current.clientWidth));
+  }, [play, text]);
+  const style: CSSProperties | undefined =
+    shift > 0 ? ({ "--shift": `-${shift}px`, animationDuration: `${Math.max(2.5, shift / 40 + 1.5)}s` } as CSSProperties) : undefined;
+  return (
+    <span ref={box} className={`block overflow-hidden whitespace-nowrap ${shift === 0 ? "text-ellipsis" : ""} ${className}`} title={text}>
+      <span ref={inner} className={`inline-block ${shift > 0 ? "marquee-run" : ""}`} style={style}>
+        {text}
+      </span>
+    </span>
+  );
+}
 
 /**
  * Themed drop-down (ARIA select-only combobox). Arrow keys move, Enter or Space picks, Escape closes,
@@ -140,7 +163,7 @@ export function Select<V extends string = string>({
           id={listId}
           role="listbox"
           aria-label={ariaLabel}
-          className="absolute left-0 z-40 mt-1 max-h-64 min-w-full overflow-auto rounded-m border border-line bg-panel py-1 shadow-card"
+          className="absolute left-0 z-40 mt-1 max-h-64 w-full overflow-auto rounded-m border border-line bg-panel py-1 shadow-card"
         >
           {options.map((o, i) => {
             const isSel = i === selected;
@@ -153,13 +176,13 @@ export function Select<V extends string = string>({
                 onMouseEnter={() => setActive(i)}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => choose(i)}
-                className={`flex cursor-pointer items-start justify-between gap-3 whitespace-nowrap px-3 py-2.5 text-sm ${
+                className={`flex cursor-pointer items-start justify-between gap-3 px-3 py-2 text-sm ${
                   i === active ? "bg-brand-soft text-ink" : "text-text"
                 } ${isSel ? "font-semibold" : ""}`}
               >
-                <span>
-                  {o.label}
-                  {o.hint && <span className="block text-xs font-normal text-muted">{o.hint}</span>}
+                <span className="min-w-0 flex-1">
+                  <Marquee text={o.label} play={i === active} />
+                  {o.hint && <Marquee text={o.hint} play={i === active} className="text-xs font-normal text-muted" />}
                 </span>
                 {isSel && <Icon name="check" size={16} className="mt-0.5 shrink-0 text-brand" />}
               </li>

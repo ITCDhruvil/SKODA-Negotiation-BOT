@@ -52,3 +52,12 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@keyframes marquee-slide {
+  0%, 15% { transform: translateX(0); }
+  85%, 100% { transform: translateX(var(--shift)); }
+}
+.marquee-run { animation: marquee-slide 4s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .marquee-run { animation: none; }
+}
