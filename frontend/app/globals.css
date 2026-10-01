@@ -4,6 +4,7 @@
 
 /* Tokens copied from reference/dashboard-ui/AIS_App_Shell_theme.html (light + dark). */
 :root {
+  color-scheme: light;
   --bg: #f0f3f1; --panel: #ffffff; --raise: #f6f8f7; --line: #dae1dd; --line2: #e8edea;
   --ink: #0f2c24; --text: #1a2a25; --muted: #5a6b65;
   --c1: #1fa971; --c2: #4b7bec; --c3: #f2a93b; --c4: #e5534b; --c5: #9b6bd6; --c6: #2bb5c4; --on-brand: #ffffff; --brand: #0a6a4e; --brand-soft: #e1efe7;
@@ -14,6 +15,7 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0b1411; --panel: #121d19; --raise: #16231e; --line: #24342e; --line2: #1c2a25;
   --ink: #e3eee9; --text: #dae5e0; --muted: #92a59d; --c1: #3fd08f; --c2: #7a9cff; --c3: #f4bd5c; --c4: #f27d74; --c5: #b794ec; --c6: #4fd0dd; --on-brand: #07130f; --brand: #6ad7a2; --brand-soft: #16302a;
   --emerald: #08201a; --emerald2: #0f2d24; --amber: #e6ae52; --amber-soft: #33281a;
@@ -23,6 +25,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #0b1411; --panel: #121d19; --raise: #16231e; --line: #24342e; --line2: #1c2a25;
     --ink: #e3eee9; --text: #dae5e0; --muted: #92a59d; --c1: #3fd08f; --c2: #7a9cff; --c3: #f4bd5c; --c4: #f27d74; --c5: #b794ec; --c6: #4fd0dd; --on-brand: #07130f; --brand: #6ad7a2; --brand-soft: #16302a;
     --emerald: #08201a; --emerald2: #0f2d24; --amber: #e6ae52; --amber-soft: #33281a;
