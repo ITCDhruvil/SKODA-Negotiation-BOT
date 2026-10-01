@@ -79,13 +79,13 @@ export function DataTable<T>({
                   key={c.key}
                   scope="col"
                   aria-sort={active ? (sort!.dir === "asc" ? "ascending" : "descending") : c.sort ? "none" : undefined}
-                  className={`${pad} ${align(c.align)} whitespace-nowrap ${c.hideOnMobile ? "hidden md:table-cell" : ""} ${c.hideBelowXl ? "hidden xl:table-cell" : ""} ${c.className ?? ""}`}
+                  className={`${pad} ${align(c.align)} whitespace-nowrap align-middle ${c.hideOnMobile ? "hidden md:table-cell" : ""} ${c.hideBelowXl ? "hidden xl:table-cell" : ""} ${c.className ?? ""}`}
                 >
                   {c.sort ? (
                     <button
                       type="button"
                       onClick={() => toggle(c.key)}
-                      className={`group inline-flex items-center gap-1 rounded-chip font-semibold hover:text-ink ${c.align === "right" ? "flex-row-reverse" : ""} ${active ? "text-ink" : ""}`}
+                      className={`group inline-flex items-center gap-1 rounded-chip font-semibold hover:text-ink ${c.align === "right" ? "flex-row-reverse" : ""} ${c.align === "center" ? "justify-center pl-[17px]" : ""} ${active ? "text-ink" : ""}`}
                     >
                       {c.header}
                       <Icon

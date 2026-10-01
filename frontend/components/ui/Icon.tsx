@@ -33,6 +33,7 @@ const PATHS = {
   back: "M15 6l-6 6 6 6",
   clear: "M4 12h16",
   filter: "M3 5h18l-7 8v6l-4 2v-8z",
+  sliders: "M6 3v6M6 15v6M12 3v2M12 11v10M18 3v10M18 19v2M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 8m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M18 16m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0",
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { EventStatDialog, type StatKind } from "@/components/events/EventStatDialog";
 import type { EventView } from "@/lib/api";
 import { dateShort, money } from "@/lib/format";
 import { STATUS_LABEL, STATUS_TONE, deltaLabel } from "@/lib/labels";
@@ -11,6 +13,22 @@ import { IconLink } from "@/components/ui/TableToolbar";
 
 export function EventsTable({ events, empty }: { events: EventView[]; empty?: string }) {
   const router = useRouter();
+  const [stat, setStat] = useState<{ event: EventView; kind: StatKind } | null>(null);
+  const lastKind = stat?.kind ?? "items";
+  const opener = (e: EventView, kind: StatKind, text: React.ReactNode, label: string, className = "") => (
+    <button
+      type="button"
+      title={label}
+      aria-label={`${label}: ${e.id}`}
+      onClick={(ev) => {
+        ev.stopPropagation();
+        setStat({ event: e, kind });
+      }}
+      className={`rounded-chip px-1.5 py-0.5 font-semibold underline decoration-dotted decoration-line underline-offset-4 hover:bg-brand-soft hover:text-brand hover:decoration-brand ${className}`}
+    >
+      {text}
+    </button>
+  );
   const columns: Column<EventView>[] = [
     {
       key: "id",
@@ -46,29 +64,29 @@ export function EventsTable({ events, empty }: { events: EventView[]; empty?: st
         </span>
       ),
     },
-    { key: "type", header: "Type", sort: (e) => e.direction, cell: (e) => <DirectionBadge direction={e.direction} /> },
-    { key: "items", header: "Items", align: "right", sort: (e) => e.item_count, hideOnMobile: true, cell: (e) => e.item_count },
-    { key: "vendors", header: "Vendors", align: "right", sort: (e) => e.vendor_count, hideBelowXl: true, cell: (e) => e.vendor_count },
+    { key: "type", header: "Type", align: "center", className: "w-[1%]", sort: (e) => e.direction, cell: (e) => <DirectionBadge direction={e.direction} /> },
+    { key: "items", header: "Items", align: "center", className: "w-[1%]", sort: (e) => e.item_count, hideOnMobile: true, cell: (e) => opener(e, "items", e.item_count, "Show items") },
+    { key: "vendors", header: "Vendors", align: "center", className: "w-[1%]", sort: (e) => e.vendor_count, hideBelowXl: true, cell: (e) => opener(e, "vendors", e.vendor_count, "Show vendors") },
     {
       key: "value",
       header: "Value",
       align: "right",
+      className: "w-[1%]",
       sort: (e) => (e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value),
-      cell: (e) => <span className="whitespace-nowrap tabular-nums">{money(e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value)}</span>,
+      cell: (e) => opener(e, "value", money(e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value), "Show value breakdown", "whitespace-nowrap tabular-nums font-normal"),
     },
     {
       key: "delta",
       header: "Potential",
       align: "right",
+      className: "w-[1%]",
       sort: (e) => (e.status === "closed" ? e.realised_delta : e.potential_delta),
       hideOnMobile: true,
       cell: (e) =>
         e.status === "closed" ? (
-          <span className="whitespace-nowrap tabular-nums font-semibold text-ok" title={`${deltaLabel(e.direction)} achieved`}>
-            {money(e.realised_delta)}
-          </span>
+          opener(e, "potential", money(e.realised_delta), `${deltaLabel(e.direction)} achieved`, "whitespace-nowrap tabular-nums text-ok")
         ) : e.potential_delta > 0 ? (
-          <span className="whitespace-nowrap tabular-nums font-semibold text-ok">{money(e.potential_delta)}</span>
+          opener(e, "potential", money(e.potential_delta), "Show potential breakdown", "whitespace-nowrap tabular-nums text-ok")
         ) : (
           <span className="text-muted">—</span>
         ),
@@ -76,9 +94,11 @@ export function EventsTable({ events, empty }: { events: EventView[]; empty?: st
     {
       key: "status",
       header: "Status",
+      align: "center",
+      className: "w-[1%]",
       sort: (e) => e.status,
       cell: (e) => (
-        <div className="grid gap-1">
+        <div className="flex flex-col items-center gap-1">
           <Pill tone={STATUS_TONE[e.status]}>{STATUS_LABEL[e.status]}</Pill>
           {!e.eligibility.eligible && (
             <span title={e.eligibility.reason}>
@@ -92,16 +112,20 @@ export function EventsTable({ events, empty }: { events: EventView[]; empty?: st
       key: "action",
       header: "",
       align: "right",
+      className: "w-[1%]",
       cell: (e) => <IconLink href={`/events/${e.id}`} icon="eye" label="View event" />,
     },
   ];
   return (
-    <DataTable
-      columns={columns}
-      rows={events}
-      rowKey={(e) => e.id}
-      onRowClick={(e) => router.push(`/events/${e.id}`)}
-      empty={empty ?? "No events match."}
-    />
+    <>
+      <DataTable
+        columns={columns}
+        rows={events}
+        rowKey={(e) => e.id}
+        onRowClick={(e) => router.push(`/events/${e.id}`)}
+        empty={empty ?? "No events match."}
+      />
+      <EventStatDialog event={stat?.event ?? null} kind={lastKind} onClose={() => setStat(null)} />
+    </>
   );
 }
