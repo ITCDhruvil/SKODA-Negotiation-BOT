@@ -33,15 +33,19 @@ export function Pagination({
   total,
   page,
   pageSize,
+  mode,
   onPage,
-  onPageSize,
+  onMode,
   noun = "rows",
 }: {
   total: number;
   page: number;
+  /** Rows on each page right now (for "auto" this is the number that fits the screen). */
   pageSize: number;
+  /** "auto" fits the rows to the screen height; otherwise a fixed number as text. */
+  mode: string;
   onPage: (p: number) => void;
-  onPageSize: (n: number) => void;
+  onMode: (mode: string) => void;
   noun?: string;
 }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -59,13 +63,16 @@ export function Pagination({
         </span>
         <span className="flex items-center gap-2">
           Rows per page
-          <span className="w-24">
+          <span className="w-32">
             <Select
               placement="top"
               ariaLabel="Rows per page"
-              value={String(pageSize)}
-              onChange={(v) => onPageSize(Number(v))}
-              options={PAGE_SIZES.map((n) => ({ value: String(n), label: String(n) }))}
+              value={mode}
+              onChange={onMode}
+              options={[
+                { value: "auto", label: mode === "auto" ? `Auto (${pageSize})` : "Auto", hint: "Fits the screen" },
+                ...PAGE_SIZES.map((n) => ({ value: String(n), label: String(n) })),
+              ]}
             />
           </span>
         </span>

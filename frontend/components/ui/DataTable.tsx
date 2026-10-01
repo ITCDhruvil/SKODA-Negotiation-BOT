@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Icon } from "./Icon";
 import { PAGE_SIZES, Pagination } from "./Pagination";
 
@@ -53,16 +53,19 @@ export function DataTable<T>({
   noun?: string;
 }) {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
-  // The chosen page size is remembered between visits.
+  // "auto" fits as many rows as the screen height allows; otherwise a fixed number. The choice is remembered.
+  const [mode, setMode] = useState<string>("auto");
+  const [fit, setFit] = useState<number>(PAGE_SIZES[0]);
+  const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
     try {
-      const saved = Number(window.localStorage.getItem("pageSize"));
-      if ((PAGE_SIZES as readonly number[]).includes(saved)) setPageSize(saved);
+      const saved = window.localStorage.getItem("pageSize");
+      if (saved === "auto" || (PAGE_SIZES as readonly number[]).includes(Number(saved))) setMode(saved as string);
     } catch {
       /* storage may be blocked */
     }
   }, []);
+  const pageSize = mode === "auto" ? fit : Number(mode);
   const [sort, setSort] = useState<{ key: string; dir: Dir } | null>(defaultSort ?? null);
   const align = (a?: string) => (a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left");
   const pad = dense ? "px-3 py-2" : "px-4 py-3";
@@ -82,6 +85,25 @@ export function DataTable<T>({
     });
   }, [rows, sort, columns]);
 
+  // Work out how many rows fit between the top of the table and the bottom of the window.
+  useEffect(() => {
+    if (!paginate || mode !== "auto") return;
+    const measure = () => {
+      const el = wrap.current;
+      if (!el) return;
+      const row = el.querySelector("tbody tr");
+      const head = el.querySelector("thead");
+      const rowH = row && row.getBoundingClientRect().height > 20 ? row.getBoundingClientRect().height : dense ? 40 : 56;
+      const top = el.getBoundingClientRect().top + window.scrollY + (head?.getBoundingClientRect().height ?? 40);
+      const footer = 72; // the pagination bar
+      const room = window.innerHeight - top - footer - 16;
+      setFit(Math.min(100, Math.max(5, Math.floor(room / rowH))));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [paginate, mode, dense, rows.length]);
+
   // New data or a new order starts again on page one; a shorter list never leaves you past its end.
   useEffect(() => setPage(1), [rows.length, sort, pageSize]);
   const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
@@ -93,7 +115,7 @@ export function DataTable<T>({
 
   return (
     <>
-    <div className="overflow-x-auto">
+    <div ref={wrap} className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-y border-line2 bg-raise text-xs font-semibold text-muted">
@@ -172,12 +194,13 @@ export function DataTable<T>({
         total={sorted.length}
         page={current}
         pageSize={pageSize}
+        mode={mode}
         noun={noun}
         onPage={setPage}
-        onPageSize={(n) => {
-          setPageSize(n);
+        onMode={(m) => {
+          setMode(m);
           try {
-            window.localStorage.setItem("pageSize", String(n));
+            window.localStorage.setItem("pageSize", m);
           } catch {
             /* storage may be blocked */
           }
