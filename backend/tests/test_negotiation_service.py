@@ -54,10 +54,11 @@ def test_negotiation_only_starts_when_the_buyer_starts_it_after_analysis(repo: R
         neg.start(repo, BUY)  # already negotiating
 
 
-def test_start_picks_the_best_effective_vendor_or_the_one_named(buy: Repo):
+def test_start_picks_the_vendor_of_the_best_quote_or_the_one_named(buy: Repo):
     s = neg.start(buy, BUY)
-    comp = readmodel.comparison(readmodel.snapshot(buy), buy.get("item", BUY))
-    assert s.vendor_id == comp.rows[0].vendor_id
+    snap = readmodel.snapshot(buy)
+    view = readmodel.item_view(snap, buy.get("item", BUY))
+    assert s.vendor_id == view.best_bid_vendor_id and s.original_price == view.best_bid
 
 
 def test_start_rejects_a_vendor_that_did_not_quote(buy: Repo):

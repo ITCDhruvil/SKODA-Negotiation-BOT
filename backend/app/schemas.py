@@ -182,6 +182,8 @@ class ItemDetail(BaseModel):
     outcome: Optional[OutcomeView]
     value_eligibility: EligibilityView
     bids_eligibility: EligibilityView
+    active_session_id: Optional[str] = None
+    latest_session_status: Optional[str] = None
 
 
 class Kpis(BaseModel):
@@ -356,7 +358,18 @@ class SessionSummary(BaseModel):
     agreed_price: Optional[float]
 
 
+class SessionActions(BaseModel):
+    can_advance: bool
+    can_send: bool
+    can_accept_offer: bool
+    can_hand_back: bool
+    can_continue: bool
+    can_accept_deal: bool
+
+
 class SessionView(SessionSummary):
+    event_id: str
+    actions: SessionActions
     item_description: str
     direction: Direction
     language: Language

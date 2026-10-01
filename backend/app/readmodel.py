@@ -124,6 +124,8 @@ def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
         recommendation = "accept" if within else "negotiate"
     if item.state == "closed" and outcome:
         shown = outcome.final_price
+    elif item.state == "closed":
+        shown = 0.0  # closed without a deal: nothing was bought or sold
     else:
         shown = best.unit_price if best else item.reference_price
     return sch.ItemView(

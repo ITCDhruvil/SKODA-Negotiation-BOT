@@ -208,3 +208,35 @@ def next_better_payment(direction: Direction, code: str) -> Optional[str]:
         return better[0] if better else None
     better = [c for d, c in steps if d < days]
     return better[-1] if better else None
+
+
+def is_better(direction: Direction, a: float, b: float) -> bool:
+    """True when price `a` is strictly better for us than `b` (lower on BUY, higher on SELL)."""
+    _check(direction)
+    return a < b if direction == "buy" else a > b
+
+
+def limit_word(direction: Direction) -> str:
+    """What the limit is called in plain language: a ceiling when we buy, a floor when we sell."""
+    _check(direction)
+    return "ceiling" if direction == "buy" else "floor"
+
+
+def distance(a: float, b: float) -> float:
+    """Absolute gap between two prices."""
+    return abs(a - b)
+
+
+def relative_gap(a: float, b: float) -> float:
+    """Gap between `a` and the reference price `b`, as a fraction of `b`."""
+    return abs(a - b) / b
+
+
+def within_pct(a: float, b: float, pct: float) -> bool:
+    """True when `a` is within the fraction `pct` of the reference price `b`."""
+    return relative_gap(a, b) <= pct
+
+
+def same_amount(a: float, b: float, tolerance: float = 0.005) -> bool:
+    """True when two amounts are equal to within half a paisa."""
+    return abs(a - b) < tolerance

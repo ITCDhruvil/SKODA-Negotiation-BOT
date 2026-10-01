@@ -107,7 +107,11 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         s = snap()
         if item_id not in s.item_by_id:
             raise services.NotFound(f"item {item_id} not found")
-        return readmodel.item_detail(s, s.item_by_id[item_id])
+        view = readmodel.item_detail(s, s.item_by_id[item_id])
+        sessions = neg.sessions_for_item(repo, item_id)
+        return view.model_copy(update={
+            "active_session_id": next((x.id for x in sessions if x.status == "active"), None),
+            "latest_session_status": sessions[-1].status if sessions else None})
 
     @app.get("/api/health", response_model=sch.Health)
     def health():
@@ -231,6 +235,10 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         detail(item_id)  # 404 for an unknown item
         return negviews.summaries_for_item(repo, item_id)
 
+    @app.get("/api/events/{event_id}/sessions", response_model=list[sch.SessionSummary])
+    def event_sessions(event_id: str):
+        return negviews.summaries_for_event(repo, event_id)
+
     @app.post("/api/items/{item_id}/negotiations", response_model=sch.SessionView)
     def start_negotiation(item_id: str, body: StartIn):
         s = neg.start(repo, item_id, vendor_id=body.vendor_id, mode=body.mode)
@@ -286,6 +294,11 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     @app.post("/api/items/{item_id}/accept-deal", response_model=sch.ItemDetail)
     def accept_deal(item_id: str):
         neg.accept_deal(repo, item_id)
+        return detail(item_id)
+
+    @app.post("/api/items/{item_id}/close-without-deal", response_model=sch.ItemDetail)
+    def close_without_deal(item_id: str):
+        neg.close_without_deal(repo, item_id)
         return detail(item_id)
 
     @app.post("/api/events/{event_id}/approve", response_model=sch.EventDetail)

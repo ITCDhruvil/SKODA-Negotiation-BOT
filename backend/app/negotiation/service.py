@@ -89,7 +89,7 @@ def _context(s: Session, item: Item, event: Event) -> tactics.Context:
         direction=event.direction, target=target, limit=limit, objective=item.objective,
         round=s.round, our_offer=s.our_offer, vendor_offer=s.vendor_offer,
         previous_vendor_offer=s.previous_vendor_offer, vendor_payment=s.vendor_payment,
-        vendor_final=s.vendor_final, original_price=s.original_price)
+        vendor_final=s.vendor_final, original_price=s.original_price, continuing=s.continuing)
 
 
 def _our_text(kind: str, s: Session, item: Item, event: Event, vendor_name: str, price: float,
@@ -100,14 +100,43 @@ def _our_text(kind: str, s: Session, item: Item, event: Event, vendor_name: str,
         payment_ask=payment_ask, agreed_payment=agreed_payment)
 
 
+def vendor_name(repo: Repo, vendor_id: str) -> str:
+    v = repo.get("vendor", vendor_id)
+    return v.name if v else vendor_id
+
+
 def _vendor_name(repo: Repo, s: Session) -> str:
-    v = repo.get("vendor", s.vendor_id)
-    return v.name if v else s.vendor_id
+    return vendor_name(repo, s.vendor_id)
 
 
 def _require_active(s: Session) -> None:
     if s.status != "active":
         raise Conflict(f"this negotiation is {s.status.replace('_', ' ')}")
+
+
+def _require_negotiating(item: Item) -> None:
+    if item.state != "negotiating":
+        raise Conflict(f"this item is {item.state.replace('_', ' ')}, not being negotiated")
+
+
+def _blank_to_none(text: Optional[str]) -> Optional[str]:
+    """Empty or whitespace-only text means "word it for me"."""
+    return text if text is not None and text.strip() else None
+
+
+def _check_text(repo: Repo, s: Session, item: Item, text: str, *, price: float,
+                payment: Optional[str], limit: float, target: float) -> None:
+    """Run the message guardrails with the numbers this conversation allows the text to name."""
+    name = _vendor_name(repo, s)
+    allowed = [item.qty, price, s.original_price, s.vendor_offer, s.previous_vendor_offer,
+               deal.payment_days(s.vendor_payment), deal.payment_days(s.original_payment)]
+    if payment:
+        allowed.append(deal.payment_days(payment))
+    # Digits that belong to the item's or the vendor's name (such as "M10" or "3M") are not offers.
+    allowed += guardrails.numbers_in(item.description) + guardrails.numbers_in(name)
+    guardrails.check_message(
+        text, offer_price=price, limit=limit, target=target, allowed_numbers=allowed,
+        mask=(name, messages.short_name(name), item.description))
 
 
 # --- start -----------------------------------------------------------------------------------
@@ -132,18 +161,22 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
             if chosen is None:
                 raise Conflict(f"{vendor_id} has not quoted on this item")
         else:
-            chosen = deal.best_first(event.direction, bids, key=lambda b: deal.effective_price(
-                event.direction, b.unit_price, payment_code=b.payment_code, incoterm=b.incoterm,
-                delivery_days=b.delivery_days, warranty_months=b.warranty_months))[0]
+            # The best quote is the best raw unit price (what the item view shows); ties go to the
+            # lower bid id.
+            chosen = deal.best_first(event.direction, sorted(bids, key=lambda b: b.id),
+                                     key=lambda b: b.unit_price)[0]
         s = Session(
             id=f"S-{item_id}-{len(existing) + 1}", item_id=item_id, vendor_id=chosen.vendor_id,
             bid_id=chosen.id, mode=mode, status="active", language=chosen.language, round=0,
             original_price=chosen.unit_price, original_payment=chosen.payment_code,
             our_offer=None, our_payment=None, vendor_offer=chosen.unit_price,
             previous_vendor_offer=chosen.unit_price, vendor_payment=chosen.payment_code,
-            vendor_final=False, agreed_price=None, agreed_payment=None, handback_reason=None,
+            vendor_final=False, continuing=False, agreed_price=None, agreed_payment=None, handback_reason=None,
             started_at=clock.now(), ended_at=None)
-        return _save_session(repo, s)
+        _save_session(repo, s)
+        if mode == "approve":
+            _prepare_draft(repo, s)  # so the buyer sees the first move without asking for it
+        return s
 
 
 # --- executing moves -------------------------------------------------------------------------
@@ -164,18 +197,22 @@ def _finish(repo: Repo, s: Session, item: Item, *, agreed: bool, price: Optional
 def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], text: Optional[str],
                 author: str) -> Session:
     item = _item(repo, s.item_id)
+    _require_negotiating(item)
     event = _event(repo, item)
     target, limit = _points(item)
     price = deal.round_price(price)
+    text = _blank_to_none(text)
     try:
         guardrails.check_offer(event.direction, price, limit)
+        if not deal.is_better(event.direction, price, s.vendor_offer):
+            raise Conflict(f"The vendor already offered {messages.money(s.vendor_offer)}; "
+                           "accept it instead.")
         if payment:
             deal.payment_days(payment)
-        vendor_name = _vendor_name(repo, s)
         if text is None:
             kind = "open" if s.our_offer is None else "counter"
-            text = _our_text(kind, s, item, event, vendor_name, price, payment_ask=payment)
-        guardrails.check_message(text, offer_price=price, limit=limit, target=target)
+            text = _our_text(kind, s, item, event, _vendor_name(repo, s), price, payment_ask=payment)
+        _check_text(repo, s, item, text, price=price, payment=payment, limit=limit, target=target)
     except (guardrails.GuardrailError, ValueError) as e:
         raise Conflict(str(e)) from e
     _add_turn(repo, s, "us", author, text, price, payment)
@@ -191,7 +228,7 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
     s = s.model_copy(update={
         "our_offer": price, "our_payment": payment, "round": s.round + 1,
         "previous_vendor_offer": s.vendor_offer, "vendor_offer": reply.price,
-        "vendor_payment": reply.payment, "vendor_final": reply.final})
+        "vendor_payment": reply.payment, "vendor_final": reply.final, "continuing": False})
     if reply.kind == "accept":
         return _finish(repo, s, item, agreed=True, price=price, payment=reply.payment)
     return _save_session(repo, s)
@@ -199,14 +236,17 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
 
 def _accept(repo: Repo, s: Session, text: Optional[str], author: str) -> Session:
     item = _item(repo, s.item_id)
+    _require_negotiating(item)
     event = _event(repo, item)
     target, limit = _points(item)
+    text = _blank_to_none(text)
     try:
         guardrails.check_offer(event.direction, s.vendor_offer, limit)
         if text is None:
             text = _our_text("accept", s, item, event, _vendor_name(repo, s), s.vendor_offer,
                              agreed_payment=s.vendor_payment)
-        guardrails.check_message(text, offer_price=s.vendor_offer, limit=limit, target=target)
+        _check_text(repo, s, item, text, price=s.vendor_offer, payment=s.vendor_payment,
+                    limit=limit, target=target)
     except guardrails.GuardrailError as e:
         raise Conflict(str(e)) from e
     _add_turn(repo, s, "us", author, text, s.vendor_offer, s.vendor_payment)
@@ -241,6 +281,9 @@ def _prepare_draft(repo: Repo, s: Session) -> Draft:
 
 def _execute(repo: Repo, s: Session, d: Draft, *, price: Optional[float] = None,
              payment: Optional[str] = None, text: Optional[str] = None) -> Session:
+    text = _blank_to_none(text)
+    if d.kind != "offer" and (price is not None or payment is not None or text is not None):
+        raise Conflict("That kind of draft cannot be edited.")
     edited = ((price is not None and price != d.price) or (text is not None and text != d.text)
               or (payment is not None and payment != d.payment_code))
     author = "human" if edited else "bot"
@@ -251,7 +294,7 @@ def _execute(repo: Repo, s: Session, d: Draft, *, price: Optional[float] = None,
                            payment if payment is not None else d.payment_code,
                            text if text is not None else (None if rewording else d.text), author)
     if d.kind == "accept":
-        return _accept(repo, s, text if text is not None else d.text, author)
+        return _accept(repo, s, d.text, author)
     return _hand_back(repo, s, d.rationale)
 
 
@@ -283,6 +326,7 @@ def approve_draft(repo: Repo, session_id: str, draft_id: str, *, price: Optional
 def discard_draft(repo: Repo, session_id: str, draft_id: str) -> Session:
     with repo.transaction():
         s = _session(repo, session_id)
+        _require_active(s)
         d = _get(repo, "draft", draft_id, "draft")
         if d.session_id != s.id or d.status != "pending":
             raise Conflict("that draft is no longer waiting for approval")
@@ -321,6 +365,10 @@ def set_mode(repo: Repo, session_id: str, mode: Mode) -> Session:
     with repo.transaction():
         s = _session(repo, session_id)
         _require_active(s)
+        if mode == "manual":
+            d = pending_draft(repo, s.id)
+            if d is not None:
+                repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=s.id)
         return _save_session(repo, s.model_copy(update={"mode": mode}))
 
 
@@ -340,7 +388,8 @@ def continue_negotiation(repo: Repo, item_id: str) -> Session:
             raise Conflict("there is no agreed result to continue from")
         _move_item(repo, item, "negotiating")
         return _save_session(repo, s.model_copy(update={
-            "status": "active", "agreed_price": None, "agreed_payment": None, "ended_at": None}))
+            "status": "active", "agreed_price": None, "agreed_payment": None, "ended_at": None,
+            "continuing": True}))
 
 
 def accept_deal(repo: Repo, item_id: str) -> Item:
@@ -352,6 +401,15 @@ def accept_deal(repo: Repo, item_id: str) -> Item:
             if s is None or s.status != "agreed":
                 raise Conflict("there is no agreed result to accept")
         return _move_item(repo, item, "awaiting_approval")
+
+
+def close_without_deal(repo: Repo, item_id: str) -> Item:
+    """The buyer gives up on an item that was handed back: it closes with no outcome."""
+    with repo.transaction():
+        item = _item(repo, item_id)
+        if item.state != "handed_back":
+            raise Conflict("only an item that was handed back can be closed without a deal")
+        return _move_item(repo, item, "closed")
 
 
 def approve_event(repo: Repo, event_id: str) -> list[Outcome]:
@@ -375,7 +433,7 @@ def approve_event(repo: Repo, event_id: str) -> list[Outcome]:
                     item_id=item.id, vendor_id=s.vendor_id, direction=event.direction, qty=item.qty,
                     original_price=s.original_price, final_price=s.agreed_price, negotiated=True,
                     payment_code=s.agreed_payment or s.vendor_payment, incoterm=bid.incoterm,
-                    closed_date=clock.now().date(), duration_minutes=minutes)
+                    closed_date=clock.today(), duration_minutes=minutes)
             else:
                 if not bids:
                     raise Conflict(f"{item.id} has no quotes to accept")
@@ -384,7 +442,7 @@ def approve_event(repo: Repo, event_id: str) -> list[Outcome]:
                     item_id=item.id, vendor_id=best.vendor_id, direction=event.direction,
                     qty=item.qty, original_price=best.unit_price, final_price=best.unit_price,
                     negotiated=False, payment_code=best.payment_code, incoterm=best.incoterm,
-                    closed_date=clock.now().date(), duration_minutes=0)
+                    closed_date=clock.today(), duration_minutes=0)
             repo.put("outcome", item.id, outcome, parent=item.id)
             _move_item(repo, item, "closed")
             made.append(outcome)

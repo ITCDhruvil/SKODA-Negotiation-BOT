@@ -30,6 +30,7 @@ class Context:
     vendor_payment: str
     vendor_final: bool
     original_price: float
+    continuing: bool = False  # the buyer asked to keep going after the vendor had already agreed
 
 
 @dataclass(frozen=True)
@@ -39,10 +40,6 @@ class Decision:
     price: Optional[float]
     payment: Optional[str]
     rationale: str
-
-
-def _limit_word(direction: str) -> str:
-    return "ceiling" if direction == "buy" else "floor"
 
 
 def _payment_ask(ctx: Context, tiers: int) -> Optional[str]:
@@ -57,19 +54,26 @@ def _payment_ask(ctx: Context, tiers: int) -> Optional[str]:
 
 
 def opening(ctx: Context) -> Decision:
+    if deal.gap_to_target(ctx.direction, ctx.vendor_offer, ctx.target) == 0:
+        return Decision(
+            "accept", "accept", ctx.vendor_offer, ctx.vendor_payment,
+            f"The vendor's quote of {money(ctx.vendor_offer)} already meets your target of "
+            f"{money(ctx.target)}, so there is nothing better to open with. I recommend accepting.")
     price = deal.round_price(ctx.target)
     ask = _payment_ask(ctx, 2 if ctx.objective == "improve_payment_terms" else 0)
     return Decision(
         "offer", "open", price, ask,
         f"Open at your target of {money(price)}. The vendor quoted {money(ctx.vendor_offer)}, so "
-        f"this leaves room to move toward your {_limit_word(ctx.direction)} of {money(ctx.limit)}.")
+        f"this leaves room to move toward your {deal.limit_word(ctx.direction)} of {money(ctx.limit)}.")
 
 
 def respond(ctx: Context) -> Decision:
     """Decide the next move after the vendor's latest reply."""
     d, v = ctx.direction, ctx.vendor_offer
     inside = deal.within_limit(d, v, ctx.limit)
-    word = _limit_word(d)
+    word = deal.limit_word(d)
+    if ctx.continuing:
+        return _push_further(ctx, word)
     if inside and (ctx.round >= 3 or ctx.vendor_final or deal.gap_to_target(d, v, ctx.target) == 0):
         return Decision(
             "accept", "accept", v, ctx.vendor_payment,
@@ -81,21 +85,37 @@ def respond(ctx: Context) -> Decision:
                 "handback", "", None, None,
                 f"The vendor is at {money(v)}, outside your {word} of {money(ctx.limit)}, and is not "
                 "moving further. I recommend handing this back to you to decide.")
-        if abs(v - ctx.limit) / ctx.limit <= CLOSE_WINDOW:
+        if deal.within_pct(v, ctx.limit, CLOSE_WINDOW):
             ask = _payment_ask(ctx, 1)
             more = f" with payment in {deal.payment_days(ask)} days" if ask else ""
             return Decision(
                 "offer", "close", ctx.limit, ask,
-                f"The vendor is at {money(v)}, only {money(abs(v - ctx.limit))} outside your {word}. "
+                f"The vendor is at {money(v)}, only {money(deal.distance(v, ctx.limit))} outside your {word}. "
                 f"I recommend asking {money(ctx.limit)}{more} to close.")
     fraction = FRACTION_PAYMENT_FOCUS if ctx.objective == "improve_payment_terms" else FRACTION
     nxt = deal.concede(d, ctx.our_offer if ctx.our_offer is not None else ctx.target, v, ctx.limit, fraction)
     ask = _payment_ask(ctx, 1) if ctx.objective == "improve_payment_terms" else None
-    moved = abs(v - ctx.previous_vendor_offer)
+    moved = deal.distance(v, ctx.previous_vendor_offer)
     return Decision(
         "offer", "counter", nxt, ask,
         f"The vendor moved {money(moved)} to {money(v)}. "
-        + (f"That is still {money(abs(v - ctx.limit))} outside your {word}. " if not inside
+        + (f"That is still {money(deal.distance(v, ctx.limit))} outside your {word}. " if not inside
            else f"That is already within your {word}, but {money(deal.gap_to_target(d, v, ctx.target))} "
                 "short of your target. ")
         + f"I recommend asking {money(nxt)}.")
+
+
+def _push_further(ctx: Context, word: str) -> Decision:
+    """The vendor already agreed; the buyer wants to see if more can be had."""
+    d, v = ctx.direction, ctx.vendor_offer
+    short = deal.gap_to_target(d, v, ctx.target)
+    ask = deal.concede(deal.opposite(d), v, ctx.target, ctx.target, FRACTION) if short > 0 else v
+    if short == 0 or not deal.is_better(d, ask, v):
+        return Decision(
+            "accept", "accept", v, ctx.vendor_payment,
+            f"{money(v)} already meets your target of {money(ctx.target)}, or nothing better can "
+            "sensibly be asked. I recommend accepting.")
+    return Decision(
+        "offer", "counter", ask, None,
+        f"You asked to keep going. The vendor agreed at {money(v)}, still {money(short)} short of "
+        f"your target and within your {word} of {money(ctx.limit)}. I recommend asking {money(ask)}.")

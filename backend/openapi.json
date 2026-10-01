@@ -1000,6 +1000,49 @@
     }
    }
   },
+  "/api/events/{event_id}/sessions": {
+   "get": {
+    "summary": "Event Sessions",
+    "operationId": "event_sessions_api_events__event_id__sessions_get",
+    "parameters": [
+     {
+      "name": "event_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Event Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/SessionSummary"
+         },
+         "title": "Response Event Sessions Api Events  Event Id  Sessions Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/items/{item_id}/negotiations": {
    "post": {
     "summary": "Start Negotiation",
@@ -1476,6 +1519,45 @@
    "post": {
     "summary": "Accept Deal",
     "operationId": "accept_deal_api_items__item_id__accept_deal_post",
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ItemDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/items/{item_id}/close-without-deal": {
+   "post": {
+    "summary": "Close Without Deal",
+    "operationId": "close_without_deal_api_items__item_id__close_without_deal_post",
     "parameters": [
      {
       "name": "item_id",
@@ -2705,6 +2787,28 @@
      },
      "bids_eligibility": {
       "$ref": "#/components/schemas/EligibilityView"
+     },
+     "active_session_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active Session Id"
+     },
+     "latest_session_status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Latest Session Status"
      }
     },
     "type": "object",
@@ -3567,6 +3671,44 @@
     ],
     "title": "ResetResult"
    },
+   "SessionActions": {
+    "properties": {
+     "can_advance": {
+      "type": "boolean",
+      "title": "Can Advance"
+     },
+     "can_send": {
+      "type": "boolean",
+      "title": "Can Send"
+     },
+     "can_accept_offer": {
+      "type": "boolean",
+      "title": "Can Accept Offer"
+     },
+     "can_hand_back": {
+      "type": "boolean",
+      "title": "Can Hand Back"
+     },
+     "can_continue": {
+      "type": "boolean",
+      "title": "Can Continue"
+     },
+     "can_accept_deal": {
+      "type": "boolean",
+      "title": "Can Accept Deal"
+     }
+    },
+    "type": "object",
+    "required": [
+     "can_advance",
+     "can_send",
+     "can_accept_offer",
+     "can_hand_back",
+     "can_continue",
+     "can_accept_deal"
+    ],
+    "title": "SessionActions"
+   },
    "SessionSummary": {
     "properties": {
      "id": {
@@ -3693,6 +3835,13 @@
        }
       ],
       "title": "Agreed Price"
+     },
+     "event_id": {
+      "type": "string",
+      "title": "Event Id"
+     },
+     "actions": {
+      "$ref": "#/components/schemas/SessionActions"
      },
      "item_description": {
       "type": "string",
@@ -3834,6 +3983,8 @@
      "round",
      "started_at",
      "agreed_price",
+     "event_id",
+     "actions",
      "item_description",
      "direction",
      "language",

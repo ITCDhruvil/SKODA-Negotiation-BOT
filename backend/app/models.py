@@ -175,6 +175,7 @@ class Session(_Model):
     previous_vendor_offer: float
     vendor_payment: str
     vendor_final: bool
+    continuing: bool = False  # the buyer asked to keep going after the vendor had agreed
     agreed_price: Optional[float]
     agreed_payment: Optional[str]
     handback_reason: Optional[str]

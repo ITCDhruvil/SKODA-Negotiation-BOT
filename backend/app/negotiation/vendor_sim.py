@@ -55,7 +55,7 @@ def reply(
             payment = offer_payment
         return VendorReply("accept", offer_price, payment, True)
     moved = deal.concede(mover, vendor_price, offer_price, reserve, flex)
-    if abs(moved - reserve) <= SNAP * reserve:
+    if deal.within_pct(moved, reserve, SNAP):
         moved = reserve
         final = True
     else:

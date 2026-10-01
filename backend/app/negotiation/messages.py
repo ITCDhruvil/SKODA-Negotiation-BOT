@@ -5,12 +5,19 @@ they never mention software, assistants or automation (see guardrails.check_mess
 """
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from app import deal
 
 LANGS = ("en", "hi", "mr")
-SIGNATURE = "Dhruvil Patel\nSKODA Auto VW India, Pune"
+DEFAULT_SIGNATURE = "Dhruvil Patel\nSKODA Auto VW India, Pune"
+
+
+def signature() -> str:
+    """The name at the foot of our messages: NEGOTIATION_SIGNATURE (a literal \n is a line break)."""
+    configured = os.environ.get("NEGOTIATION_SIGNATURE", "").strip()
+    return configured.replace("\\n", "\n") if configured else DEFAULT_SIGNATURE
 
 _UNIT = {
     "en": {"EA": "unit", "AU": "lot", "KG": "kg", "TON": "ton", "LOT": "lot"},
@@ -34,16 +41,37 @@ def _group(n: int) -> str:
     return ("-" if n < 0 else "") + s
 
 
+_signature = signature  # our_message has a parameter of the same name
+
+
+def _paise(x: float) -> int:
+    """Whole paise, rounded half up, so 46.996 is 4700 and not 4699.6."""
+    return int(abs(x) * 100 + 0.5)
+
+
 def money(x: float) -> str:
-    """₹ amount with Indian grouping; paise only when present."""
-    whole = int(x)
-    if x == whole:
-        return f"₹{_group(whole)}"
-    return f"₹{_group(whole)}.{round((x - whole) * 100):02d}"
+    """₹ amount with Indian grouping; paise only when present; a minus sign for negatives."""
+    total = _paise(x)
+    whole, paise = divmod(total, 100)
+    sign = "-" if x < 0 and total else ""
+    body = _group(whole) if not paise else f"{_group(whole)}.{paise:02d}"
+    return f"{sign}₹{body}"
 
 
 def _qty(x: float) -> str:
-    return _group(int(x)) if x == int(x) else f"{x:,.2f}"
+    if x == int(x):
+        return _group(int(x))
+    whole, paise = divmod(_paise(x), 100)
+    sign = "-" if x < 0 else ""
+    return f"{sign}{_group(whole)}.{paise:02d}"
+
+
+def _qty_unit(lang: str, unit: str, qty: float) -> str:
+    """The unit word that follows a quantity; English adds an s for anything but exactly one."""
+    word = _UNIT[lang].get(unit, unit)
+    if lang == "en" and qty != 1 and word in ("unit", "lot"):
+        return word + "s"
+    return word
 
 
 def payment_phrase(lang: str, direction: str, code: Optional[str]) -> str:
@@ -87,15 +115,15 @@ def _agreed_payment(lang: str, code: Optional[str]) -> str:
 # {quote} {price} {pay} {sign}
 _OURS: dict[tuple[str, str, str], str] = {
     ("open", "buy", "en"): (
-        "Hello {vendor} team, thank you for your quotation of {quote} per {unit} for {qty} {unit} of "
+        "Hello{vendor} team, thank you for your quotation of {quote} per {unit} for {qty} {qty_unit} of "
         "{item}. For this quantity we were looking at around {price} per {unit}. Could you please "
         "revisit your price?{pay}\n\nRegards,\n{sign}"),
     ("open", "buy", "hi"): (
-        "नमस्कार {vendor} टीम, {item} ({qty} {unit}) के लिए {quote} प्रति {unit} का कोटेशन देने के लिए "
+        "नमस्कार{vendor} टीम, {item} ({qty} {unit}) के लिए {quote} प्रति {unit} का कोटेशन देने के लिए "
         "धन्यवाद। इस मात्रा के लिए हम लगभग {price} प्रति {unit} की उम्मीद कर रहे थे। क्या आप कृपया "
         "अपनी कीमत पर पुनर्विचार कर सकते हैं?{pay}\n\nधन्यवाद,\n{sign}"),
     ("open", "buy", "mr"): (
-        "नमस्कार {vendor} टीम, {item} ({qty} {unit}) साठी {quote} प्रति {unit} दराने कोटेशन दिल्याबद्दल "
+        "नमस्कार{vendor} टीम, {item} ({qty} {unit}) साठी {quote} प्रति {unit} दराने कोटेशन दिल्याबद्दल "
         "धन्यवाद. या प्रमाणासाठी आम्हाला साधारण {price} प्रति {unit} अपेक्षित होते. कृपया आपल्या "
         "किमतीचा पुनर्विचार कराल का?{pay}\n\nधन्यवाद,\n{sign}"),
     ("counter", "buy", "en"): (
@@ -105,7 +133,7 @@ _OURS: dict[tuple[str, str, str], str] = {
         "आपके जवाब के लिए धन्यवाद। हम {price} प्रति {unit} तक आ सकते हैं।{pay} क्या यह आपको मंज़ूर "
         "होगा?\n\nधन्यवाद,\n{sign}"),
     ("counter", "buy", "mr"): (
-        "उत्तर दिल्याबद्दल धन्यवाद. आम्ही {price} प्रति {unit} पर्यंत येऊ शकतो.{pay} हे आपल्याला "
+        "उत्तर दिल्याबद्दल धन्यवाद. आम्ही {price} प्रति {unit} या दरापर्यंत येऊ शकतो.{pay} हे आपल्याला "
         "मान्य आहे का?\n\nधन्यवाद,\n{sign}"),
     ("close", "buy", "en"): (
         "Thank you. If you can do {price} per {unit}, we can go ahead with the order today.{pay}"
@@ -114,27 +142,27 @@ _OURS: dict[tuple[str, str, str], str] = {
         "धन्यवाद। अगर आप {price} प्रति {unit} कर दें तो हम आज ही ऑर्डर आगे बढ़ा सकते हैं।{pay}"
         "\n\nधन्यवाद,\n{sign}"),
     ("close", "buy", "mr"): (
-        "धन्यवाद. जर आपण {price} प्रति {unit} केले तर आम्ही आजच ऑर्डर पुढे नेऊ शकतो.{pay}"
+        "धन्यवाद. जर आपण {price} प्रति {unit} केले तर आम्ही ऑर्डर आजच निश्चित करू शकतो.{pay}"
         "\n\nधन्यवाद,\n{sign}"),
     ("accept", "buy", "en"): (
         "Alright, {price} per {unit} is fine with us.{pay} Thank you for working with us on this."
         "\n\nRegards,\n{sign}"),
     ("accept", "buy", "hi"): (
         "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} इसमें सहयोग के लिए धन्यवाद।"
-        "\n\nधन्यवाद,\n{sign}"),
+        "\n\nसादर,\n{sign}"),
     ("accept", "buy", "mr"): (
         "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} सहकार्याबद्दल धन्यवाद."
-        "\n\nधन्यवाद,\n{sign}"),
+        "\n\nकळावे,\n{sign}"),
     ("open", "sell", "en"): (
-        "Hello {vendor} team, thank you for your bid of {quote} per {unit} for {qty} {unit} of "
+        "Hello{vendor} team, thank you for your bid of {quote} per {unit} for {qty} {qty_unit} of "
         "{item}. Going by current market levels we were expecting around {price} per {unit}. Could "
         "you please revisit your bid?{pay}\n\nRegards,\n{sign}"),
     ("open", "sell", "hi"): (
-        "नमस्कार {vendor} टीम, {item} ({qty} {unit}) के लिए {quote} प्रति {unit} की बोली के लिए "
+        "नमस्कार{vendor} टीम, {item} ({qty} {unit}) के लिए {quote} प्रति {unit} की बोली के लिए "
         "धन्यवाद। मौजूदा बाज़ार भाव को देखते हुए हम लगभग {price} प्रति {unit} की उम्मीद कर रहे थे। "
         "क्या आप अपनी बोली पर पुनर्विचार कर सकते हैं?{pay}\n\nधन्यवाद,\n{sign}"),
     ("open", "sell", "mr"): (
-        "नमस्कार {vendor} टीम, {item} ({qty} {unit}) साठी {quote} प्रति {unit} बोली दिल्याबद्दल "
+        "नमस्कार{vendor} टीम, {item} ({qty} {unit}) साठी {quote} प्रति {unit} बोली दिल्याबद्दल "
         "धन्यवाद. सध्याच्या बाजारभावानुसार आम्हाला साधारण {price} प्रति {unit} अपेक्षित होते. कृपया "
         "आपल्या बोलीचा पुनर्विचार कराल का?{pay}\n\nधन्यवाद,\n{sign}"),
     ("counter", "sell", "en"): (
@@ -144,7 +172,7 @@ _OURS: dict[tuple[str, str, str], str] = {
         "संशोधित बोली के लिए धन्यवाद। हम {price} प्रति {unit} तक आ सकते हैं।{pay} क्या यह आपको "
         "मंज़ूर होगा?\n\nधन्यवाद,\n{sign}"),
     ("counter", "sell", "mr"): (
-        "सुधारित बोलीबद्दल धन्यवाद. आम्ही {price} प्रति {unit} पर्यंत खाली येऊ शकतो.{pay} हे "
+        "सुधारित बोलीबद्दल धन्यवाद. आम्ही {price} प्रति {unit} या दरापर्यंत खाली येऊ शकतो.{pay} हे "
         "आपल्याला मान्य आहे का?\n\nधन्यवाद,\n{sign}"),
     ("close", "sell", "en"): (
         "Thank you. If you can do {price} per {unit}, we can release the lot to you this week.{pay}"
@@ -158,16 +186,16 @@ _OURS: dict[tuple[str, str, str], str] = {
     ("accept", "sell", "en"): (
         "Alright, {price} per {unit} is fine with us.{pay} Thank you.\n\nRegards,\n{sign}"),
     ("accept", "sell", "hi"): (
-        "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} धन्यवाद।\n\nधन्यवाद,\n{sign}"),
+        "ठीक है, {price} प्रति {unit} हमें मंज़ूर है।{pay} धन्यवाद।\n\nसादर,\n{sign}"),
     ("accept", "sell", "mr"): (
-        "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} धन्यवाद.\n\nधन्यवाद,\n{sign}"),
+        "ठीक आहे, {price} प्रति {unit} आम्हाला मान्य आहे.{pay} धन्यवाद.\n\nकळावे,\n{sign}"),
 }
 
 # (kind, event direction, language). In a buy event the vendor sells; in a sell event the vendor buys.
 _VENDOR: dict[tuple[str, str, str], str] = {
     ("counter", "buy", "en"): "Thanks for the feedback. For this quantity the best I can do is {price} per {unit}.",
     ("counter", "buy", "hi"): "फीडबैक के लिए धन्यवाद। इस मात्रा के लिए मैं {price} प्रति {unit} तक कर सकता हूँ।",
-    ("counter", "buy", "mr"): "अभिप्रायाबद्दल धन्यवाद. या प्रमाणासाठी मी {price} प्रति {unit} पर्यंत करू शकतो.",
+    ("counter", "buy", "mr"): "प्रतिसादाबद्दल धन्यवाद. या प्रमाणासाठी मी {price} प्रति {unit} पर्यंत करू शकतो.",
     ("firm", "buy", "en"): "I understand, but {price} per {unit} really is the lowest I can go. That is my final price.",
     ("firm", "buy", "hi"): "मैं समझता हूँ, लेकिन {price} प्रति {unit} इससे कम नहीं हो पाएगा। यही मेरी अंतिम कीमत है।",
     ("firm", "buy", "mr"): "मला समजते, पण {price} प्रति {unit} यापेक्षा कमी होणार नाही. हीच माझी अंतिम किंमत आहे.",
@@ -186,21 +214,31 @@ _VENDOR: dict[tuple[str, str, str], str] = {
 }
 
 
-def _short(vendor_name: str) -> str:
-    return vendor_name.split()[0] if vendor_name else "there"
+_HONORIFICS = {"m/s", "mr", "mr.", "shree", "sri", "the"}
+
+
+def short_name(vendor_name: str) -> str:
+    """The first real word of the vendor's name, without honorifics; '' when nothing is left."""
+    words = vendor_name.split()
+    while words and words[0].lower() in _HONORIFICS:
+        words.pop(0)
+    return words[0] if words else ""
 
 
 def our_message(
     kind: str, *, direction: str, lang: str, vendor_name: str, item: str, qty: float, unit: str,
     quote: float, price: float, payment_ask: Optional[str] = None, agreed_payment: Optional[str] = None,
-    signature: str = SIGNATURE,
+    signature: Optional[str] = None,
 ) -> str:
     """The text we send. `quote` is the vendor's current price; `price` is what we propose."""
     template = _OURS[(kind, direction, lang)]
     pay = payment_phrase(lang, direction, payment_ask) if kind != "accept" else _agreed_payment(lang, agreed_payment)
+    name = short_name(vendor_name)
     return template.format(
-        vendor=_short(vendor_name), item=item, qty=_qty(qty), unit=_UNIT[lang].get(unit, unit),
-        quote=money(quote), price=money(price), pay=pay, sign=signature)
+        vendor=f" {name}" if name else "", item=item, qty=_qty(qty),
+        unit=_UNIT[lang].get(unit, unit), qty_unit=_qty_unit(lang, unit, qty),
+        quote=money(quote), price=money(price), pay=pay,
+        sign=signature if signature is not None else _signature())
 
 
 def vendor_message(
