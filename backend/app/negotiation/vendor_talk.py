@@ -9,6 +9,8 @@ from __future__ import annotations
 import zlib
 from typing import Optional
 
+from app.negotiation.personas import SCRIPTED_BIDS
+
 # How far our offer was from the vendor's price, as a share of the vendor's price.
 BIG, MID = 0.08, 0.03
 
@@ -51,7 +53,9 @@ _REACT = {
 
 _PAUSE = {
     "en": ["Give me a minute, let me check with my team.", "Let me talk to my manager and come back to you.",
-           "One moment, I need to check the numbers on my side.", "Hold on, let me see what is possible."],
+           "One moment, I need to check the numbers on my side.", "Hold on, let me see what is possible.",
+           "Let me check the stock and current rates, I will be back shortly.", "Give me five minutes, I need to confirm something.",
+           "Let me ask the purchase side and revert."],
     "hi": ["एक मिनट दीजिए, मैं अपनी टीम से पूछ लेता हूँ।", "मैं मैनेजर से बात करके बताता हूँ।"],
     "mr": ["एक मिनिट द्या, मी टीमशी बोलून सांगतो.", "मी मॅनेजरशी बोलून कळवतो."],
 }
@@ -72,9 +76,21 @@ def pause(lang: str, variant: int) -> str:
     return pool[variant % len(pool)]
 
 
-def pauses_before(round_no: int, kind: str) -> bool:
-    """Every third reply that moves the price is preceded by a pause (the first reply never is)."""
-    return kind == "counter" and round_no >= 1 and round_no % 3 == 1
+def pauses_before(round_no: int, kind: str, bid_id: Optional[str] = None) -> bool:
+    """Whether a price move is preceded by a "let me check" pause.
+
+    The fixed demo stories keep every third move. Any other vendor pauses at most twice, in rounds that depend on
+    the bid, and some not at all, so it does not read as a habit.
+    """
+    if kind != "counter" or round_no < 1:
+        return False
+    if bid_id is None or bid_id in SCRIPTED_BIDS:
+        return round_no % 3 == 1
+    h = zlib.crc32(f"pause-plan:{bid_id}".encode("utf-8"))
+    if h % 10 < 3:
+        return False  # three vendors in ten never stop to check
+    first = 2 + (h >> 4) % 3
+    return round_no in (first, first + 3 + (h >> 8) % 3) if h % 10 < 8 else round_no == first
 
 
 # --- how long replies take (conversation time, not real time) -------------------------------------

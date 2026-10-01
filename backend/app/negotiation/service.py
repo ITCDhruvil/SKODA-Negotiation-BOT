@@ -268,7 +268,7 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
     question = None
     if reply.kind == "counter" and s.round == 1 and not s.vendor_question:
         question = info.ask_vendor(facts)  # the vendor wants to know a few things before it moves
-    if vendor_talk.pauses_before(s.round, reply.kind):
+    if vendor_talk.pauses_before(s.round, reply.kind, s.bid_id):
         # Before moving, the vendor says it will check with someone: a short message of its own.
         _add_turn(repo, s, "vendor", "vendor", vendor_talk.pause(s.language, s.round), None, None,
                   delay=vendor_talk.pause_delay(s.bid_id, s.round))
@@ -280,7 +280,7 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         reply.price, reply.payment,
         delay=(vendor_talk.walk_away_delay(s.bid_id, s.round) if reply.ends else
                vendor_talk.reply_delay(personas.persona_for(s.bid_id, s.vendor_id), s.bid_id, s.round,
-                                       vendor_talk.pauses_before(s.round, reply.kind))))
+                                       vendor_talk.pauses_before(s.round, reply.kind, s.bid_id))))
     # Movement means a lower (buy) or higher (sell) price, or a better payment term; the very first reply does not count.
     # A token step (a rupee or so) is not movement: it counts as a stall and is tracked on its own.
     step = abs(reply.price - s.vendor_offer)
