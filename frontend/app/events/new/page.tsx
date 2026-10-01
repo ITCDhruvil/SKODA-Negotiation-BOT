@@ -10,7 +10,9 @@ import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Select";
 import { SearchBox } from "@/components/ui/TableToolbar";
 import { ErrorBox, Loading, Notice } from "@/components/ui/State";
-import { api, type Direction, type EventOptions, type NewEvent, type NewItem } from "@/lib/api";
+import { api, type Direction, type EventOptions, type NewEvent, type NewItem, type VendorSuggestion } from "@/lib/api";
+import { Pill } from "@/components/ui/basics";
+import { TOUGH_LABEL, TOUGH_TONE } from "@/lib/labels";
 import { num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
 
@@ -81,6 +83,8 @@ function Form({ options }: { options: EventOptions }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filled, setFilled] = useState(false);
+  const [suggestions, setSuggestions] = useState<VendorSuggestion[] | null>(null);
+  const [customised, setCustomised] = useState(false); // the buyer changed the vendor selection by hand
 
   // A new type starts the form over with that type's defaults.
   useEffect(() => {
@@ -90,6 +94,8 @@ function Form({ options }: { options: EventOptions }) {
     setPicked([]);
     setStep(0);
     setAttempted(false);
+    setCustomised(false);
+    setSuggestions(null);
   }, [direction, cats]);
   const org = orgs[Number(orgIdx)] ?? orgs[0];
   useEffect(() => setCostCentre(org?.cost_centre ?? ""), [org]);
@@ -99,6 +105,25 @@ function Form({ options }: { options: EventOptions }) {
     setFilled(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
+
+  // Vendors are ranked for the request: the category, the items typed so far, ratings and past dealings.
+  const itemKey = items.map((i) => i.description.trim()).join("|");
+  useEffect(() => {
+    if (!categoryKey) return;
+    let live = true;
+    api
+      .vendorSuggestions(direction, categoryKey, items.map((i) => i.description))
+      .then((r) => {
+        if (!live) return;
+        setSuggestions(r);
+        if (!customised) setPicked(r.filter((x) => x.recommended).map((x) => x.id));
+      })
+      .catch(() => live && setSuggestions(null));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [direction, categoryKey, itemKey]);
 
   const problems = {
     requestor: requestor.trim().length < 2 ? "Enter who is asking for this" : null,
@@ -153,7 +178,8 @@ function Form({ options }: { options: EventOptions }) {
     setTitle("");
     setCartNo("");
     setItems(rows);
-    setPicked(cat.vendors.map((v) => v.id));
+    setPicked(cat.vendors.map((v) => v.id)); // replaced by the ranked suggestions as soon as they load
+    setCustomised(false);
     setAttempted(false);
     setError(null);
     setStep(3);
@@ -190,7 +216,10 @@ function Form({ options }: { options: EventOptions }) {
 
   const unitOptions = (direction === "buy" ? BUY_UNITS : SELL_UNITS).map((u) => ({ value: u, label: u }));
   const eventTitle = title.trim() || (items[0]?.description.trim() ? items[0].description.trim() + (items.length > 1 ? ` (+${items.length - 1} more)` : "") : "");
-  const vendorList = (category?.vendors ?? []).filter((v) => !vq || v.name.toLowerCase().includes(vq.toLowerCase()));
+  const rank = new Map((suggestions ?? []).map((x, i) => [x.id, i]));
+  const vendorList = (category?.vendors ?? [])
+    .filter((v) => !vq || v.name.toLowerCase().includes(vq.toLowerCase()))
+    .sort((a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999));
   const err = (e: string | null) => (attempted ? e : null);
 
   const summary: [string, ReactNode, boolean][] = [
@@ -371,28 +400,55 @@ function Form({ options }: { options: EventOptions }) {
           )}
 
           {step === 2 && category && (
-            <Section title="Vendors to invite" hint={`Vendors that deal in this category. Invite at least ${options.min_vendors} so there are enough quotes to compare.`}>
+            <Section title="Vendors to invite" hint={`Picked for you from the category, the items you entered, ratings and how each vendor has dealt with us. Invite at least ${options.min_vendors}.`}>
               <div className="flex flex-wrap items-center gap-2">
                 <SearchBox value={vq} onChange={setVq} placeholder="Search vendors" />
-                <Button size="sm" onClick={() => setPicked(category.vendors.map((v) => v.id))}>Select all</Button>
-                <Button size="sm" onClick={() => setPicked([])}>Clear</Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setPicked((suggestions ?? []).filter((x) => x.recommended).map((x) => x.id));
+                    setCustomised(false);
+                  }}
+                >
+                  <Icon name="bulb" size={14} /> Use recommended
+                </Button>
+                <Button size="sm" onClick={() => { setPicked(category.vendors.map((v) => v.id)); setCustomised(true); }}>Select all</Button>
+                <Button size="sm" onClick={() => { setPicked([]); setCustomised(true); }}>Clear</Button>
                 <span className={`ml-auto rounded-full px-3 py-1 text-xs font-bold ${vendorsOk ? "bg-ok-soft text-ok" : "bg-amber-soft text-amber"}`}>
                   {picked.length} selected{vendorsOk ? "" : ` · need ${options.min_vendors - picked.length} more`}
                 </span>
               </div>
-              <ul className="grid gap-2 sm:grid-cols-2">
+              <ul className="grid gap-2">
                 {vendorList.map((v) => {
                   const on = picked.includes(v.id);
+                  const sg = suggestions?.find((x) => x.id === v.id);
                   return (
                     <li key={v.id}>
-                      <label className={`flex cursor-pointer items-center gap-3 rounded-m border px-3 py-2.5 text-sm transition ${on ? "border-brand bg-brand-soft" : "border-line hover:border-brand"}`}>
-                        <input type="checkbox" className="sr-only" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== v.id) : [...p, v.id]))} />
+                      <label className={`flex cursor-pointer items-start gap-3 rounded-m border px-3 py-3 text-sm transition ${on ? "border-brand bg-brand-soft" : "border-line hover:border-brand"}`}>
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={on}
+                          onChange={() => {
+                            setPicked((p) => (on ? p.filter((x) => x !== v.id) : [...p, v.id]));
+                            setCustomised(true);
+                          }}
+                        />
                         <Avatar name={v.name} index={Number(v.id.replace(/\D/g, ""))} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate font-semibold text-ink">{v.name}</span>
-                          <span className="text-xs text-muted">Rating {v.rating.toFixed(1)}</span>
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-ink">{v.name}</span>
+                            {sg?.recommended && <Pill tone="brand">Recommended</Pill>}
+                            {sg && sg.toughness !== "unknown" && <Pill tone={TOUGH_TONE[sg.toughness]}>{TOUGH_LABEL[sg.toughness]}</Pill>}
+                          </span>
+                          <span className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted">
+                            <span>Rating {v.rating.toFixed(1)}</span>
+                            {sg?.reasons.map((r) => (
+                              <span key={r}>{r}</span>
+                            ))}
+                          </span>
                         </span>
-                        <span className={`grid h-5 w-5 place-items-center rounded-full border ${on ? "border-brand bg-brand text-on-brand" : "border-line"}`} aria-hidden="true">
+                        <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${on ? "border-brand bg-brand text-on-brand" : "border-line"}`} aria-hidden="true">
                           {on && <Icon name="check" size={12} />}
                         </span>
                       </label>

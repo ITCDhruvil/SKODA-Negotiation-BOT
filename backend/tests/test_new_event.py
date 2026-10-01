@@ -65,3 +65,31 @@ def test_the_form_is_validated(client):
     assert client.post("/api/events", json={**b, "category_key": "nope"}).status_code == 409
     s = payload(client, "sell")
     assert client.post("/api/events", json={**s, "items": [s["items"][0], s["items"][0]]}).status_code == 409
+
+
+def test_vendor_suggestions_rank_the_category_pool_with_reasons(client):
+    o = client.get("/api/event-options").json()
+    cat = next(c for c in o["categories"] if c["direction"] == "buy" and len(c["vendors"]) >= 5)
+    sample = cat["samples"][0]["description"]
+    r = client.get("/api/vendor-suggestions", params={"direction": "buy", "category_key": cat["key"], "q": [sample]})
+    assert r.status_code == 200
+    rows = r.json()
+    assert {x["id"] for x in rows} == {v["id"] for v in cat["vendors"]}
+    assert [x["score"] for x in rows] == sorted((x["score"] for x in rows), reverse=True)
+    rec = [x for x in rows if x["recommended"]]
+    assert 3 <= len(rec) <= 5 and all(x["recommended"] for x in rows[: len(rec)])
+    assert all(x["reasons"] for x in rec if x["rating"] >= 4.0)
+    assert client.get("/api/vendor-suggestions", params={"direction": "sell", "category_key": cat["key"]}).status_code == 409
+
+
+def test_a_vendor_known_to_be_hard_ranks_lower_than_an_equal_flexible_one(client):
+    o = client.get("/api/event-options").json()
+    hard = {"V008", "V037", "V024", "V003", "V042"}
+    for cat in o["categories"]:
+        ids = {v["id"] for v in cat["vendors"]}
+        if ids & hard and len(ids) >= 5:
+            rows = client.get("/api/vendor-suggestions", params={"direction": cat["direction"], "category_key": cat["key"]}).json()
+            bad = next(x for x in rows if x["id"] in hard)
+            assert any("Hard to crack" in r for r in bad["reasons"]) or bad["toughness"] != "hard"
+            return
+    pytest.skip("no category with a hard vendor")

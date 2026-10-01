@@ -157,6 +157,10 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     def event_options():
         return new_event.options(repo)
 
+    @app.get("/api/vendor-suggestions")
+    def vendor_suggestions(direction: Direction, category_key: str, q: list[str] = Query(default=[])):
+        return new_event.suggest_vendors(repo, direction, category_key, q)
+
     @app.post("/api/events", response_model=sch.EventDetail)
     def add_event(body: new_event.NewEvent):
         event_id = new_event.create_event(repo, body)

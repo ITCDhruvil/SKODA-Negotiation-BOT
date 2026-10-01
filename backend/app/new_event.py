@@ -104,6 +104,56 @@ def options(repo: Repo) -> dict:
     }
 
 
+RECOMMENDED = 5  # how many vendors are suggested by default
+
+
+def suggest_vendors(repo: Repo, direction: str, category_key: str, descriptions: list[str]) -> list[dict]:
+    """Rank the vendors of a category for a request, best first, each with the reasons it was suggested.
+
+    A vendor scores for its rating, how much it has done with us, past deals on the same items or the same
+    category, and how it has negotiated before (flexible helps, hard to move counts against).
+    """
+    from app import readmodel
+
+    category = next((c for c in options(repo)["categories"] if c["key"] == category_key and c["direction"] == direction), None)
+    if category is None:
+        raise Conflict("choose a category that matches the event type")
+    vendors = {v.id: v for v in repo.fetch("vendor")}
+    history = repo.fetch("history")
+    wanted = [d.strip().lower() for d in descriptions if d and d.strip()]
+    ranked = []
+    for row in category["vendors"]:
+        v = vendors[row["id"]]
+        mine = [h for h in history if h.vendor_id == v.id]
+        same_item = [h for h in mine if any(w in h.description.lower() or h.description.lower() in w for w in wanted)]
+        same_category = [h for h in mine if h.category_key == category_key]
+        tough = readmodel.vendor_toughness(history, v.id)
+        score = v.rating * 10 + min(v.past_deals, 40) / 4 + 6 * min(len(same_item), 3) + 2 * min(len(same_category), 5)
+        score += {"flexible": 5, "firm": 2, "hard": -6, "unknown": 0}[tough.level]
+        reasons = []
+        if same_item:
+            reasons.append(f"Dealt on {'this item' if len(wanted) == 1 else 'similar items'} {len(same_item)} time{'s' if len(same_item) != 1 else ''} before")
+        if same_category:
+            reasons.append(f"{len(same_category)} past deal{'s' if len(same_category) != 1 else ''} in this category")
+        if v.rating >= 4.5:
+            reasons.append(f"Top rated ({v.rating:.1f})")
+        elif v.rating >= 4.0:
+            reasons.append(f"Well rated ({v.rating:.1f})")
+        if v.past_deals >= 30:
+            reasons.append(f"{v.past_deals} deals with us")
+        if tough.level == "flexible":
+            reasons.append("Flexible when negotiating")
+        elif tough.level == "hard":
+            reasons.append("Hard to crack: keep as a back-up")
+        ranked.append({"id": v.id, "name": v.name, "rating": v.rating, "past_deals": v.past_deals,
+                       "score": round(score, 1), "reasons": reasons[:4], "toughness": tough.level})
+    ranked.sort(key=lambda r: (-r["score"], r["id"]))
+    top = max(MIN_VENDORS, min(RECOMMENDED, len(ranked)))
+    for i, r in enumerate(ranked):
+        r["recommended"] = i < top
+    return ranked
+
+
 def _next_number(repo: Repo) -> int:
     return max(int(e.id.rsplit("-", 1)[1]) for e in repo.fetch("event")) + 1
 

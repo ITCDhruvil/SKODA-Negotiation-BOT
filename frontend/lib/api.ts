@@ -43,6 +43,16 @@ export type EventOptions = {
 };
 export type Toughness = S["Toughness"];
 export type Strategy = S["Strategy"];
+export type VendorSuggestion = {
+  id: string;
+  name: string;
+  rating: number;
+  past_deals: number;
+  score: number;
+  reasons: string[];
+  toughness: "unknown" | "flexible" | "firm" | "hard";
+  recommended: boolean;
+};
 export type Mode = SessionView["mode"];
 
 export type Direction = EventView["direction"];
@@ -115,6 +125,14 @@ export const api = {
       `/api/events${qs({ q: p.q, direction: p.direction, status: p.status, category_key: p.category_key, date_from: p.from, date_to: p.to })}`,
     ),
   event: (id: string) => request<EventDetail>(`/api/events/${id}`),
+  vendorSuggestions: (direction: Direction, categoryKey: string, descriptions: string[]) =>
+    request<VendorSuggestion[]>(
+      `/api/vendor-suggestions?${new URLSearchParams([
+        ["direction", direction],
+        ["category_key", categoryKey],
+        ...descriptions.filter((d) => d.trim()).map((d) => ["q", d.trim()] as [string, string]),
+      ])}`,
+    ),
   eventOptions: () => request<EventOptions>("/api/event-options"),
   addEvent: (body: NewEvent) => post<EventDetail>("/api/events", body),
   simulate: (direction: Direction) => post<EventDetail>("/api/events/simulate", { direction }),
