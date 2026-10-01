@@ -324,3 +324,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 108. Rows per page defaults to "Auto": the table shows as many rows as fit between its header and the bottom of the window (at least 5, at most 100), recalculated when the window is resized, and the footer shows the figure as "Auto (10)". A fixed size (10, 25, 50 or 100) can still be chosen; the choice is remembered. This refines assumption 107.
     Reason: the buyer asked for the number of records to follow the screen size.
+
+109. A guided Demo story page walks through the whole process in nine steps (event, goals, vendor responses, compare and analyse, start, conversation, result, approval, closed and exported) for a purchase event (lunch buffet, target 250, ceiling 270) and a scrap event (aluminium lot, target 170, floor 165). Each step does the real action through the normal API; the current step is derived from the item's state. "Restart story" resets all demo data. The purchase story's last step also takes the best quote on the event's other items using their suggested goals, so the event can close and export.
+    Reason: a repeatable client presentation that needs no setup or explanation from the presenter.

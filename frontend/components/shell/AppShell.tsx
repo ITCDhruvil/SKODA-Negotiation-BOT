@@ -16,6 +16,7 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/comparison", label: "Comparison", icon: "comparison" },
   { href: "/history", label: "History", icon: "history" },
   { href: "/reports", label: "Reports", icon: "reports" },
+  { href: "/story", label: "Demo story", icon: "bulb" },
   { href: "/settings", label: "Settings", icon: "ops" },
 ];
 
@@ -83,6 +84,7 @@ function DateRangeMenu() {
 /** The heading for the current page, shown on the left of the top bar. */
 function pageTitle(pathname: string): string {
   if (pathname === "/") return "Dashboard";
+  if (pathname === "/story") return "Demo story";
   if (pathname.startsWith("/events/") && pathname.endsWith("/approve")) return "Approval";
   if (pathname.startsWith("/events/")) return "Event";
   if (pathname.startsWith("/items/")) return "Item";
