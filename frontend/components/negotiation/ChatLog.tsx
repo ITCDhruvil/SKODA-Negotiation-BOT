@@ -9,7 +9,7 @@ function time(iso: string): string {
 export function TypingDots({ label }: { label: string }) {
   return (
     <div className="flex justify-start">
-      <div className="rounded-l rounded-bl-s border border-line bg-raise px-4 py-3 text-xs text-muted" role="status">
+      <div className="rounded-card rounded-bl-chip border border-line bg-raise px-4 py-3 text-xs text-muted" role="status">
         <span className="sr-only">{label}</span>
         <span aria-hidden className="flex items-center gap-1 motion-reduce:hidden">
           {[0, 1, 2].map((i) => (
@@ -30,7 +30,7 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
         const ours = t.speaker === "us";
         return (
           <div key={t.seq} className={`flex ${ours ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-l px-4 py-3 text-sm ${ours ? "rounded-br-s bg-brand-soft text-ink" : "rounded-bl-s border border-line bg-raise text-ink"}`}>
+            <div className={`max-w-[85%] rounded-card px-4 py-3 text-sm ${ours ? "rounded-br-chip bg-brand-soft text-ink" : "rounded-bl-chip border border-line bg-raise text-ink"}`}>
               <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span className="font-semibold">{ours ? "You" : vendorName}</span>
                 <span>{time(t.at)}</span>

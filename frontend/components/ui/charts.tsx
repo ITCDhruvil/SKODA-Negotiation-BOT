@@ -102,7 +102,7 @@ export function DonutChart({
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               onBlur={() => setActive(null)}
-              className={`flex w-full items-center gap-2.5 rounded-s px-2 py-1.5 text-left transition ${active === i ? "bg-raise" : ""}`}
+              className={`flex w-full items-center gap-2.5 rounded-chip px-2 py-1.5 text-left transition ${active === i ? "bg-raise" : ""}`}
             >
               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: s.color }} />
               <span className="min-w-0 flex-1 truncate text-text">{s.label}</span>
@@ -296,7 +296,7 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
                 setRange(r.key);
                 setHover(null);
               }}
-              className={`min-w-[2.5rem] rounded-s px-3 py-1.5 text-xs font-bold transition ${range === r.key ? "bg-panel text-brand shadow-card" : "text-muted hover:text-ink"}`}
+              className={`min-w-[2.5rem] rounded-chip px-3 py-1.5 text-xs font-bold transition ${range === r.key ? "bg-panel text-brand shadow-card" : "text-muted hover:text-ink"}`}
             >
               {r.label}
             </button>

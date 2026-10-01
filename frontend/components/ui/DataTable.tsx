@@ -85,7 +85,7 @@ export function DataTable<T>({
                     <button
                       type="button"
                       onClick={() => toggle(c.key)}
-                      className={`group inline-flex items-center gap-1 rounded-s font-semibold hover:text-ink ${c.align === "right" ? "flex-row-reverse" : ""} ${active ? "text-ink" : ""}`}
+                      className={`group inline-flex items-center gap-1 rounded-chip font-semibold hover:text-ink ${c.align === "right" ? "flex-row-reverse" : ""} ${active ? "text-ink" : ""}`}
                     >
                       {c.header}
                       <Icon

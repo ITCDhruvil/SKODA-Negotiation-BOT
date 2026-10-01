@@ -262,7 +262,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
         }
         subtitle={`${event.title} · ${num(item.qty)} ${item.unit} · reference ${money(item.reference_price)} per ${item.unit} · ${item.incoterm}`}
       />
-      <div className="mb-5 rounded-l border border-line bg-panel px-5 py-4 shadow-card">
+      <div className="mb-5 rounded-card border border-line bg-panel px-5 py-4 shadow-card">
         <Stepper state={item.state} />
         <NextStep
           detail={detail}

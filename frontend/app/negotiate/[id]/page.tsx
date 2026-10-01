@@ -74,7 +74,7 @@ function DraftCard({ s, onResult, onError }: { s: SessionView } & Handlers) {
   };
 
   return (
-    <div className="rounded-l border border-brand bg-brand-soft/40 p-4">
+    <div className="rounded-card border border-brand bg-brand-soft/40 p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-bold text-ink">Drafted message: review before it goes out</h3>
         <Pill tone="brand">{d.kind === "offer" ? "Offer" : d.kind === "accept" ? "Accept" : "Hand back"}</Pill>
@@ -245,7 +245,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             )}
 
             {s.status === "agreed" && (
-              <div className="rounded-l border border-transparent bg-ok-soft p-4 text-sm text-ok" role="status">
+              <div className="rounded-card border border-transparent bg-ok-soft p-4 text-sm text-ok" role="status">
                 <p className="text-base font-bold">
                   Agreed at {money(s.agreed_price)} per {s.unit}
                   {s.agreed_payment ? ` · ${s.agreed_payment}` : ""}
@@ -279,7 +279,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             )}
 
             {s.status === "handed_back" && (
-              <div className="rounded-l border border-transparent bg-red-soft p-4 text-sm text-red" role="status">
+              <div className="rounded-card border border-transparent bg-red-soft p-4 text-sm text-red" role="status">
                 <p className="font-bold">Handed back to you</p>
                 <p className="mt-1">{s.handback_reason ?? "No acceptable deal could be reached within your limits."}</p>
                 <div className="mt-3">

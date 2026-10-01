@@ -113,7 +113,7 @@ export function Panel({
   flush?: boolean;
 }) {
   return (
-    <section className={`rounded-l border border-line bg-panel shadow-card ${className}`}>
+    <section className={`rounded-card border border-line bg-panel shadow-card ${className}`}>
       {(title || actions) && (
         <header className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3.5">
           <div className="min-w-0">
@@ -136,30 +136,59 @@ const KPI_ICON_TONE: Record<Tone, string> = {
   brand: "bg-brand-soft text-brand",
 };
 
+/**
+ * Summary tile: a large icon on the left, then the label, the value and a line of smaller facts.
+ * With `href` the whole tile is a link to the data behind it.
+ */
 export function KpiCard({
   icon,
   tone = "brand",
   label,
   value,
+  facts,
   sub,
+  href,
 }: {
   icon: IconName;
   tone?: Tone;
   label: string;
   value: ReactNode;
+  /** Smaller figures shown under the value, for example "81 open". */
+  facts?: string[];
+  /** A single line of detail, for tiles that do not need separate figures. */
   sub?: ReactNode;
+  href?: string;
 }) {
-  return (
-    <div className="min-w-0 rounded-l border border-line bg-panel p-3.5 shadow-card">
-      <div className="flex items-center gap-2">
-        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-s ${KPI_ICON_TONE[tone]}`}>
-          <Icon name={icon} size={15} />
-        </span>
-        <span className="min-w-0 truncate text-xs font-medium text-muted">{label}</span>
+  const body = (
+    <div className="flex h-full min-w-0 items-center gap-3.5 p-4">
+      <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-m ${KPI_ICON_TONE[tone]}`}>
+        <Icon name={icon} size={26} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-xs font-semibold text-muted">{label}</div>
+        <div className="truncate text-2xl font-extrabold leading-tight tracking-tight text-ink tabular-nums">{value}</div>
+        {sub && !facts && <div className="mt-1 text-[11px] leading-snug text-muted">{sub}</div>}
+        {facts && facts.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted">
+            {facts.map((f, i) => (
+              <span key={i} className="whitespace-nowrap">
+                {i > 0 && <span aria-hidden="true" className="mr-2">·</span>}
+                {f}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="mt-2 truncate text-xl font-extrabold leading-tight tracking-tight text-ink tabular-nums">{value}</div>
-      {sub && <div className="mt-0.5 text-[11px] leading-snug text-muted">{sub}</div>}
+      {href && <Icon name="chevron" size={16} className="shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand" />}
     </div>
+  );
+  const shell = "min-w-0 overflow-hidden rounded-card border border-line bg-panel shadow-card";
+  return href ? (
+    <Link href={href} className={`group block ${shell} transition hover:border-brand`}>
+      {body}
+    </Link>
+  ) : (
+    <div className={shell}>{body}</div>
   );
 }
 

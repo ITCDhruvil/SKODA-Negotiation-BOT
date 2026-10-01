@@ -7,7 +7,7 @@ export function Loading({ label = "Loading…" }: { label?: string }) {
     <div role="status" aria-live="polite" className="grid gap-3 p-2">
       <span className="sr-only">{label}</span>
       {[70, 100, 85].map((w, i) => (
-        <div key={i} className="h-4 animate-pulse rounded-s bg-raise" style={{ width: `${w}%` }} />
+        <div key={i} className="h-4 animate-pulse rounded-chip bg-raise" style={{ width: `${w}%` }} />
       ))}
     </div>
   );

@@ -40,8 +40,19 @@ export function SearchBox({ value, onChange, placeholder }: { value: string; onC
 export function FilterMenu({ filters }: { filters: FilterDef[] }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<string | null>(null);
+  const [rowTop, setRowTop] = useState(0);
+  const [wide, setWide] = useState(true);
   const root = useRef<HTMLDivElement>(null);
   const active = filters.filter((f) => f.value !== "").length;
+
+  // Wide screens show a side panel on hover; narrow ones replace the list instead.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -64,6 +75,29 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
 
   const current = filters.find((f) => f.key === view);
   const labelOf = (f: FilterDef) => f.options.find((o) => o.value === f.value)?.label ?? f.options[0]?.label ?? "";
+  const showList = wide || !current;
+
+  const options = current && (
+    <div role="group" aria-label={current.label} className="max-h-72 overflow-auto py-1">
+      {current.options.map((o) => (
+        <button
+          key={o.value}
+          role="menuitemradio"
+          aria-checked={current.value === o.value}
+          type="button"
+          onClick={() => {
+            current.onChange(o.value);
+            setView(null);
+            if (wide) setOpen(false);
+          }}
+          className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm text-text hover:bg-raise"
+        >
+          <span className={current.value === o.value ? "font-semibold text-ink" : ""}>{o.label}</span>
+          {current.value === o.value && <Icon name="check" size={16} className="text-brand" />}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div ref={root} className="relative">
@@ -83,15 +117,30 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
         {active > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-on-brand">{active}</span>}
       </button>
       {open && (
-        <div role="menu" className="absolute left-0 z-40 mt-2 w-64 rounded-l border border-line bg-panel py-1.5 shadow-pop sm:left-auto sm:right-0">
-          {!current &&
+        <div role="menu" onMouseLeave={() => wide && setView(null)} className="absolute left-0 z-40 mt-2 w-64 rounded-card border border-line bg-panel py-1.5 shadow-pop">
+          {showList &&
             filters.map((f) => (
               <button
                 key={f.key}
                 role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={view === f.key}
                 type="button"
-                onClick={() => setView(f.key)}
-                className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm hover:bg-raise"
+                onMouseEnter={(e) => {
+                  if (!wide) return;
+                  setRowTop(e.currentTarget.offsetTop - 6);
+                  setView(f.key);
+                }}
+                onFocus={(e) => {
+                  if (!wide) return;
+                  setRowTop(e.currentTarget.offsetTop - 6);
+                  setView(f.key);
+                }}
+                onClick={(e) => {
+                  setRowTop(e.currentTarget.offsetTop - 6);
+                  setView(f.key);
+                }}
+                className={`flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm hover:bg-raise ${view === f.key ? "bg-raise" : ""}`}
               >
                 <span className="font-semibold text-ink">{f.label}</span>
                 <span className="flex min-w-0 items-center gap-1 text-muted">
@@ -100,40 +149,31 @@ export function FilterMenu({ filters }: { filters: FilterDef[] }) {
                 </span>
               </button>
             ))}
-          {!current && active > 0 && (
+          {showList && active > 0 && (
             <button
               type="button"
+              onMouseEnter={() => setView(null)}
               onClick={() => filters.forEach((f) => f.onChange(""))}
               className="mt-1 w-full border-t border-line2 px-3.5 py-2.5 text-left text-sm font-semibold text-brand hover:bg-raise"
             >
               Clear all filters
             </button>
           )}
-          {current && (
+          {current && !wide && (
             <>
               <button type="button" onClick={() => setView(null)} className="flex w-full items-center gap-2 border-b border-line2 px-3.5 py-2.5 text-left text-sm font-semibold text-ink hover:bg-raise">
                 <Icon name="back" size={14} />
                 {current.label}
               </button>
-              <div role="group" aria-label={current.label} className="max-h-64 overflow-auto py-1">
-                {current.options.map((o) => (
-                  <button
-                    key={o.value}
-                    role="menuitemradio"
-                    aria-checked={current.value === o.value}
-                    type="button"
-                    onClick={() => {
-                      current.onChange(o.value);
-                      setView(null);
-                    }}
-                    className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm text-text hover:bg-raise"
-                  >
-                    <span className={current.value === o.value ? "font-semibold text-ink" : ""}>{o.label}</span>
-                    {current.value === o.value && <Icon name="check" size={16} className="text-brand" />}
-                  </button>
-                ))}
-              </div>
+              {options}
             </>
+          )}
+          {current && wide && (
+            <div className="absolute left-full w-64 pl-1" style={{ top: Math.max(rowTop, 0) }}>
+              <div role="menu" aria-label={current.label} className="rounded-card border border-line bg-panel py-1.5 shadow-pop">
+                {options}
+              </div>
+            </div>
           )}
         </div>
       )}

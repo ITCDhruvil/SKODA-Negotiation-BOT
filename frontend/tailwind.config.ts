@@ -20,7 +20,7 @@ const config: Config = {
         electric: v("electric"), "e-ink": v("e-ink"),
         focus: v("focus"),
       },
-      borderRadius: { s: "6px", m: "10px", l: "16px" },
+      borderRadius: { chip: "6px", m: "10px", card: "16px" },
       fontFamily: {
         sans: ['"Hanken Grotesk"', "system-ui", "-apple-system", '"Segoe UI"', "Roboto", "sans-serif"],
       },

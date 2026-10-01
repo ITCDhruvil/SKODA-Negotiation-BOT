@@ -95,7 +95,7 @@ export function DateRangePicker({ value, onChange }: { value: Range; onChange: (
         <Icon name="down" size={14} />
       </button>
       {open && (
-        <div role="dialog" aria-label="Choose dates" className="absolute right-0 z-40 mt-2 flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-l border border-line bg-panel shadow-pop sm:flex-row">
+        <div role="dialog" aria-label="Choose dates" className="absolute right-0 z-40 mt-2 flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card border border-line bg-panel shadow-pop sm:flex-row">
           <div className="flex gap-1 overflow-x-auto border-b border-line2 p-2 sm:grid sm:w-40 sm:content-start sm:border-b-0 sm:border-r sm:p-3">
             {presets().map((p) => {
               const on = p.range.from === draft.from && p.range.to === draft.to;

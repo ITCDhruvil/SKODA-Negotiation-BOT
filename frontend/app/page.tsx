@@ -59,7 +59,7 @@ export default function DashboardPage() {
             >
               <Icon name="plus" size={16} /> Create event
             </summary>
-            <div className="absolute right-0 z-30 mt-2 grid w-56 gap-1 rounded-l border border-line bg-panel p-2 shadow-pop">
+            <div className="absolute right-0 z-30 mt-2 grid w-56 gap-1 rounded-card border border-line bg-panel p-2 shadow-pop">
               <button
                 className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise"
                 onClick={() => createEvent("buy")}
@@ -108,13 +108,13 @@ function DashboardBody({ data }: { data: Dashboard }) {
 
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard icon="events" tone="info" label="Total events" value={k.total_events} sub={`${k.open_events} open`} />
-        <KpiCard icon="cube" tone="brand" label="Items & lots" value={k.items} sub={`${k.vendors} vendors`} />
-        <KpiCard icon="coin" tone="amber" label="Total value" value={moneyCompact(k.total_value)} sub="Quoted or final" />
-        <KpiCard icon="trend" tone="ok" label="Potential" value={moneyCompact(k.potential_total)} sub={`${moneyCompact(k.potential_savings)} save · ${moneyCompact(k.potential_uplift)} uplift`} />
-        <KpiCard icon="chat" tone="amber" label="In negotiation" value={k.negotiations_in_progress} sub="Negotiating or awaiting approval" />
-        <KpiCard icon="check" tone="ok" label="Completed" value={k.completed_negotiations} sub={`${moneyCompact(k.realised_total)} generated`} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <KpiCard icon="events" tone="info" label="Total events" value={k.total_events} href="/events" facts={[`${k.open_events} open`, `${k.total_events - k.open_events} closed`]} />
+        <KpiCard icon="cube" tone="brand" label="Items & lots" value={k.items} href="/comparison" facts={[`${k.vendors} vendors`]} />
+        <KpiCard icon="coin" tone="amber" label="Total value" value={moneyCompact(k.total_value)} href="/reports" facts={["Quoted or final"]} />
+        <KpiCard icon="trend" tone="ok" label="Potential" value={moneyCompact(k.potential_total)} href="/comparison" facts={[`${moneyCompact(k.potential_savings)} savings`, `${moneyCompact(k.potential_uplift)} uplift`]} />
+        <KpiCard icon="chat" tone="amber" label="In negotiation" value={k.negotiations_in_progress} href="/negotiations" facts={["Negotiating or awaiting approval"]} />
+        <KpiCard icon="check" tone="ok" label="Completed" value={k.completed_negotiations} href="/history" facts={[`${moneyCompact(k.realised_total)} generated`]} />
       </div>
 
       <EventsPanel
@@ -218,7 +218,7 @@ function DashboardBody({ data }: { data: Dashboard }) {
           </Panel>
 
           {data.insight && (
-            <div className="rounded-l border border-line bg-brand-soft p-4">
+            <div className="rounded-card border border-line bg-brand-soft p-4">
               <div className="flex items-start gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-m bg-panel text-brand">
                   <Icon name="bulb" />

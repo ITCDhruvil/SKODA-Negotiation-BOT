@@ -118,7 +118,7 @@ export function ChatComposer({
               aria-label="Offer price per unit"
               value={offer.price}
               onChange={(e) => setOffer({ ...offer, price: e.target.value })}
-              className="w-24 rounded-s border border-line bg-panel px-2 py-1 text-sm text-ink"
+              className="w-24 rounded-chip border border-line bg-panel px-2 py-1 text-sm text-ink"
             />
           </label>
           <label className="flex items-center gap-1">
@@ -128,7 +128,7 @@ export function ChatComposer({
               placeholder="e.g. ZD45"
               value={offer.payment}
               onChange={(e) => setOffer({ ...offer, payment: e.target.value })}
-              className="w-24 rounded-s border border-line bg-panel px-2 py-1 text-sm text-ink"
+              className="w-24 rounded-chip border border-line bg-panel px-2 py-1 text-sm text-ink"
             />
           </label>
           <button type="button" aria-label="Remove offer" onClick={() => setOffer(null)} className="ml-auto grid h-7 w-7 place-items-center rounded-full text-muted hover:bg-panel">

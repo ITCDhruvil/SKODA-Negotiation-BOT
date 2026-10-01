@@ -62,7 +62,7 @@ export function Dialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-l border border-line bg-panel shadow-card"
+        className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-card border border-line bg-panel shadow-card"
       >
         <header className="flex items-center justify-between gap-3 border-b border-line2 px-5 py-4">
           <h2 className="text-base font-bold text-ink">{title}</h2>
