@@ -360,3 +360,6 @@ Append new points at the bottom. Format: number, statement, reason.
 
 120. Options typed in by hand (a category or a requestor) show a delete button while the pointer is over their row, and only then; deleting the selected one falls back to the default. Drop-down lists scroll when they are long (up to 16 rem or 40% of the window height, never less than 10 rem), and open upward when there is clearly more room above the field than below it, so they never run off the screen.
     Reason: tidy up hand-added values and keep long lists usable.
+
+121. In drop-downs the enter (and back) icons sit inside the add box, as plain icons with no background. Long lists hide the scroll bar and show a soft fade at the bottom while more options lie below (and at the top once scrolled), so it is clear that the list continues.
+    Reason: cleaner look; the fade replaces the scroll bar as the hint.

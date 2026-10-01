@@ -85,6 +85,7 @@ export function Select<V extends string = string>({
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const [flip, setFlip] = useState(false);
+  const [more, setMore] = useState({ up: false, down: false }); // is there content above or below the visible part
   const withBar = searchable || Boolean(onAdd);
   const needle = query.trim().toLowerCase();
   const shown = needle ? options.filter((o) => `${o.label} ${o.hint ?? ""}`.toLowerCase().includes(needle)) : options;
@@ -104,6 +105,15 @@ export function Select<V extends string = string>({
   useEffect(() => {
     if (open) list.current?.children[active]?.scrollIntoView({ block: "nearest" });
   }, [open, active]);
+
+  const measure = () => {
+    const el = list.current;
+    if (!el) return;
+    setMore({ up: el.scrollTop > 4, down: el.scrollTop + el.clientHeight < el.scrollHeight - 4 });
+  };
+  useLayoutEffect(() => {
+    if (open) measure();
+  }, [open, needle, options.length]);
 
   // Typing in the search bar starts again from the first match.
   useEffect(() => setActive(0), [needle]);
@@ -223,7 +233,7 @@ export function Select<V extends string = string>({
           {withBar && (
             <div className="flex items-center gap-1.5 border-b border-line2 p-2">
               {adding ? (
-                <>
+                <div className="flex min-w-0 flex-1 items-center gap-1 rounded-m border border-brand bg-panel pr-1.5">
                   <input
                     autoFocus
                     value={draft}
@@ -241,11 +251,8 @@ export function Select<V extends string = string>({
                     maxLength={60}
                     placeholder={addPlaceholder}
                     aria-label={addPlaceholder}
-                    className="min-w-0 flex-1 rounded-m border border-brand bg-panel px-3 py-2 text-sm text-ink outline-none placeholder:text-muted"
+                    className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-muted"
                   />
-                  <button type="button" aria-label="Add" title="Add" disabled={draft.trim().length < 2} onClick={submitAdd} className="grid h-9 w-9 shrink-0 place-items-center rounded-m bg-brand text-on-brand disabled:opacity-40">
-                    <Icon name="enter" size={16} />
-                  </button>
                   <button
                     type="button"
                     aria-label="Back to search"
@@ -254,11 +261,14 @@ export function Select<V extends string = string>({
                       setAdding(false);
                       setDraft("");
                     }}
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-m text-muted hover:bg-raise"
+                    className="grid h-7 w-7 shrink-0 place-items-center text-muted hover:text-ink"
                   >
-                    <Icon name="close" size={15} />
+                    <Icon name="close" size={14} />
                   </button>
-                </>
+                  <button type="button" aria-label="Add" title="Add" disabled={draft.trim().length < 2} onClick={submitAdd} className="grid h-7 w-7 shrink-0 place-items-center text-brand transition hover:scale-110 disabled:text-muted disabled:opacity-40 disabled:hover:scale-100">
+                    <Icon name="enter" size={17} />
+                  </button>
+                </div>
               ) : (
                 <>
                   <label className="flex min-w-0 flex-1 items-center gap-2 rounded-m border border-line bg-panel px-3 py-2 focus-within:border-brand">
@@ -293,7 +303,16 @@ export function Select<V extends string = string>({
               )}
             </div>
           )}
-          <ul ref={list} id={listId} role="listbox" aria-label={ariaLabel} className={`py-1 ${scroll ? "max-h-[max(10rem,min(16rem,40vh))] overflow-y-auto overscroll-contain" : ""}`}>
+          <div className="relative">
+          {scroll && more.up && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-[var(--panel)] to-transparent" />}
+          <ul
+            ref={list}
+            id={listId}
+            role="listbox"
+            aria-label={ariaLabel}
+            onScroll={measure}
+            className={`py-1 ${scroll ? "max-h-[max(10rem,min(16rem,40vh))] overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : ""}`}
+          >
             {shown.map((o, i) => {
               const isSel = o.value === value;
               return (
@@ -340,6 +359,8 @@ export function Select<V extends string = string>({
               </li>
             )}
           </ul>
+          {scroll && more.down && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 rounded-b-m bg-gradient-to-t from-[var(--panel)] to-transparent" />}
+          </div>
         </div>
       )}
     </div>
