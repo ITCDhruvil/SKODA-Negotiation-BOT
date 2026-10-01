@@ -80,10 +80,11 @@ def test_full_auto_hero_buy_ends_at_270_with_45_day_payment(buy: Repo):
     assert s.status == "agreed" and s.agreed_price == 270 and s.agreed_payment == "ZD45"
     assert item_state(buy, BUY) == "result_pending"
     ts = neg.turns(buy, s.id)
+    # the vendor pauses once ("let me check with my team") before it moves, which is a message of its own
     assert [(t.speaker, t.price) for t in ts] == [
-        ("us", 250), ("vendor", 285), ("us", 257), ("vendor", 280), ("us", 262), ("vendor", 277),
+        ("us", 250), ("vendor", 285), ("us", 257), ("vendor", None), ("vendor", 280), ("us", 262), ("vendor", 277),
         ("us", 265), ("vendor", 275), ("us", 270), ("vendor", 270)]
-    assert [t.author for t in ts] == ["bot", "vendor"] * 5
+    assert [t.author for t in ts] == ["bot", "vendor", "bot", "vendor", "vendor", "bot", "vendor", "bot", "vendor", "bot", "vendor"]
     assert deal.realised_delta("buy", s.original_price, s.agreed_price, 600) == 9000
 
 
@@ -341,3 +342,11 @@ def test_changing_the_language_changes_only_the_messages_that_follow(buy: Repo):
     assert len(buy.fetch("draft", parent=s.id)) == 2 and len([d for d in buy.fetch("draft", parent=s.id) if d.status == "pending"]) == 1
     with pytest.raises(services.Conflict):
         neg.set_language(buy, s.id, "fr")
+
+
+def test_the_vendor_reacts_to_our_offer_and_sometimes_pauses_before_answering(buy: Repo):
+    s = run_auto(buy, neg.start(buy, BUY, mode="auto").id)
+    vendor = [t for t in neg.turns(buy, s.id) if t.speaker == "vendor"]
+    assert any(t.price is None and "check" in t.text.lower() or "manager" in t.text.lower() for t in vendor)
+    reacting = [t.text for t in vendor if t.price is not None][1:]
+    assert any(x.startswith(("That is", "Honestly", "We are", "I cannot")) for x in reacting)

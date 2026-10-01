@@ -330,6 +330,7 @@ _HONORIFICS = {"m/s", "mr", "mr.", "shree", "sri", "the"}
 
 
 from app.negotiation import tactic_messages as _tm  # noqa: E402
+from app.negotiation import vendor_talk as _vt  # noqa: E402
 
 _OURS.update(_tm.OURS)
 _OURS_ALT.update(_tm.ALT)
@@ -382,9 +383,9 @@ def _decorate(text: str, answers: Optional[list[str]], ask: Optional[str]) -> st
 
 def vendor_message(
     kind: str, *, direction: str, lang: str, price: float, unit: str, payment: Optional[str] = None,
-    variant: int = 0, answer: Optional[str] = None, ask: Optional[str] = None,
+    variant: int = 0, answer: Optional[str] = None, ask: Optional[str] = None, gap: Optional[float] = None,
 ) -> str:
-    """The simulated vendor's reply text. `answer` goes first, a question of its own goes last."""
+    """The simulated vendor's reply text: a reaction to our offer, then `answer`, then its price, then a question of its own."""
     template = _VENDOR[(kind, direction, lang)]
     alts = _VENDOR_ALT.get((kind, direction), []) if lang == "en" else []
     if alts and variant % (len(alts) + 1):
@@ -394,4 +395,5 @@ def vendor_message(
         pay=_agreed_payment(lang, payment) if payment else "")
     if payment and kind in ("counter", "hold"):
         text += _agreed_payment(lang, payment)  # it also moved on payment terms
-    return (answer + " " if answer else "") + text + (" " + ask if ask else "")
+    react = _vt.reaction(direction, lang, gap, variant) if kind in ("counter", "hold", "firm") else ""
+    return (react + " " if react else "") + (answer + " " if answer else "") + text + (" " + ask if ask else "")

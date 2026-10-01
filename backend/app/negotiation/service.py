@@ -14,7 +14,7 @@ from typing import Optional
 
 from app import clock, deal, lifecycle
 from app.models import Bid, Draft, Event, Item, Mode, Outcome, Session, Turn
-from app.negotiation import guardrails, info, messages, personas, tactics, vendor_sim
+from app.negotiation import guardrails, info, messages, personas, tactics, vendor_sim, vendor_talk
 from app.services import Conflict, NotFound
 from app.store import Repo
 
@@ -258,9 +258,13 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
     question = None
     if reply.kind == "counter" and s.round == 1 and not s.vendor_question:
         question = info.ask_vendor(facts)  # the vendor wants to know a few things before it moves
+    if vendor_talk.pauses_before(s.round, reply.kind):
+        # Before moving, the vendor says it will check with someone: a short message of its own.
+        _add_turn(repo, s, "vendor", "vendor", vendor_talk.pause(s.language, s.round), None, None)
+    gap = abs(s.vendor_offer - price) / s.vendor_offer if (s.vendor_offer and s.round >= 1) else None  # nothing to react to at first
     _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
-        unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question),
+        unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question, gap=gap),
         reply.price, reply.payment)
     # Movement means a lower (buy) or higher (sell) price, or a better payment term; the very first reply does not count.
     moved = reply.price != s.vendor_offer or reply.payment != s.vendor_payment
