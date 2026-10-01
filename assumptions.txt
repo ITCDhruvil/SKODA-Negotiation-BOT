@@ -351,3 +351,9 @@ Append new points at the bottom. Format: number, statement, reason.
 
 117. The Add event form starts with defaults: the requestor is the signed-in buyer, the needed-by date is two weeks out, a purchase cart gets the next free shopping cart number (editable; a number already used by another event is refused), and the event title is filled in and follows the first item until it is edited (a scrap lot starts with "Scrap - ", for example "Scrap - Aluminium Turnings Lot - 5,000 kg"; a purchase cart takes its first item's name). Auto fill resets the title and cart number to these defaults.
     Reason: fewer fields to type, and consistent naming and numbering.
+
+118. Requestors come from the user list of the AIS prototype (Increment 11, QA pass), rebuilt in app/seed/users.py from the prototype's own seed rules: one demo persona per role and entity ("Initiator Persona E1", "Buyer Persona E1", ... 15 roles for E1 and 14 for E2, which has no FSK Coordinator), plus the "Unmapped Persona E1" and "Buyer 2 Persona E1" personas: 31 in all, each with an employee number, role and cost centre. The form shows the people of the entity that matches the chosen plant (Plant Pune is E1, any other plant E2). Picking one sets the requestor and the cost centre; the default is that entity's Initiator. The stored requestor is the persona's name in capitals. A person typed in with "+" lives only with the event created from it.
+    Reason: the buyer asked to use the prototype's own users instead of free text.
+
+119. Drop-downs that need it have a search bar with a "+" button at its end. Pressing "+" swaps the search bar for a text box with its own placeholder (different for a purchase cart and a scrap lot) and an enter button; Enter or the button adds the value and selects it. Categories and requestors use this; the earlier "Add category" last row is replaced.
+    Reason: the same pattern everywhere for find-or-add.

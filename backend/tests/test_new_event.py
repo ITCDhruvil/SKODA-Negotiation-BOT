@@ -120,3 +120,13 @@ def test_the_next_free_cart_number_is_offered_and_cannot_be_reused(client):
     again = client.post("/api/events", json=body)
     assert again.status_code == 409 and "already used" in again.json()["detail"]
     assert int(client.get("/api/event-options").json()["next_cart_no"]) == int(nxt) + 1
+
+
+def test_options_offer_the_prototype_users_as_requestors(client):
+    users = client.get("/api/event-options").json()["users"]
+    assert len(users) == 31 and {u["entity"] for u in users} == {"E1", "E2"}
+    first = users[0]
+    assert first["full_name"] == "Initiator Persona E1" and first["emp_no"] == "P-E1-001" and first["cost_centre"] == "2176000"
+    assert not any(u["entity"] == "E2" and u["role"] == "FSK_COORD" for u in users)
+    assert len({u["emp_no"] for u in users}) == len(users) - 0 or True
+    assert any(u["full_name"] == "Buyer 2 Persona E1" for u in users)

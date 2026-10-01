@@ -10,7 +10,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Select";
 import { SearchBox } from "@/components/ui/TableToolbar";
 import { ErrorBox, Loading, Notice } from "@/components/ui/State";
-import { api, type Direction, type EventOptions, type NewEvent, type NewItem, type VendorSuggestion } from "@/lib/api";
+import { api, type Direction, type EventOptions, type EventUser, type NewEvent, type NewItem, type VendorSuggestion } from "@/lib/api";
 import { Pill } from "@/components/ui/basics";
 import { TOUGH_LABEL, TOUGH_TONE } from "@/lib/labels";
 import { num } from "@/lib/format";
@@ -88,7 +88,8 @@ function Form({ options }: { options: EventOptions }) {
   const [orgIdx, setOrgIdx] = useState("0");
   const [title, setTitle] = useState("");
   const [titleTouched, setTitleTouched] = useState(false);
-  const [requestor, setRequestor] = useState("Dhruvil Patel");
+  const [requestorId, setRequestorId] = useState("");
+  const [customUsers, setCustomUsers] = useState<EventUser[]>([]);
   const [costCentre, setCostCentre] = useState("");
   const [due, setDue] = useState(inDays(14));
   const [cartNo, setCartNo] = useState(options.next_cart_no);
@@ -116,6 +117,25 @@ function Form({ options }: { options: EventOptions }) {
     setCartNo(options.next_cart_no);
   }, [direction, options]);
   const org = orgs[Number(orgIdx)] ?? orgs[0];
+
+  // The requestors are the people known to the prototype for this entity (plus any typed in here).
+  const entity = org?.plant === "Plant Pune" ? "E1" : "E2";
+  const people = useMemo(() => [...options.users.filter((u) => u.entity === entity), ...customUsers.filter((u) => u.entity === entity)], [options, entity, customUsers]);
+  const person = people.find((u) => u.id === requestorId);
+  const requestor = person?.full_name ?? "";
+  useEffect(() => {
+    if (!people.some((u) => u.id === requestorId)) setRequestorId((people.find((u) => u.role === "INITIATOR") ?? people[0])?.id ?? "");
+  }, [people, requestorId]);
+  const pickRequestor = (id: string) => {
+    setRequestorId(id);
+    const u = people.find((x) => x.id === id);
+    if (u && u.cost_centre) setCostCentre(u.cost_centre);
+  };
+  const addRequestor = (name: string) => {
+    const id = `custom-${name.toLowerCase().replace(/\s+/g, "-")}`;
+    setCustomUsers((rows) => (rows.some((r) => r.id === id) ? rows : [...rows, { id, entity, sso: "", emp_no: "New", full_name: name, email: "", role: "INITIATOR", role_name: "Requestor", cost_centre: costCentre }]));
+    setRequestorId(id);
+  };
   useEffect(() => setCostCentre(org?.cost_centre ?? ""), [org]);
   const category = cats.find((c) => c.key === categoryKey);
   useEffect(() => {
@@ -144,7 +164,7 @@ function Form({ options }: { options: EventOptions }) {
   }, [direction, categoryKey, itemKey]);
 
   const problems = {
-    requestor: requestor.trim().length < 2 ? "Enter who is asking for this" : null,
+    requestor: requestor.trim().length < 2 ? "Choose who is asking for this" : null,
     costCentre: costCentre.trim().length < 3 ? "Enter a cost centre" : null,
     due: !due ? "Pick the date it is needed by" : due < todayIso() ? "That date has passed" : null,
   };
@@ -191,7 +211,7 @@ function Form({ options }: { options: EventOptions }) {
     setFilled(true);
     setCategoryKey(cat.key);
     setOrgIdx(String(orgChoice));
-    setRequestor(pickOne(options.requestors));
+    setRequestorId(pickOne(people).id);
     setDue(inDays([7, 10, 14, 21, 30][Math.floor(Math.random() * 5)]));
     setTitle("");
     setTitleTouched(false);
@@ -309,7 +329,17 @@ function Form({ options }: { options: EventOptions }) {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Labeled label="Category" required>
-                    <Select value={categoryKey} onChange={setCategoryKey} ariaLabel="Category" scroll={false} addLabel="Add category" onAdd={addCategory} options={cats.map((c) => ({ value: c.key, label: c.label }))} />
+                    <Select
+                      value={categoryKey}
+                      onChange={setCategoryKey}
+                      ariaLabel="Category"
+                      scroll={false}
+                      searchable
+                      searchPlaceholder="Search categories"
+                      onAdd={addCategory}
+                      addPlaceholder={direction === "sell" ? "New scrap material, e.g. Zinc dross" : "New category, e.g. Office furniture"}
+                      options={cats.map((c) => ({ value: c.key, label: c.label }))}
+                    />
                   </Labeled>
                   <Labeled label="Event title" hint={direction === "sell" ? "Starts with Scrap and follows the lot. Edit it if you like." : "Follows the first item. Edit it if you like."}>
                     <input className={inputClass} value={titleTouched ? title : defaultTitle} onChange={(e) => { setTitle(e.target.value); setTitleTouched(true); }} maxLength={120} placeholder="For example, Training lunch for batch 12" />
@@ -331,16 +361,18 @@ function Form({ options }: { options: EventOptions }) {
                     <input className={`${inputClass} ${err(problems.costCentre) ? "!border-red" : ""}`} value={costCentre} onChange={(e) => setCostCentre(e.target.value)} maxLength={20} inputMode="numeric" />
                   </Labeled>
                   <div className="md:col-span-2">
-                    <Labeled label="Requestor" required error={err(problems.requestor)} hint="Who is asking for this.">
-                      <input className={`${inputClass} ${err(problems.requestor) ? "!border-red" : ""}`} value={requestor} onChange={(e) => setRequestor(e.target.value)} maxLength={60} placeholder="Name of the requestor" />
+                    <Labeled label="Requestor" required error={err(problems.requestor)} hint="Who is asking for this. Search the list, or use + to add someone.">
+                      <Select
+                        value={requestorId}
+                        onChange={pickRequestor}
+                        ariaLabel="Requestor"
+                        searchable
+                        searchPlaceholder="Search people or roles"
+                        onAdd={addRequestor}
+                        addPlaceholder={direction === "sell" ? "New requestor for the scrap sale, e.g. Asha Rao" : "New requestor, e.g. Asha Rao"}
+                        options={people.map((u) => ({ value: u.id, label: u.full_name, hint: `${u.emp_no} · ${u.role_name} · cost centre ${u.cost_centre}` }))}
+                      />
                     </Labeled>
-                    <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Suggested requestors">
-                      {options.requestors.slice(0, 5).map((r) => (
-                        <button key={r} type="button" onClick={() => setRequestor(r)} className="rounded-full border border-line px-2.5 py-1 text-xs font-semibold text-text hover:border-brand hover:text-brand">
-                          {r}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
               </Section>

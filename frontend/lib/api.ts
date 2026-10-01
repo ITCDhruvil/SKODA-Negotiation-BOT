@@ -34,7 +34,19 @@ export type EventCategory = {
   samples: { description: string; unit: NewItem["unit"]; qty: number; reference_price: number }[];
   vendors: { id: string; name: string; rating: number }[];
 };
+export type EventUser = {
+  id: string;
+  entity: string;
+  sso: string;
+  emp_no: string;
+  full_name: string;
+  email: string;
+  role: string;
+  role_name: string;
+  cost_centre: string;
+};
 export type EventOptions = {
+  users: EventUser[];
   categories: EventCategory[];
   organisations: { direction: Direction; company_id: string; company: string; plant: string; purch_org: string; purch_group: string; cost_centre: string }[];
   requestors: string[];

@@ -18,6 +18,7 @@ from app.models import Direction, Event, Unit
 from app.seed.build import Accumulator, _add_item
 from app.seed.catalog import BUY_CATEGORIES, FAMILY_TITLES, REQUESTORS, SCRAP_MATERIALS
 from app.seed.constants import SEED
+from app.seed.users import build_users
 from app.seed.vendors import pool
 from app.services import Conflict
 from app.store import Repo
@@ -103,6 +104,7 @@ def options(repo: Repo) -> dict:
         "categories": buy + sell,
         "organisations": list(orgs.values()),
         "requestors": list(REQUESTORS),
+        "users": build_users(),  # the prototype's persona list, offered as requestors
         "incoterms": list(INCOTERMS),
         "min_vendors": MIN_VENDORS,
     }
