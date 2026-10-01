@@ -395,5 +395,5 @@ def vendor_message(
         pay=_agreed_payment(lang, payment) if payment else "")
     if payment and kind in ("counter", "hold"):
         text += _agreed_payment(lang, payment)  # it also moved on payment terms
-    react = _vt.reaction(direction, lang, gap, variant) if kind in ("counter", "hold", "firm") else ""
+    react = _vt.reaction(direction, lang, gap, variant) if kind in ("counter", "firm") else ""
     return (react + " " if react else "") + (answer + " " if answer else "") + text + (" " + ask if ask else "")

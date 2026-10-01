@@ -96,7 +96,7 @@ def respond(ctx: Context) -> Decision:
     word = deal.limit_word(d)
     if ctx.continuing:
         return _push_further(ctx, word)
-    if inside and (ctx.round >= ACCEPT_AFTER or ctx.vendor_final or ctx.stalls >= 1
+    if inside and (ctx.round >= ACCEPT_AFTER or ctx.vendor_final or ctx.stalls >= 3
                    or deal.gap_to_target(d, v, ctx.target) == 0):
         return Decision(
             "accept", "accept", v, ctx.vendor_payment,
@@ -126,33 +126,33 @@ def respond(ctx: Context) -> Decision:
                 "offer", "close", ctx.limit, ask,
                 f"The vendor is at {money(v)}, only {money(deal.distance(v, ctx.limit))} outside your {word}. "
                 f"I recommend asking {money(ctx.limit)}{more} to close.", "close")
-        if ctx.stalls >= 1:
-            held = ctx.our_offer if ctx.our_offer is not None else ctx.target
-            if not ctx.trade_used:
-                ask = _payment_ask(ctx, 1)
-                if ask:
-                    return Decision(
-                        "offer", "trade", held, ask,
-                        f"The vendor did not move from {money(v)}. I recommend holding at {money(held)} and asking for "
-                        f"payment in {deal.payment_days(ask)} days instead: a terms trade costs the vendor less than price.", "trade")
-            if ctx.has_alternative and not ctx.leverage_used:
-                nxt = deal.concede(d, held, v, ctx.limit, 0.15)
+    if ctx.stalls >= 1:  # the vendor did not move: try terms, other offers, then the middle, before anything else
+        held = ctx.our_offer if ctx.our_offer is not None else ctx.target
+        if not ctx.trade_used:
+            ask = _payment_ask(ctx, 1)
+            if ask:
                 return Decision(
-                    "offer", "leverage", nxt, None,
-                    f"Still no movement from {money(v)}. Another vendor has really quoted on this item, so I recommend "
-                    f"saying other offers are closer to what you expected (no number named) and asking {money(nxt)}.", "leverage")
-            if ctx.stalls >= 2 and not ctx.split_used:
-                mid = deal.concede(d, held, v, ctx.limit, 0.5)
-                if deal.is_better(d, mid, v):
-                    return Decision(
-                        "offer", "split", mid, None,
-                        f"The vendor has stalled twice at {money(v)}. I recommend offering to meet in the middle at "
-                        f"{money(mid)}, which is still inside your {word} of {money(ctx.limit)}.", "split")
-            if ctx.our_offer == ctx.limit:
+                    "offer", "trade", held, ask,
+                    f"The vendor did not move from {money(v)}. I recommend holding at {money(held)} and asking for "
+                    f"payment in {deal.payment_days(ask)} days instead: a terms trade costs the vendor less than price.", "trade")
+        if ctx.has_alternative and not ctx.leverage_used:
+            nxt = deal.concede(d, held, v, ctx.limit, 0.15)
+            return Decision(
+                "offer", "leverage", nxt, None,
+                f"Still no movement from {money(v)}. Another vendor has really quoted on this item, so I recommend "
+                f"saying other offers are closer to what you expected (no number named) and asking {money(nxt)}.", "leverage")
+        if ctx.stalls >= 2 and not ctx.split_used:
+            mid = deal.concede(d, held, v, ctx.limit, 0.5)
+            if deal.is_better(d, mid, v):
                 return Decision(
-                    "offer", "close", ctx.limit, None,
-                    f"You are already at your {word} of {money(ctx.limit)} and the vendor has not moved. I recommend "
-                    "restating it firmly once more.", "hold")
+                    "offer", "split", mid, None,
+                    f"The vendor has stalled twice at {money(v)}. I recommend offering to meet in the middle at "
+                    f"{money(mid)}, which is still inside your {word} of {money(ctx.limit)}.", "split")
+        if ctx.our_offer == ctx.limit and not inside:
+            return Decision(
+                "offer", "close", ctx.limit, None,
+                f"You are already at your {word} of {money(ctx.limit)} and the vendor has not moved. I recommend "
+                "restating it firmly once more.", "hold")
     fraction = FRACTION_PAYMENT_FOCUS if ctx.objective == "improve_payment_terms" else FRACTION
     nxt = deal.concede(d, ctx.our_offer if ctx.our_offer is not None else ctx.target, v, ctx.limit, fraction)
     ask = _payment_ask(ctx, 1) if ctx.objective == "improve_payment_terms" else None

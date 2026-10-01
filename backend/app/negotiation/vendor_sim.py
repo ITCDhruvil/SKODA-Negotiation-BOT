@@ -62,7 +62,8 @@ def reply(
         # without reaching it, so there is another round of talking before the deal.
         step = deal.concede(mover, vendor_price, offer_price, offer_price, flex * STEP * max(prof.step(round_no), 0.3))
         if step != offer_price:
-            return VendorReply("counter", step, vendor_payment, False)
+            # No visible step at its price is a hold, not a move.
+            return VendorReply("counter" if step != vendor_price else "hold", step, vendor_payment, False)
     if accepts:
         payment = vendor_payment
         if (offer_payment and deal.better_payment(event_direction, offer_payment, vendor_payment)
