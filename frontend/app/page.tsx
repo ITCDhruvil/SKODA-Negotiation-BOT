@@ -1,97 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { EventsPanel } from "@/components/events/EventsPanel";
 import { Delta, DirectionBadge, KpiCard, Panel } from "@/components/ui/basics";
 import { Avatar, DonutChart, SERIES, StackBar } from "@/components/ui/charts";
 import { Icon } from "@/components/ui/Icon";
 import { RangeNotice } from "@/components/ui/RangeNotice";
-import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
-import { api, type Dashboard, type Direction } from "@/lib/api";
+import { ErrorBox, Loading } from "@/components/ui/State";
+import { api, type Dashboard } from "@/lib/api";
 import { moneyCompact, money, pct } from "@/lib/format";
-import { useApi, useDismissDetails } from "@/lib/hooks";
+import { useApi } from "@/lib/hooks";
 import { useRange } from "@/lib/providers";
-
-function greeting(): string {
-  const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-}
 
 export default function DashboardPage() {
   const { range } = useRange();
   const { data, error, errorStatus, loading, reload } = useApi(() => api.dashboard(range), [range.from, range.to]);
-  const [hello, setHello] = useState("Welcome");
-  const [created, setCreated] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const menuRef = useDismissDetails();
-  useEffect(() => setHello(greeting()), []);
-
-  const createEvent = async (direction: Direction) => {
-    if (busy) return;
-    menuRef.current?.removeAttribute("open");
-    setBusy(true);
-    setActionError(null);
-    try {
-      const res = await api.simulate(direction);
-      setCreated(res.event.id);
-      await reload();
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <>
-      <PageHeader
-        actions={
-          <details className="relative" ref={menuRef}>
-            <summary
-              aria-disabled={busy}
-              onClick={(e) => {
-                if (busy) e.preventDefault();
-              }}
-              className={`inline-flex list-none items-center gap-2 rounded-m bg-brand px-4 py-2 text-sm font-semibold text-on-brand ${busy ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-            >
-              <Icon name="plus" size={16} /> Create event
-            </summary>
-            <div className="absolute right-0 z-30 mt-2 grid w-56 gap-1 rounded-card border border-line bg-panel p-2 shadow-pop">
-              <button
-                className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise"
-                onClick={() => createEvent("buy")}
-              >
-                New purchase cart
-                <span className="block text-xs font-normal text-muted">Services or goods from suppliers</span>
-              </button>
-              <button
-                className="rounded-m px-3 py-2 text-left text-sm font-medium text-ink hover:bg-raise"
-                onClick={() => createEvent("sell")}
-              >
-                New scrap lot
-                <span className="block text-xs font-normal text-muted">Scrap for bidding buyers</span>
-              </button>
-            </div>
-          </details>
-        }
-      />
-
       <RangeNotice />
-
-      {created && (
-        <div className="mb-4">
-          <Notice tone="ok">
-            Created <Link href={`/events/${created}`} className="font-semibold underline">{created}</Link> as a new draft event.
-          </Notice>
-        </div>
-      )}
-      {actionError && (
-        <div className="mb-4">
-          <Notice tone="red">{actionError}</Notice>
-        </div>
-      )}
 
       {loading && !data && <Loading label="Loading dashboard" />}
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}

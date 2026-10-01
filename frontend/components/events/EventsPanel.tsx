@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CreateEventMenu } from "@/components/events/CreateEventMenu";
 import { EventsTable } from "@/components/events/EventsTable";
 import { Panel } from "@/components/ui/basics";
 import { TableToolbar } from "@/components/ui/TableToolbar";
@@ -21,6 +22,7 @@ export function EventsPanel({
   onQ,
   limit,
   footer,
+  actions,
 }: {
   events: EventView[];
   title?: string;
@@ -28,6 +30,7 @@ export function EventsPanel({
   onQ?: (q: string) => void;
   limit?: number;
   footer?: React.ReactNode;
+  actions?: React.ReactNode;
 }) {
   const [kind, setKind] = useState<Kind>("all");
   const [status, setStatus] = useState("");
@@ -54,7 +57,7 @@ export function EventsPanel({
   const rows = limit ? shown.slice(0, limit) : shown;
 
   return (
-    <Panel title={title} flush>
+    <Panel title={title} flush actions={actions ?? <CreateEventMenu />}>
       <div className="-mt-1 px-4">
         <Tabs
           idPrefix="events"
