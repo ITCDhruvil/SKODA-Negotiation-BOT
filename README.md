@@ -22,7 +22,7 @@ Open http://localhost:3000. `POST /api/admin/reset` (or the Settings page) resto
 
 ## Demo story (for clients)
 
-Open **Demo story** in the sidebar for a guided, nine-step walk through the whole process, with a purchase story and a scrap story. Each step explains what happens and why it matters, shows the live data on the right, and has one button that does the step for real: restart, set the goals, collect vendor responses, analyse the quotes, start the negotiation (it then plays out as a live chat that a person can stop and take over), accept the result, approve and close, then download the SAP Shopping Cart template (or the scrap deal summary) and see the savings on the dashboard. The steps follow the real state of the item, so reloading the page resumes where you were, and any finished step can be revisited with Back and Next.
+Open **Demo story** in the sidebar for a guided, nine-step walk through the whole process, with a purchase story, a scrap story and a hard-vendor story (a vendor whose history says it is hard to crack: about 17 messages, a tested "final price", a terms trade, and the agreement at 275). Each step explains what happens and why it matters, shows the live data on the right, and has one button that does the step for real: restart, set the goals, collect vendor responses, analyse the quotes, start the negotiation (it then plays out as a live chat that a person can stop and take over), accept the result, approve and close, then download the SAP Shopping Cart template (or the scrap deal summary) and see the savings on the dashboard. The steps follow the real state of the item, so reloading the page resumes where you were, and any finished step can be revisited with Back and Next.
 
 ## Demo script (manual)
 

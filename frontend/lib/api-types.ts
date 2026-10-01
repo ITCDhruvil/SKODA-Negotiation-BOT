@@ -776,6 +776,8 @@ export interface components {
             text: string;
             /** Rationale */
             rationale: string;
+            /** Tactic */
+            tactic?: string | null;
             /**
              * Created
              * Format: date-time
@@ -1045,6 +1047,7 @@ export interface components {
             language: "en" | "hi" | "mr";
             /** Responded */
             responded: boolean;
+            toughness: components["schemas"]["Toughness"];
         };
         /** ItemDetail */
         ItemDetail: {
@@ -1587,6 +1590,7 @@ export interface components {
             turns: components["schemas"]["TurnView"][];
             pending_draft: components["schemas"]["DraftView"] | null;
             intelligence: components["schemas"]["Intelligence"];
+            strategy: components["schemas"]["Strategy"];
         };
         /** SimulateIn */
         SimulateIn: {
@@ -1606,6 +1610,50 @@ export interface components {
              * @enum {string}
              */
             mode: "auto" | "approve" | "manual";
+        };
+        /**
+         * Strategy
+         * @description Where the conversation stands, from what the vendor has actually done (never its hidden settings).
+         */
+        Strategy: {
+            /** Round */
+            round: number;
+            /** Max Rounds */
+            max_rounds: number;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "opening" | "probing" | "trading" | "pressing" | "closing" | "done";
+            /**
+             * Stance
+             * @enum {string}
+             */
+            stance: "unknown" | "open" | "firm" | "open_on_terms";
+            /** Stance Note */
+            stance_note: string;
+            /** Tactics Used */
+            tactics_used: string[];
+            /** Alternative */
+            alternative: string | null;
+            history: components["schemas"]["Toughness"];
+        };
+        /**
+         * Toughness
+         * @description How hard a vendor has been to move, judged from its past negotiated deals.
+         */
+        Toughness: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "unknown" | "flexible" | "firm" | "hard";
+            /** Negotiated Deals */
+            negotiated_deals: number;
+            /** Average Concession Pct */
+            average_concession_pct: number | null;
+            /** Note */
+            note: string;
         };
         /** TurnView */
         TurnView: {
@@ -1632,6 +1680,8 @@ export interface components {
              * Format: date-time
              */
             at: string;
+            /** Tactic */
+            tactic?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1703,6 +1753,7 @@ export interface components {
             closed_deals: number;
             /** History Deals */
             history_deals: number;
+            toughness: components["schemas"]["Toughness"];
         };
     };
     responses: never;

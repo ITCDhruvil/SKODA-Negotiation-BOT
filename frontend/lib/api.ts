@@ -41,6 +41,8 @@ export type EventOptions = {
   incoterms: string[];
   min_vendors: number;
 };
+export type Toughness = S["Toughness"];
+export type Strategy = S["Strategy"];
 export type Mode = SessionView["mode"];
 
 export type Direction = EventView["direction"];

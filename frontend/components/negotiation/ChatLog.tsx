@@ -1,5 +1,6 @@
 import type { TurnView } from "@/lib/api";
 import { money } from "@/lib/format";
+import { TACTIC_LABEL } from "@/lib/labels";
 
 function time(iso: string): string {
   const d = new Date(iso);
@@ -34,6 +35,11 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
               <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span className="font-semibold">{ours ? "You" : vendorName}</span>
                 <span>{time(t.at)}</span>
+                {ours && t.tactic && TACTIC_LABEL[t.tactic] && (
+                  <span className="rounded-full bg-panel px-2 py-0.5 text-[10px] font-semibold text-muted" title="What this message is doing (visible to you only)">
+                    {TACTIC_LABEL[t.tactic]}
+                  </span>
+                )}
               </div>
               <p className="whitespace-pre-wrap break-words">{t.text}</p>
               {t.price != null && <p className="mt-2 text-xs font-semibold tabular-nums text-muted">Offer {money(t.price)}{t.payment_code ? ` · ${t.payment_code}` : ""}</p>}

@@ -20,7 +20,7 @@ import { Tabs, panelId, tabId } from "@/components/ui/Tabs";
 import { api, type ItemDetail, type SessionSummary } from "@/lib/api";
 import { dateShort, money, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import { SESSION_LABEL, SESSION_TONE, STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
+import { TOUGH_LABEL, TOUGH_TONE, SESSION_LABEL, SESSION_TONE, STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
 
 const LANG: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi" };
 const VENDOR_STATUS = ["Invited", "Quoted", "In progress", "Agreed", "Handed back"];
@@ -83,6 +83,18 @@ function QuotesTab({
       ),
     },
     { key: "rating", header: "Rating", align: "center", className: "w-[1%]", sort: (r) => r.invitee.rating, cell: (r) => <span className="tabular-nums">{r.invitee.rating.toFixed(1)}</span> },
+    {
+      key: "tough",
+      header: "Negotiates",
+      align: "center",
+      className: "w-[1%]",
+      sort: (r) => ["hard", "firm", "unknown", "flexible"].indexOf(r.invitee.toughness.level),
+      cell: (r) => (
+        <span title={r.invitee.toughness.note}>
+          <Pill tone={TOUGH_TONE[r.invitee.toughness.level]}>{TOUGH_LABEL[r.invitee.toughness.level]}</Pill>
+        </span>
+      ),
+    },
     { key: "lang", header: "Language", align: "center", className: "w-[1%]", sort: (r) => r.invitee.language, cell: (r) => LANG[r.invitee.language] ?? r.invitee.language },
     {
       key: "quote",

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui/basics";
 import { Notice } from "@/components/ui/State";
 import { api, type ItemDetail, type Mode } from "@/lib/api";
-import { MODE_HINT, MODE_LABEL } from "@/lib/labels";
+import { MODE_HINT, MODE_LABEL, TOUGH_LABEL } from "@/lib/labels";
 import { ModeSelect } from "./ModeSelect";
 
 /** Lets the buyer start a negotiation (or reopen the running one). The buyer always starts it. */
@@ -19,6 +19,7 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
   const [error, setError] = useState<string | null>(null);
 
   const responded = detail.invitees.filter((i) => i.responded);
+  const chosen = responded.find((v) => v.vendor_id === (vendorId || item.best_bid_vendor_id));
   const open = detail.active_session_id;
   const canStart = (item.state === "analyzed" || (item.state === "negotiating" && !open)) && event.eligibility.eligible;
 
@@ -60,10 +61,15 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
           ariaLabel="Negotiate with"
           options={[
             { value: "", label: "Best quote (recommended)" },
-            ...responded.map((v) => ({ value: v.vendor_id, label: v.vendor_name })),
+            ...responded.map((v) => ({ value: v.vendor_id, label: v.vendor_name, hint: v.toughness.level === "unknown" ? undefined : TOUGH_LABEL[v.toughness.level] })),
           ]}
         />
       </Field>
+      {chosen && chosen.toughness.level !== "unknown" && chosen.toughness.level !== "flexible" && (
+        <Notice tone={chosen.toughness.level === "hard" ? "red" : "amber"}>
+          <b>{chosen.vendor_name}.</b> {chosen.toughness.note}
+        </Notice>
+      )}
       <Field label="Who sends the messages?">
         <ModeSelect id="start-mode" value={mode} onChange={setMode} />
       </Field>

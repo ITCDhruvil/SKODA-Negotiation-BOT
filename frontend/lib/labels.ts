@@ -94,6 +94,39 @@ export const MODE_LABEL: Record<"auto" | "approve" | "manual", string> = {
 
 export const LANGUAGE_LABEL: Record<"en" | "hi" | "mr", string> = { en: "English", hi: "Hindi (हिंदी)", mr: "Marathi (मराठी)" };
 
+export const TACTIC_LABEL: Record<string, string> = {
+  open: "Opening offer",
+  concede: "Small step",
+  trade: "Terms trade",
+  leverage: "Other offers",
+  split: "Meet in the middle",
+  bluff: "Testing a final price",
+  close: "Closing ask",
+  hold: "Holding firm",
+  accept: "Accepting",
+  handback: "Handing back",
+};
+
+export const TOUGH_LABEL: Record<"unknown" | "flexible" | "firm" | "hard", string> = {
+  unknown: "Unknown",
+  flexible: "Flexible",
+  firm: "Firm",
+  hard: "Hard to crack",
+};
+export const TOUGH_TONE: Record<"unknown" | "flexible" | "firm" | "hard", Tone> = { unknown: "muted", flexible: "ok", firm: "amber", hard: "red" };
+
+export const PHASE_LABEL: Record<string, string> = {
+  opening: "Opening",
+  probing: "Probing",
+  trading: "Trading",
+  pressing: "Pressing",
+  closing: "Closing",
+  done: "Finished",
+};
+
+export const STANCE_LABEL: Record<string, string> = { unknown: "Too early to tell", open: "Open", firm: "Firm", open_on_terms: "Open on terms" };
+export const STANCE_TONE: Record<string, Tone> = { unknown: "muted", open: "ok", firm: "red", open_on_terms: "info" };
+
 export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
   auto: "Messages go out on their own, round by round. You can stop and take over at any time.",
   approve: "Each message is drafted for you; you review, edit and send it.",

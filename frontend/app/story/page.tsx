@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { ChatLog } from "@/components/negotiation/ChatLog";
+import { StrategyPanel } from "@/components/negotiation/StrategyPanel";
 import { Button, Delta, DirectionBadge, Panel, Pill } from "@/components/ui/basics";
 import { Icon } from "@/components/ui/Icon";
 import { ErrorBox, Loading, Notice } from "@/components/ui/State";
@@ -12,7 +13,9 @@ import { money, num } from "@/lib/format";
 import { deltaLabel, limitLabel, quoteLabel } from "@/lib/labels";
 
 type Scenario = {
-  key: "buy" | "sell";
+  key: "buy" | "sell" | "hard";
+  direction: "buy" | "sell";
+  vendor?: string; // negotiate with this vendor instead of the best quote
   label: string;
   event: string;
   item: string;
@@ -22,8 +25,9 @@ type Scenario = {
 };
 
 const SCENARIOS: Scenario[] = [
-  { key: "buy", label: "Purchase story", event: "EVT-2026-041", item: "EVT-2026-041-01", target: 250, limit: 270, blurb: "Buying lunch for a delegation visit: we want a lower price per meal." },
-  { key: "sell", label: "Scrap story", event: "EVT-2026-052", item: "EVT-2026-052-01", target: 170, limit: 165, blurb: "Selling an aluminium scrap lot: we want a higher price per kg." },
+  { key: "buy", direction: "buy", label: "Purchase story", event: "EVT-2026-041", item: "EVT-2026-041-01", target: 250, limit: 270, blurb: "Buying lunch for a delegation visit: we want a lower price per meal." },
+  { key: "hard", direction: "buy", vendor: "V008", label: "Hard vendor story", event: "EVT-2026-041", item: "EVT-2026-041-01", target: 250, limit: 280, blurb: "The same lunch order, but with a vendor whose history says it is hard to crack: a long conversation with real tactics." },
+  { key: "sell", direction: "sell", label: "Scrap story", event: "EVT-2026-052", item: "EVT-2026-052-01", target: 170, limit: 165, blurb: "Selling an aluminium scrap lot: we want a higher price per kg." },
 ];
 
 type Step = { title: string; short: string; what: string; why: string };
@@ -116,7 +120,7 @@ export default function StoryPage() {
 
   const current = detail ? stepFor(detail.item.state, started) : 0;
   const shown = viewing ?? current;
-  const d = detail?.event.direction ?? sc.key;
+  const d = detail?.event.direction ?? sc.direction;
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true);
@@ -203,7 +207,7 @@ export default function StoryPage() {
             : current === 3
               ? { label: "Analyse the quotes", onClick: () => void run(() => api.analyze(sc.item)) }
               : current === 4
-                ? { label: "Start negotiation (fully automatic)", onClick: () => void run(async () => { const s = await api.startNegotiation(sc.item, { mode: "auto" }); setSession(s); setPlaying(true); }) }
+                ? { label: "Start negotiation (fully automatic)", onClick: () => void run(async () => { const s = await api.startNegotiation(sc.item, { mode: "auto", vendor_id: sc.vendor ?? null }); setSession(s); setPlaying(true); }) }
                 : current === 6
                   ? { label: "Accept the deal", onClick: () => void run(() => api.acceptDeal(sc.item)) }
                   : current === 7
@@ -258,12 +262,20 @@ export default function StoryPage() {
         );
       case 4:
         return (
+          <div className="grid gap-4">
+          {sc.vendor && detail.invitees.find((v) => v.vendor_id === sc.vendor) && (
+            <Notice tone="red">
+              <b>{detail.invitees.find((v) => v.vendor_id === sc.vendor)!.vendor_name}.</b> {detail.invitees.find((v) => v.vendor_id === sc.vendor)!.toughness.note}
+            </Notice>
+          )}
           <Panel title="Opportunity">
             <Facts rows={[[`Best ${quoteLabel(d).toLowerCase()}`, money(item.best_bid)], ["Target", money(item.target)], [limitLabel(d), money(item.limit)], ["Gap per unit", money(item.gap)], [`Potential ${deltaLabel(d).toLowerCase()}`, <Delta key="p" value={item.potential_delta} direction={d} />]]} />
           </Panel>
+          </div>
         );
       case 5:
         return (
+          <div className="grid gap-4">
           <Panel
             title={o ? `Conversation with ${o.vendor_name}` : "Conversation"}
             actions={
@@ -284,6 +296,8 @@ export default function StoryPage() {
               <p className="text-sm text-muted">The conversation appears here once the negotiation starts.</p>
             )}
           </Panel>
+          {o && <StrategyPanel strategy={o.strategy} />}
+          </div>
         );
       default: {
         if (!o) return <Notice tone="info">Nothing to show for this step yet.</Notice>;
@@ -371,7 +385,7 @@ export default function StoryPage() {
                   {eventClosed ? (
                     <>
                       <a href={api.exportUrl(sc.event)} download className="inline-flex items-center justify-center gap-2 rounded-m border border-line bg-panel px-4 py-2 font-semibold text-ink hover:border-brand">
-                        <Icon name="download" size={16} /> {sc.key === "buy" ? "Download Shopping Cart template (CSV)" : "Download deal summary (CSV)"}
+                        <Icon name="download" size={16} /> {sc.direction === "buy" ? "Download Shopping Cart template (CSV)" : "Download deal summary (CSV)"}
                       </a>
                       <Link href="/" className="inline-flex items-center justify-center gap-2 rounded-m bg-brand px-4 py-2 font-semibold text-on-brand">
                         <Icon name="dashboard" size={16} /> See it on the dashboard

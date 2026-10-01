@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatLog } from "@/components/negotiation/ChatLog";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
 import { ChatComposer } from "@/components/negotiation/ChatComposer";
+import { StrategyPanel } from "@/components/negotiation/StrategyPanel";
 import { Select } from "@/components/ui/Select";
 import { Button, DirectionBadge, Field, Panel, Pill, inputClass } from "@/components/ui/basics";
 import { Dialog } from "@/components/ui/Dialog";
@@ -306,6 +307,7 @@ function Workspace({ initial }: { initial: SessionView }) {
               options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
             />
           </Panel>
+          <StrategyPanel strategy={s.strategy} />
           <Panel title="Live intelligence">
             <dl>
               <Row label="Original quote">{money(i.current_bid)}</Row>
