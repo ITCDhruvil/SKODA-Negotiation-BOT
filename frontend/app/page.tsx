@@ -42,18 +42,7 @@ function DashboardBody({ data }: { data: Dashboard }) {
         <KpiCard icon="check" tone="ok" label="Completed" value={k.completed_negotiations} href="/history" facts={[`${moneyCompact(k.realised_total)} generated`]} />
       </div>
 
-      <EventsPanel
-        events={data.events}
-        limit={10}
-        footer={
-          <div className="flex items-center justify-between px-4 py-3 text-xs text-muted">
-            <span>Latest 10 shown</span>
-            <Link href="/events" className="font-semibold text-brand hover:underline">
-              View all events
-            </Link>
-          </div>
-        }
-      />
+      <EventsPanel events={data.events} paginate />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Panel title="Value by category">
