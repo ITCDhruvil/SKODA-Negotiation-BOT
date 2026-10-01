@@ -12,7 +12,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app import lifecycle, readmodel, services, simulate
 from app import schemas as sch
-from app.models import Dataset, Direction, Objective
+from app.models import Dataset, Direction, Mode, Objective
+from app.negotiation import service as neg
+from app.negotiation import views as negviews
 from app.store import Repo
 
 
@@ -30,6 +32,35 @@ class ReleaseIn(BaseModel):
 
 class SimulateIn(BaseModel):
     direction: Direction
+
+
+class StartIn(BaseModel):
+    vendor_id: Optional[str] = None
+    mode: Mode = "approve"
+
+
+class ModeIn(BaseModel):
+    mode: Mode
+
+
+class ApproveDraftIn(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    price: Optional[float] = Field(default=None, gt=0)
+    payment_code: Optional[str] = Field(default=None, max_length=8)
+    text: Optional[str] = Field(default=None, max_length=2000)
+
+
+class MessageIn(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    price: float = Field(gt=0)
+    payment_code: Optional[str] = Field(default=None, max_length=8)
+    text: Optional[str] = Field(default=None, max_length=2000)
+
+
+class HandBackIn(BaseModel):
+    reason: Optional[str] = Field(default=None, max_length=500)
 
 
 def _range(date_from: Optional[date], date_to: Optional[date]) -> tuple[Optional[date], Optional[date]]:
@@ -192,5 +223,75 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     def reset():
         repo.load_dataset(seed_dataset)
         return sch.ResetResult(events=repo.count("event"))
+
+    # --- negotiation sessions ----------------------------------------------------------------
+
+    @app.get("/api/items/{item_id}/sessions", response_model=list[sch.SessionSummary])
+    def item_sessions(item_id: str):
+        detail(item_id)  # 404 for an unknown item
+        return negviews.summaries_for_item(repo, item_id)
+
+    @app.post("/api/items/{item_id}/negotiations", response_model=sch.SessionView)
+    def start_negotiation(item_id: str, body: StartIn):
+        s = neg.start(repo, item_id, vendor_id=body.vendor_id, mode=body.mode)
+        return negviews.session_view(repo, s.id)
+
+    @app.get("/api/sessions/{session_id}", response_model=sch.SessionView)
+    def get_session(session_id: str):
+        return negviews.session_view(repo, session_id)
+
+    @app.put("/api/sessions/{session_id}/mode", response_model=sch.SessionView)
+    def set_mode(session_id: str, body: ModeIn):
+        neg.set_mode(repo, session_id, body.mode)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/advance", response_model=sch.SessionView)
+    def advance(session_id: str):
+        neg.advance(repo, session_id)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/drafts/{draft_id}/approve", response_model=sch.SessionView)
+    def approve_draft(session_id: str, draft_id: str, body: Optional[ApproveDraftIn] = None):
+        b = body or ApproveDraftIn()
+        neg.approve_draft(repo, session_id, draft_id, price=b.price, payment_code=b.payment_code,
+                          text=b.text)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/drafts/{draft_id}/discard", response_model=sch.SessionView)
+    def discard_draft(session_id: str, draft_id: str):
+        neg.discard_draft(repo, session_id, draft_id)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/messages", response_model=sch.SessionView)
+    def send_message(session_id: str, body: MessageIn):
+        neg.send_message(repo, session_id, price=body.price, payment_code=body.payment_code,
+                         text=body.text)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/accept-offer", response_model=sch.SessionView)
+    def accept_offer(session_id: str):
+        neg.accept_offer(repo, session_id)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/hand-back", response_model=sch.SessionView)
+    def hand_back(session_id: str, body: Optional[HandBackIn] = None):
+        neg.hand_back(repo, session_id, (body.reason if body else None))
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/items/{item_id}/continue", response_model=sch.SessionView)
+    def continue_negotiation(item_id: str):
+        s = neg.continue_negotiation(repo, item_id)
+        return negviews.session_view(repo, s.id)
+
+    @app.post("/api/items/{item_id}/accept-deal", response_model=sch.ItemDetail)
+    def accept_deal(item_id: str):
+        neg.accept_deal(repo, item_id)
+        return detail(item_id)
+
+    @app.post("/api/events/{event_id}/approve", response_model=sch.EventDetail)
+    def approve_event(event_id: str):
+        neg.approve_event(repo, event_id)
+        s = snap()
+        return readmodel.event_detail(s, s.event_by_id[event_id])
 
     return app

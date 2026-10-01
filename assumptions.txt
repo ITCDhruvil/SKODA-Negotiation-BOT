@@ -225,3 +225,24 @@ Append new points at the bottom. Format: number, statement, reason.
 
 75. Fonts still load from Google Fonts at runtime; an offline demo falls back to the system font. Self-hosting the font (next/font) is deferred.
     Reason: known offline limitation, out of scope for this wave.
+
+76. Messages to the counterparty are written in a human voice and signed by the buyer; no message says or implies it comes from software. Guardrails enforce this in every mode, including text the buyer types. (User decision. Note for a real deployment: disclosure duties about automated agents differ by market and by counterparty agreement; the POC uses a simulated vendor only.)
+    Reason: the buyer wants the vendor to deal with them as a person, and the guardrails make that hold in every mode.
+
+77. Three permission modes on every session, changeable at any time: full auto, approve each message, manual. Stopping auto and taking over means switching to manual.
+    Reason: the buyer stays in control and can step in at any point without ending the conversation.
+
+78. Phase 4 negotiates price and payment terms only; incoterm, delivery or pickup days, warranty, validity and penalty carry over from the vendor's bid. (Narrows assumption 3 for this phase.)
+    Reason: keeps the first negotiation build small and the outcome comparable with the original bid.
+
+79. The simulated vendor is rule-based: a hidden reserve and a fixed flexibility per bid (hash of the bid id; the two hero best-bidders are pinned so the demo story is 270 for the buy and 168 for the sell). It accepts any offer that meets its reserve, may grant up to 15 days better payment, and calls its price final within 0.3% of its reserve or after five replies.
+    Reason: a deterministic vendor makes the demo repeatable and the tests exact, and the reserve never leaves the backend.
+
+80. Buyer tactics: open at the target; move 40% of the way toward the vendor each round (25% when the objective is payment terms); when the vendor is within 2.5% of the limit, ask exactly the limit with one payment tier better; accept an in-limit price after round 3, when the vendor says final, or when it meets the target; otherwise hand back.
+    Reason: simple, explainable rules the buyer can follow and predict.
+
+81. Accepting the best quote as it stands is allowed from `analyzed` and produces a non-negotiated outcome (original equals final, duration 0). It is the buyer's own explicit decision and is not limit-checked: the limit governs only what the assistant offers or accepts inside a conversation.
+    Reason: the buyer may always take a quote they can see; the limit is a guardrail for the assistant, not for the buyer.
+
+82. Sessions, turns and drafts live only in the store and are cleared by Reset. Seeded items that are already `negotiating` or `handed_back` have no conversation; the buyer can start one.
+    Reason: the seed data has no conversation history, and the POC keeps no data beyond the store.

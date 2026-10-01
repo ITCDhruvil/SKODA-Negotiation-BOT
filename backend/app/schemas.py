@@ -1,12 +1,12 @@
 """Explicit API response models. Nothing here carries a vendor reserve."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-from app.models import Direction, ItemState, Language, Objective, Unit
+from app.models import Direction, DraftKind, ItemState, Language, Mode, Objective, SessionStatus, Unit
 
 EventStatus = Literal["received", "in_progress", "closed"]
 Recommendation = Literal["waiting", "negotiate", "accept", "review", "done"]
@@ -307,3 +307,70 @@ class HistoryRow(HistoryPoint):
     category_key: str
     unit: Unit
     value_delta: Optional[float]
+
+
+# --- negotiation sessions ------------------------------------------------------------------
+
+class TurnView(BaseModel):
+    seq: int
+    speaker: Literal["us", "vendor"]
+    author: Literal["bot", "human", "vendor"]  # for the buyer's own audit trail
+    text: str
+    price: Optional[float]
+    payment_code: Optional[str]
+    at: datetime
+
+
+class DraftView(BaseModel):
+    id: str
+    kind: DraftKind
+    price: Optional[float]
+    payment_code: Optional[str]
+    text: str
+    rationale: str  # shown to the buyer only
+    created: datetime
+
+
+class Intelligence(BaseModel):
+    current_bid: float
+    target: float
+    limit: float
+    latest_vendor_offer: float
+    our_offer: Optional[float]
+    movement: float  # improvement per unit since the vendor's opening quote
+    potential_delta: float
+    delta_if_accepted: Optional[float]
+    within_limit: bool
+    recommendation: str
+
+
+class SessionSummary(BaseModel):
+    id: str
+    item_id: str
+    vendor_id: str
+    vendor_name: str
+    mode: Mode
+    status: SessionStatus
+    round: int
+    started_at: datetime
+    agreed_price: Optional[float]
+
+
+class SessionView(SessionSummary):
+    item_description: str
+    direction: Direction
+    language: Language
+    unit: Unit
+    qty: float
+    original_price: float
+    our_offer: Optional[float]
+    vendor_offer: float
+    vendor_payment: str
+    vendor_final: bool
+    agreed_payment: Optional[str]
+    agreed_delta: Optional[float]
+    handback_reason: Optional[str]
+    ended_at: Optional[datetime]
+    turns: list[TurnView]
+    pending_draft: Optional[DraftView]
+    intelligence: Intelligence

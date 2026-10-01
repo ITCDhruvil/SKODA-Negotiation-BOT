@@ -293,10 +293,240 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/items/{item_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Item Sessions */
+        get: operations["item_sessions_api_items__item_id__sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/items/{item_id}/negotiations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Negotiation */
+        post: operations["start_negotiation_api_items__item_id__negotiations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Session */
+        get: operations["get_session_api_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Mode */
+        put: operations["set_mode_api_sessions__session_id__mode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Advance */
+        post: operations["advance_api_sessions__session_id__advance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/drafts/{draft_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Draft */
+        post: operations["approve_draft_api_sessions__session_id__drafts__draft_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/drafts/{draft_id}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Discard Draft */
+        post: operations["discard_draft_api_sessions__session_id__drafts__draft_id__discard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Message */
+        post: operations["send_message_api_sessions__session_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/accept-offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Offer */
+        post: operations["accept_offer_api_sessions__session_id__accept_offer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/hand-back": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hand Back */
+        post: operations["hand_back_api_sessions__session_id__hand_back_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/items/{item_id}/continue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Continue Negotiation */
+        post: operations["continue_negotiation_api_items__item_id__continue_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/items/{item_id}/accept-deal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Deal */
+        post: operations["accept_deal_api_items__item_id__accept_deal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{event_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Event */
+        post: operations["approve_event_api_events__event_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ApproveDraftIn */
+        ApproveDraftIn: {
+            /** Price */
+            price?: number | null;
+            /** Payment Code */
+            payment_code?: string | null;
+            /** Text */
+            text?: string | null;
+        };
         /** CategoryValue */
         CategoryValue: {
             /** Category */
@@ -409,6 +639,29 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** DraftView */
+        DraftView: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "offer" | "accept" | "handback";
+            /** Price */
+            price: number | null;
+            /** Payment Code */
+            payment_code: string | null;
+            /** Text */
+            text: string;
+            /** Rationale */
+            rationale: string;
+            /**
+             * Created
+             * Format: date-time
+             */
+            created: string;
+        };
         /** EligibilityView */
         EligibilityView: {
             /** Eligible */
@@ -509,6 +762,11 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HandBackIn */
+        HandBackIn: {
+            /** Reason */
+            reason?: string | null;
         };
         /** Health */
         Health: {
@@ -628,6 +886,29 @@ export interface components {
             best_price: number;
             /** Worst Price */
             worst_price: number;
+        };
+        /** Intelligence */
+        Intelligence: {
+            /** Current Bid */
+            current_bid: number;
+            /** Target */
+            target: number;
+            /** Limit */
+            limit: number;
+            /** Latest Vendor Offer */
+            latest_vendor_offer: number;
+            /** Our Offer */
+            our_offer: number | null;
+            /** Movement */
+            movement: number;
+            /** Potential Delta */
+            potential_delta: number;
+            /** Delta If Accepted */
+            delta_if_accepted: number | null;
+            /** Within Limit */
+            within_limit: boolean;
+            /** Recommendation */
+            recommendation: string;
         };
         /** Invitee */
         Invitee: {
@@ -838,6 +1119,23 @@ export interface components {
             /** Realised Total */
             realised_total: number;
         };
+        /** MessageIn */
+        MessageIn: {
+            /** Price */
+            price: number;
+            /** Payment Code */
+            payment_code?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** ModeIn */
+        ModeIn: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "auto" | "approve" | "manual";
+        };
         /** Opportunity */
         Opportunity: {
             /** Event Id */
@@ -921,6 +1219,107 @@ export interface components {
             /** Events */
             events: number;
         };
+        /** SessionSummary */
+        SessionSummary: {
+            /** Id */
+            id: string;
+            /** Item Id */
+            item_id: string;
+            /** Vendor Id */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "auto" | "approve" | "manual";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "agreed" | "handed_back";
+            /** Round */
+            round: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Agreed Price */
+            agreed_price: number | null;
+        };
+        /** SessionView */
+        SessionView: {
+            /** Id */
+            id: string;
+            /** Item Id */
+            item_id: string;
+            /** Vendor Id */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "auto" | "approve" | "manual";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "agreed" | "handed_back";
+            /** Round */
+            round: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Agreed Price */
+            agreed_price: number | null;
+            /** Item Description */
+            item_description: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "buy" | "sell";
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "hi" | "mr";
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "EA" | "AU" | "KG" | "TON" | "LOT";
+            /** Qty */
+            qty: number;
+            /** Original Price */
+            original_price: number;
+            /** Our Offer */
+            our_offer: number | null;
+            /** Vendor Offer */
+            vendor_offer: number;
+            /** Vendor Payment */
+            vendor_payment: string;
+            /** Vendor Final */
+            vendor_final: boolean;
+            /** Agreed Payment */
+            agreed_payment: string | null;
+            /** Agreed Delta */
+            agreed_delta: number | null;
+            /** Handback Reason */
+            handback_reason: string | null;
+            /** Ended At */
+            ended_at: string | null;
+            /** Turns */
+            turns: components["schemas"]["TurnView"][];
+            pending_draft: components["schemas"]["DraftView"] | null;
+            intelligence: components["schemas"]["Intelligence"];
+        };
         /** SimulateIn */
         SimulateIn: {
             /**
@@ -928,6 +1327,43 @@ export interface components {
              * @enum {string}
              */
             direction: "buy" | "sell";
+        };
+        /** StartIn */
+        StartIn: {
+            /** Vendor Id */
+            vendor_id?: string | null;
+            /**
+             * Mode
+             * @default approve
+             * @enum {string}
+             */
+            mode: "auto" | "approve" | "manual";
+        };
+        /** TurnView */
+        TurnView: {
+            /** Seq */
+            seq: number;
+            /**
+             * Speaker
+             * @enum {string}
+             */
+            speaker: "us" | "vendor";
+            /**
+             * Author
+             * @enum {string}
+             */
+            author: "bot" | "human" | "vendor";
+            /** Text */
+            text: string;
+            /** Price */
+            price: number | null;
+            /** Payment Code */
+            payment_code: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1525,6 +1961,431 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResetResult"];
+                };
+            };
+        };
+    };
+    item_sessions_api_items__item_id__sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_negotiation_api_items__item_id__negotiations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_api_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_mode_api_sessions__session_id__mode_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    advance_api_sessions__session_id__advance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_draft_api_sessions__session_id__drafts__draft_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ApproveDraftIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discard_draft_api_sessions__session_id__drafts__draft_id__discard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_api_sessions__session_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_offer_api_sessions__session_id__accept_offer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hand_back_api_sessions__session_id__hand_back_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["HandBackIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    continue_negotiation_api_items__item_id__continue_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_deal_api_items__item_id__accept_deal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_event_api_events__event_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -956,10 +956,645 @@
      }
     }
    }
+  },
+  "/api/items/{item_id}/sessions": {
+   "get": {
+    "summary": "Item Sessions",
+    "operationId": "item_sessions_api_items__item_id__sessions_get",
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/SessionSummary"
+         },
+         "title": "Response Item Sessions Api Items  Item Id  Sessions Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/items/{item_id}/negotiations": {
+   "post": {
+    "summary": "Start Negotiation",
+    "operationId": "start_negotiation_api_items__item_id__negotiations_post",
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StartIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}": {
+   "get": {
+    "summary": "Get Session",
+    "operationId": "get_session_api_sessions__session_id__get",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/mode": {
+   "put": {
+    "summary": "Set Mode",
+    "operationId": "set_mode_api_sessions__session_id__mode_put",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ModeIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/advance": {
+   "post": {
+    "summary": "Advance",
+    "operationId": "advance_api_sessions__session_id__advance_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/drafts/{draft_id}/approve": {
+   "post": {
+    "summary": "Approve Draft",
+    "operationId": "approve_draft_api_sessions__session_id__drafts__draft_id__approve_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     },
+     {
+      "name": "draft_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Draft Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/ApproveDraftIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/drafts/{draft_id}/discard": {
+   "post": {
+    "summary": "Discard Draft",
+    "operationId": "discard_draft_api_sessions__session_id__drafts__draft_id__discard_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     },
+     {
+      "name": "draft_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Draft Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/messages": {
+   "post": {
+    "summary": "Send Message",
+    "operationId": "send_message_api_sessions__session_id__messages_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessageIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/accept-offer": {
+   "post": {
+    "summary": "Accept Offer",
+    "operationId": "accept_offer_api_sessions__session_id__accept_offer_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/hand-back": {
+   "post": {
+    "summary": "Hand Back",
+    "operationId": "hand_back_api_sessions__session_id__hand_back_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/HandBackIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/items/{item_id}/continue": {
+   "post": {
+    "summary": "Continue Negotiation",
+    "operationId": "continue_negotiation_api_items__item_id__continue_post",
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/items/{item_id}/accept-deal": {
+   "post": {
+    "summary": "Accept Deal",
+    "operationId": "accept_deal_api_items__item_id__accept_deal_post",
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ItemDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/events/{event_id}/approve": {
+   "post": {
+    "summary": "Approve Event",
+    "operationId": "approve_event_api_events__event_id__approve_post",
+    "parameters": [
+     {
+      "name": "event_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Event Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EventDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
   "schemas": {
+   "ApproveDraftIn": {
+    "properties": {
+     "price": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price"
+     },
+     "payment_code": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Payment Code"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "title": "ApproveDraftIn"
+   },
    "CategoryValue": {
     "properties": {
      "category": {
@@ -1289,6 +1924,69 @@
     ],
     "title": "DeltaGenerated"
    },
+   "DraftView": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "offer",
+       "accept",
+       "handback"
+      ],
+      "title": "Kind"
+     },
+     "price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price"
+     },
+     "payment_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Payment Code"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "rationale": {
+      "type": "string",
+      "title": "Rationale"
+     },
+     "created": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "kind",
+     "price",
+     "payment_code",
+     "text",
+     "rationale",
+     "created"
+    ],
+    "title": "DraftView"
+   },
    "EligibilityView": {
     "properties": {
      "eligible": {
@@ -1533,6 +2231,24 @@
     },
     "type": "object",
     "title": "HTTPValidationError"
+   },
+   "HandBackIn": {
+    "properties": {
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "title": "HandBackIn"
    },
    "Health": {
     "properties": {
@@ -1845,6 +2561,78 @@
      "worst_price"
     ],
     "title": "Insight"
+   },
+   "Intelligence": {
+    "properties": {
+     "current_bid": {
+      "type": "number",
+      "title": "Current Bid"
+     },
+     "target": {
+      "type": "number",
+      "title": "Target"
+     },
+     "limit": {
+      "type": "number",
+      "title": "Limit"
+     },
+     "latest_vendor_offer": {
+      "type": "number",
+      "title": "Latest Vendor Offer"
+     },
+     "our_offer": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Our Offer"
+     },
+     "movement": {
+      "type": "number",
+      "title": "Movement"
+     },
+     "potential_delta": {
+      "type": "number",
+      "title": "Potential Delta"
+     },
+     "delta_if_accepted": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Delta If Accepted"
+     },
+     "within_limit": {
+      "type": "boolean",
+      "title": "Within Limit"
+     },
+     "recommendation": {
+      "type": "string",
+      "title": "Recommendation"
+     }
+    },
+    "type": "object",
+    "required": [
+     "current_bid",
+     "target",
+     "limit",
+     "latest_vendor_offer",
+     "our_offer",
+     "movement",
+     "potential_delta",
+     "delta_if_accepted",
+     "within_limit",
+     "recommendation"
+    ],
+    "title": "Intelligence"
    },
    "Invitee": {
     "properties": {
@@ -2501,6 +3289,62 @@
     ],
     "title": "Kpis"
    },
+   "MessageIn": {
+    "properties": {
+     "price": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "title": "Price"
+     },
+     "payment_code": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Payment Code"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "price"
+    ],
+    "title": "MessageIn"
+   },
+   "ModeIn": {
+    "properties": {
+     "mode": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "approve",
+       "manual"
+      ],
+      "title": "Mode"
+     }
+    },
+    "type": "object",
+    "required": [
+     "mode"
+    ],
+    "title": "ModeIn"
+   },
    "Opportunity": {
     "properties": {
      "event_id": {
@@ -2723,6 +3567,293 @@
     ],
     "title": "ResetResult"
    },
+   "SessionSummary": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "item_id": {
+      "type": "string",
+      "title": "Item Id"
+     },
+     "vendor_id": {
+      "type": "string",
+      "title": "Vendor Id"
+     },
+     "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+     },
+     "mode": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "approve",
+       "manual"
+      ],
+      "title": "Mode"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "active",
+       "agreed",
+       "handed_back"
+      ],
+      "title": "Status"
+     },
+     "round": {
+      "type": "integer",
+      "title": "Round"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "agreed_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Agreed Price"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "item_id",
+     "vendor_id",
+     "vendor_name",
+     "mode",
+     "status",
+     "round",
+     "started_at",
+     "agreed_price"
+    ],
+    "title": "SessionSummary"
+   },
+   "SessionView": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "item_id": {
+      "type": "string",
+      "title": "Item Id"
+     },
+     "vendor_id": {
+      "type": "string",
+      "title": "Vendor Id"
+     },
+     "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+     },
+     "mode": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "approve",
+       "manual"
+      ],
+      "title": "Mode"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "active",
+       "agreed",
+       "handed_back"
+      ],
+      "title": "Status"
+     },
+     "round": {
+      "type": "integer",
+      "title": "Round"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "agreed_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Agreed Price"
+     },
+     "item_description": {
+      "type": "string",
+      "title": "Item Description"
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Direction"
+     },
+     "language": {
+      "type": "string",
+      "enum": [
+       "en",
+       "hi",
+       "mr"
+      ],
+      "title": "Language"
+     },
+     "unit": {
+      "type": "string",
+      "enum": [
+       "EA",
+       "AU",
+       "KG",
+       "TON",
+       "LOT"
+      ],
+      "title": "Unit"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "original_price": {
+      "type": "number",
+      "title": "Original Price"
+     },
+     "our_offer": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Our Offer"
+     },
+     "vendor_offer": {
+      "type": "number",
+      "title": "Vendor Offer"
+     },
+     "vendor_payment": {
+      "type": "string",
+      "title": "Vendor Payment"
+     },
+     "vendor_final": {
+      "type": "boolean",
+      "title": "Vendor Final"
+     },
+     "agreed_payment": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Agreed Payment"
+     },
+     "agreed_delta": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Agreed Delta"
+     },
+     "handback_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Handback Reason"
+     },
+     "ended_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ended At"
+     },
+     "turns": {
+      "items": {
+       "$ref": "#/components/schemas/TurnView"
+      },
+      "type": "array",
+      "title": "Turns"
+     },
+     "pending_draft": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/DraftView"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "intelligence": {
+      "$ref": "#/components/schemas/Intelligence"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "item_id",
+     "vendor_id",
+     "vendor_name",
+     "mode",
+     "status",
+     "round",
+     "started_at",
+     "agreed_price",
+     "item_description",
+     "direction",
+     "language",
+     "unit",
+     "qty",
+     "original_price",
+     "our_offer",
+     "vendor_offer",
+     "vendor_payment",
+     "vendor_final",
+     "agreed_payment",
+     "agreed_delta",
+     "handback_reason",
+     "ended_at",
+     "turns",
+     "pending_draft",
+     "intelligence"
+    ],
+    "title": "SessionView"
+   },
    "SimulateIn": {
     "properties": {
      "direction": {
@@ -2739,6 +3870,100 @@
      "direction"
     ],
     "title": "SimulateIn"
+   },
+   "StartIn": {
+    "properties": {
+     "vendor_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor Id"
+     },
+     "mode": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "approve",
+       "manual"
+      ],
+      "title": "Mode",
+      "default": "approve"
+     }
+    },
+    "type": "object",
+    "title": "StartIn"
+   },
+   "TurnView": {
+    "properties": {
+     "seq": {
+      "type": "integer",
+      "title": "Seq"
+     },
+     "speaker": {
+      "type": "string",
+      "enum": [
+       "us",
+       "vendor"
+      ],
+      "title": "Speaker"
+     },
+     "author": {
+      "type": "string",
+      "enum": [
+       "bot",
+       "human",
+       "vendor"
+      ],
+      "title": "Author"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price"
+     },
+     "payment_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Payment Code"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "seq",
+     "speaker",
+     "author",
+     "text",
+     "price",
+     "payment_code",
+     "at"
+    ],
+    "title": "TurnView"
    },
    "ValidationError": {
     "properties": {
