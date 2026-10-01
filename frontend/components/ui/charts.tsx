@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { initials, money, num } from "@/lib/format";
 
 /** Categorical palette (tokens in globals.css, tuned for light and dark). */
@@ -218,9 +218,19 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
   const [range, setRange] = useState<(typeof RANGES)[number]["key"]>("all");
   const [hover, setHover] = useState<number | null>(null);
 
-  const W = 720;
-  const H = 300;
-  const m = { l: 12, r: 64, t: 20, b: 30 };
+  // Draw at the real pixel width so text and strokes keep their size however wide the card is.
+  const wrap = useRef<HTMLDivElement>(null);
+  const [W, setW] = useState(640);
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setW(Math.max(320, Math.round(el.clientWidth))));
+    ro.observe(el);
+    setW(Math.max(320, Math.round(el.clientWidth)));
+    return () => ro.disconnect();
+  }, []);
+  const H = 240;
+  const m = { l: 8, r: 52, t: 16, b: 26 };
 
   const all = useMemo(
     () => points.map((p) => ({ ...p, t: new Date(`${p.date}T00:00:00`).getTime() })).sort((a, b) => a.t - b.t),
@@ -264,7 +274,7 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
     return best;
   };
 
-  const tipLeft = hover != null ? Math.min(Math.max((xy[hover].x / W) * 100, 14), 86) : 0;
+  const tipLeft = hover != null ? Math.min(Math.max((xy[hover].x / W) * 100, 12), 88) : 0;
 
   return (
     <div>
@@ -294,14 +304,16 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
         </div>
       </div>
 
-      <div className="relative">
+      <div ref={wrap} className="relative">
         <svg
           ref={box}
+          width={W}
+          height={H}
           viewBox={`0 0 ${W} ${H}`}
           role="img"
           aria-label={label}
           tabIndex={0}
-          className="h-auto w-full touch-pan-y select-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
+          className="block touch-pan-y select-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
           onPointerMove={(e) => setHover(nearest(e.clientX))}
           onPointerLeave={() => setHover(null)}
           onKeyDown={(e) => {
