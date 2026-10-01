@@ -216,3 +216,11 @@ def test_questions_and_language_over_http(client):
     assert client.put(f"/api/sessions/{sid}/language", json={"language": "fr"}).status_code == 422
     s = client.post(f"/api/sessions/{sid}/questions", json={"text": "डिलिव्हरी कधी होईल?"}).json()
     assert "दिवसांत" in s["turns"][-1]["text"]
+
+
+def test_session_view_carries_the_values_for_the_approval_page(client):
+    analyzed(client, BUY, 250, 270)
+    sid = start(client, BUY, "auto")["id"]
+    while (s := client.post(f"/api/sessions/{sid}/advance").json())["status"] == "active":
+        pass
+    assert s["original_value"] == 285 * 600 and s["agreed_value"] == 270 * 600

@@ -78,6 +78,8 @@ def session_view(repo: Repo, session_id: str) -> sch.SessionView:
         agreed_payment=s.agreed_payment,
         agreed_delta=(deal.realised_delta(d, s.original_price, s.agreed_price, item.qty)
                       if s.agreed_price is not None else None),
+        original_value=deal.value(item.qty, s.original_price),
+        agreed_value=deal.value(item.qty, s.agreed_price) if s.agreed_price is not None else None,
         handback_reason=s.handback_reason, ended_at=s.ended_at,
         turns=[_turn(t) for t in service.turns(repo, s.id)],
         pending_draft=_draft(draft) if draft else None, intelligence=intelligence)

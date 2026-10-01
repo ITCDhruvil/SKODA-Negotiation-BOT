@@ -4247,6 +4247,21 @@
       ],
       "title": "Agreed Delta"
      },
+     "original_value": {
+      "type": "number",
+      "title": "Original Value"
+     },
+     "agreed_value": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Agreed Value"
+     },
      "handback_reason": {
       "anyOf": [
        {
@@ -4316,6 +4331,8 @@
      "vendor_final",
      "agreed_payment",
      "agreed_delta",
+     "original_value",
+     "agreed_value",
      "handback_reason",
      "ended_at",
      "turns",

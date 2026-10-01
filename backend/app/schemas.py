@@ -396,6 +396,8 @@ class SessionView(SessionSummary):
     vendor_final: bool
     agreed_payment: Optional[str]
     agreed_delta: Optional[float]
+    original_value: float  # quantity x the vendor's original price
+    agreed_value: Optional[float]  # quantity x the agreed price
     handback_reason: Optional[str]
     ended_at: Optional[datetime]
     turns: list[TurnView]

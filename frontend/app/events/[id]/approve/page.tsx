@@ -3,76 +3,36 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChatLog } from "@/components/negotiation/ChatLog";
-import { Button, Delta, Panel } from "@/components/ui/basics";
+import { ItemReview, type ReviewEntry } from "@/components/approval/ItemReview";
+import { Button, Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { Dialog } from "@/components/ui/Dialog";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
-import { api, type ItemView, type SessionView } from "@/lib/api";
+import { api, type EventView } from "@/lib/api";
 import { money, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
 import { deltaLabel } from "@/lib/labels";
 
-type Entry = { item: ItemView; session: SessionView | null };
-
-async function load(eventId: string): Promise<{ title: string; direction: "buy" | "sell"; entries: Entry[] }> {
+async function load(eventId: string): Promise<{ event: EventView; entries: ReviewEntry[] }> {
   const ev = await api.event(eventId);
   const waiting = ev.items.filter((i) => i.state === "awaiting_approval");
   const entries = await Promise.all(
-    waiting.map(async (item): Promise<Entry> => {
-      const list = await api.sessionsForItem(item.id);
+    waiting.map(async (item): Promise<ReviewEntry> => {
+      const [detail, list] = await Promise.all([api.item(item.id), api.sessionsForItem(item.id)]);
       const agreed = [...list].reverse().find((x) => x.status === "agreed");
-      return { item, session: agreed ? await api.session(agreed.id) : null };
+      const session = agreed ? await api.session(agreed.id) : null;
+      const vendorId = session?.vendor_id ?? item.best_bid_vendor_id;
+      const vendor = vendorId ? (await api.vendor(vendorId).catch(() => null))?.vendor ?? null : null;
+      return { detail, session, vendor };
     }),
   );
-  return { title: ev.event.title, direction: ev.event.direction, entries };
-}
-
-function EntryCard({ e, direction }: { e: Entry; direction: "buy" | "sell" }) {
-  const [open, setOpen] = useState(false);
-  const { item, session } = e;
-  return (
-    <Panel
-      title={item.description}
-      subtitle={session ? session.vendor_name : `Best ${direction === "buy" ? "quote" : "bid"} accepted as it stands: ${item.best_bid_vendor ?? ""}`}
-    >
-      <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ["Quantity", `${num(item.qty)} ${item.unit}`],
-          ["Original", money(session ? session.original_price : item.best_bid)],
-          ["Final price", money(session ? session.agreed_price : item.best_bid)],
-        ].map(([k, v]) => (
-          <div key={k}>
-            <dt className="text-xs text-muted">{k}</dt>
-            <dd className="font-semibold text-ink tabular-nums">{v}</dd>
-          </div>
-        ))}
-        <div>
-          <dt className="text-xs text-muted">{deltaLabel(direction)}</dt>
-          <dd>
-            <Delta value={session ? session.agreed_delta : 0} direction={direction} />
-          </dd>
-        </div>
-      </dl>
-      {session && (
-        <>
-          <Button size="sm" className="mt-4" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-            {open ? "Hide conversation" : "Show conversation"}
-          </Button>
-          {open && (
-            <div className="mt-3 max-h-96 overflow-auto rounded-m border border-line2 p-3">
-              <ChatLog turns={session.turns} vendorName={session.vendor_name} />
-            </div>
-          )}
-        </>
-      )}
-    </Panel>
-  );
+  return { event: ev.event, entries };
 }
 
 export default function ApprovePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data, error, errorStatus, loading, reload } = useApi(() => load(id), [id]);
+  const [selected, setSelected] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -80,6 +40,12 @@ export default function ApprovePage() {
   if (loading && !data) return <Loading label="Loading approvals" />;
   if (error && !data) return <ErrorBox message={error} status={errorStatus} onRetry={reload} />;
   if (!data) return null;
+
+  const { event, entries } = data;
+  const d = event.direction;
+  const current = entries.find((e) => e.detail.item.id === selected) ?? entries[0];
+  const vendorCount = new Set(entries.map((e) => e.session?.vendor_id ?? e.detail.item.best_bid_vendor_id)).size;
+  const negotiated = entries.filter((e) => e.session).length;
 
   const approve = async () => {
     setBusy(true);
@@ -103,10 +69,15 @@ export default function ApprovePage() {
             <Link href={`/events/${id}`} className="hover:underline">{id}</Link> / Approval
           </>
         }
-        title="Review & approve"
-        subtitle={data.title}
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            Review &amp; approve
+            <DirectionBadge direction={d} />
+          </span>
+        }
+        subtitle={`${event.title} · ${event.plant} · requested by ${event.requestor}`}
         actions={
-          <Button variant="primary" disabled={data.entries.length === 0 || busy} onClick={() => setConfirm(true)}>
+          <Button variant="primary" disabled={entries.length === 0 || busy} onClick={() => setConfirm(true)}>
             Approve &amp; close
           </Button>
         }
@@ -116,13 +87,65 @@ export default function ApprovePage() {
           <Notice tone="red">{failure}</Notice>
         </div>
       )}
-      {data.entries.length === 0 ? (
+      {entries.length === 0 ? (
         <Notice tone="info">Nothing is waiting for approval on this event.</Notice>
       ) : (
         <div className="grid gap-5">
-          {data.entries.map((e) => (
-            <EntryCard key={e.item.id} e={e} direction={data.direction} />
-          ))}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <KpiCard icon="cube" tone="brand" label="Items to approve" value={entries.length} sub={`${negotiated} negotiated · ${entries.length - negotiated} accepted as they stand`} />
+            <KpiCard icon="vendors" tone="info" label={d === "buy" ? "Suppliers" : "Scrap buyers"} value={vendorCount} sub="Receiving the order" />
+            <KpiCard icon="coin" tone="ok" label="Cost centre" value={event.cost_centre} sub={`${event.purch_org} · ${event.purch_group}`} />
+          </div>
+
+          <Panel title="Items awaiting approval" subtitle="Select a row to review its vendor, terms, conversation, comparison and history below." flush>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[56rem] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-line2 bg-raise text-left text-xs font-semibold text-muted">
+                    <th className="px-4 py-2.5">Item</th>
+                    <th className="px-4 py-2.5">Sent to</th>
+                    <th className="px-4 py-2.5 text-right">Quantity</th>
+                    <th className="px-4 py-2.5 text-right">Original</th>
+                    <th className="px-4 py-2.5 text-right">Final price</th>
+                    <th className="px-4 py-2.5 text-right">{deltaLabel(d)}</th>
+                    <th className="px-4 py-2.5 text-right">Value</th>
+                    <th className="px-4 py-2.5">Terms</th>
+                    <th className="px-4 py-2.5">Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((e) => {
+                    const it = e.detail.item;
+                    const s = e.session;
+                    const active = it.id === current.detail.item.id;
+                    const quote = e.detail.comparison.rows.find((r) => r.vendor_id === (s?.vendor_id ?? it.best_bid_vendor_id));
+                    return (
+                      <tr
+                        key={it.id}
+                        tabIndex={0}
+                        aria-selected={active}
+                        onClick={() => setSelected(it.id)}
+                        onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && (ev.preventDefault(), setSelected(it.id))}
+                        className={`cursor-pointer border-b border-line2 last:border-0 hover:bg-raise ${active ? "bg-brand-soft" : ""}`}
+                      >
+                        <td className="px-4 py-3 font-semibold text-ink">{it.description}</td>
+                        <td className="px-4 py-3">{s?.vendor_name ?? it.best_bid_vendor ?? "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{num(it.qty)} {it.unit}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{money(s ? s.original_price : it.best_bid)}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums text-ink">{money(s ? s.agreed_price : it.best_bid)}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right"><Delta value={s ? s.agreed_delta : 0} direction={d} /></td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{money(s ? s.agreed_value : it.value)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-muted">{s?.agreed_payment ?? quote?.payment_code ?? "—"} · {quote?.incoterm ?? it.incoterm}</td>
+                        <td className="px-4 py-3"><Pill tone={s ? "ok" : "info"}>{s ? "Negotiated" : "As quoted"}</Pill></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+
+          <ItemReview key={current.detail.item.id} entry={current} event={event} />
         </div>
       )}
       <Dialog
@@ -139,7 +162,7 @@ export default function ApprovePage() {
         }
       >
         <p className="text-sm text-text">
-          {data.entries.length} item{data.entries.length === 1 ? "" : "s"} will be closed and the results counted in the dashboard. This cannot be undone.
+          {entries.length} item{entries.length === 1 ? "" : "s"} will be closed and the results counted in the dashboard. This cannot be undone.
         </p>
       </Dialog>
     </>

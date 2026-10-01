@@ -306,3 +306,9 @@ Append new points at the bottom. Format: number, statement, reason.
 
 102. Messages are chat messages, not emails: no "Regards", no sign-off and no signature block (this replaces assumption 88; the NEGOTIATION_SIGNATURE setting is gone). The opening still greets the vendor by name. In the workspace the buyer sees a chat-style message bar: a "+" menu (add a price offer, suggested messages), the text field and a send button that becomes a stop button while the conversation runs on its own. Pressing stop switches to manual and enables typing. Typed text with no price is sent as a question and answered from the quote; a request to do better on price is answered by asking for a number.
     Reason: the buyer asked for a messaging feel and a visible way for a person watching to take over at any moment.
+
+103. The approval page is a review screen: a table of the items waiting for approval (counterparty, quantity, original and final price, savings or uplift, value, terms) and, for the selected row, tabs for Summary (counterparty details, agreed terms, negotiation record, event details), Conversation, Comparison and Price history. Values shown (value at the final price) come from the backend; the browser only displays them.
+    Reason: the buyer asked for everything needed to approve a deal in one place.
+
+104. Charts use one bright categorical palette (tokens --c1 to --c6) and are interactive: the category donut lifts a slice on hover and shows its share at the centre; the price-history chart is a smooth area chart with a crosshair and tooltip, range buttons (3M, 6M, 1Y, All), keyboard arrows and reference lines for target and limit. The donut shows the five largest categories; the rest stays as the empty part of the ring.
+    Reason: readability and a modern feel; no extra totals are computed in the browser.

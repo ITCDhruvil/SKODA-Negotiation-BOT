@@ -55,11 +55,10 @@ export function HistoryTab({ detail }: { detail: ItemDetail }) {
       </div>
       <TrendChart
         label="Price trend of past deals"
-        points={data.records.map((r) => ({ date: r.date, price: r.unit_price, negotiated: r.negotiated }))}
+        points={data.records.map((r) => ({ date: r.date, price: r.unit_price, negotiated: r.negotiated, label: r.vendor_name }))}
         refLines={refs}
       />
-      <p className="text-xs text-muted">Filled dots were negotiated; hollow dots are list-price deals.</p>
-      <DataTable columns={columns} rows={[...data.records].reverse()} rowKey={(h) => h.id} dense />
+            <DataTable columns={columns} rows={[...data.records].reverse()} rowKey={(h) => h.id} dense />
     </div>
   );
 }

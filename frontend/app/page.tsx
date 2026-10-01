@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EventsTable } from "@/components/events/EventsTable";
 import { Delta, DirectionBadge, KpiCard, Panel } from "@/components/ui/basics";
-import { Avatar, Donut, Legend, SERIES, StackBar } from "@/components/ui/charts";
+import { Avatar, DonutChart, SERIES, StackBar } from "@/components/ui/charts";
 import { Icon } from "@/components/ui/Icon";
 import { RangeNotice } from "@/components/ui/RangeNotice";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
@@ -183,23 +183,25 @@ function DashboardBody({ data, filter, setFilter }: { data: Dashboard; filter: F
 
       <div className="grid content-start gap-5">
         <Panel title="Value by category" subtitle="Share of total quoted value">
-          <Donut
+          <DonutChart
             label="Value by category"
             centerTop={moneyCompact(k.total_value)}
             centerBottom="Total value"
-            segments={top.map((c, i) => ({ label: c.category, value: c.share, color: SERIES[i % SERIES.length] }))}
             total={1}
+            stats={[
+              { label: "Categories", value: String(data.value_by_category.length) },
+              { label: "Total value", value: moneyCompact(k.total_value) },
+              { label: "Largest share", value: top[0] ? pct(top[0].share, 0) : "—" },
+            ]}
+            segments={top.map((c, i) => ({
+              label: c.category.replace(/^\d+ - /, ""),
+              value: c.share,
+              color: SERIES[i % SERIES.length],
+              valueText: moneyCompact(c.value),
+              percentText: pct(c.share, 0),
+            }))}
           />
-          <div className="mt-4">
-            <Legend
-              rows={top.map((c, i) => ({
-                color: SERIES[i % SERIES.length],
-                label: c.category.replace(/^\d+ - /, ""),
-                right: `${pct(c.share, 0)} · ${moneyCompact(c.value)}`,
-              }))}
-            />
-            {hidden > 0 && <p className="mt-2 text-xs text-muted">+ {hidden} smaller categories</p>}
-          </div>
+          {hidden > 0 && <p className="mt-2 text-xs text-muted">+ {hidden} smaller categories</p>}
         </Panel>
 
         <Panel title="Top vendors by quoted value">

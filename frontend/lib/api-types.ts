@@ -1502,6 +1502,10 @@ export interface components {
             agreed_payment: string | null;
             /** Agreed Delta */
             agreed_delta: number | null;
+            /** Original Value */
+            original_value: number;
+            /** Agreed Value */
+            agreed_value: number | null;
             /** Handback Reason */
             handback_reason: string | null;
             /** Ended At */
