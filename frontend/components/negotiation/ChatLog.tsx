@@ -1,3 +1,6 @@
+"use client";
+
+import { useId, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import type { TurnView } from "@/lib/api";
 import { duration, initials, money } from "@/lib/format";
@@ -65,17 +68,31 @@ const INSIGHT_TONE: Record<string, string> = {
   warn: "border-amber bg-amber-soft text-amber",
 };
 
-/** A private note for the buyer under a vendor message. It is never sent to the vendor. */
-function InsightCard({ kind, tone, text }: { kind: string; tone: string; text: string }) {
+/** A private note for the buyer under a vendor message. It starts folded to a small line and opens on click. It is never sent to the vendor. */
+function InsightNote({ kind, tone, text }: { kind: string; tone: string; text: string }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  const label = INSIGHT_LABEL[kind] ?? "Note";
   return (
-    <aside className={`mx-auto mt-2 w-[min(92%,44rem)] rounded-m border border-dashed px-3.5 py-2.5 ${INSIGHT_TONE[tone] ?? INSIGHT_TONE.info}`} aria-label="Private note, only you can see this">
-      <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide">
-        <Icon name="bulb" size={14} />
-        {INSIGHT_LABEL[kind] ?? "Note"}
-        <span className="font-medium normal-case tracking-normal opacity-90">· only you can see this</span>
-      </p>
-      <p className="mt-1 text-sm leading-snug text-ink">{text}</p>
-    </aside>
+    <div className="ml-10 mt-1.5 max-w-[78%]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={id}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition hover:brightness-95 ${INSIGHT_TONE[tone] ?? INSIGHT_TONE.info}`}
+      >
+        <Icon name="bulb" size={13} />
+        Insight · {label}
+        <Icon name="down" size={13} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <aside id={id} className={`mt-1.5 rounded-m border border-dashed px-3.5 py-2.5 ${INSIGHT_TONE[tone] ?? INSIGHT_TONE.info}`} aria-label="Private note, only you can see this">
+          <p className="text-xs font-semibold opacity-90">Only you can see this</p>
+          <p className="mt-0.5 text-sm leading-snug text-ink">{text}</p>
+        </aside>
+      )}
+    </div>
   );
 }
 
@@ -169,7 +186,7 @@ export function ChatLog({ turns, typing, vendorName, showInsights = false }: { t
                 </div>
               </div>
             </div>
-            {showInsights && t.insights?.map((n, k) => <InsightCard key={k} kind={n.kind} tone={n.tone} text={n.text} />)}
+            {showInsights && t.insights?.map((n, k) => <InsightNote key={k} kind={n.kind} tone={n.tone} text={n.text} />)}
           </div>
         );
       })}
