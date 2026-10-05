@@ -73,3 +73,22 @@ html[data-embed="1"] .app-topbar { display: none; }
 html[data-embed="1"] .app-grid { display: block; min-height: 0; }
 html[data-embed="1"], html[data-embed="1"] body { background: transparent; height: auto; }
 html[data-embed="1"] main { padding-left: 0; padding-right: 0; padding-top: 0; }
+
+/* "typing…" text with a light band sweeping across it, as in a messaging app. */
+.shimmer-text {
+  color: var(--muted);
+  background-image: linear-gradient(100deg, var(--muted) 35%, var(--ink) 50%, var(--muted) 65%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 1.5s linear infinite;
+}
+@keyframes shimmer-sweep {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text { animation: none; background-image: none; -webkit-text-fill-color: currentColor; }
+}

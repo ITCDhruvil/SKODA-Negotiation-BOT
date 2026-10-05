@@ -68,12 +68,7 @@ export function TypingDots({ label, side = "vendor" }: { label: string; side?: "
           ours ? "rounded-tr-[4px] bg-brand-soft" : "rounded-tl-[4px] border border-line bg-panel"
         }`}
       >
-        <span aria-hidden className="flex h-4 items-center gap-1 motion-reduce:hidden">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-muted" style={{ animationDelay: `${i * 150}ms` }} />
-          ))}
-        </span>
-        <span aria-hidden className="hidden text-xs italic text-muted motion-reduce:inline">typing…</span>
+        <span aria-hidden className="shimmer-text text-sm font-medium italic">typing…</span>
         <span className="sr-only">{label}</span>
       </div>
     </div>
