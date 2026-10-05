@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
@@ -135,6 +135,25 @@ function Workspace({ initial }: { initial: SessionView }) {
   const [typing, setTyping] = useState<{ side: "us" | "vendor"; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState<"us" | "vendor" | null>(null);
+  // On a wide screen the conversation fills the space below the page heading, so the page itself never scrolls;
+  // only the messages (and the side panels) scroll inside it.
+  const layout = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (window.innerWidth < 1280) return setFit(null);
+      if (document.documentElement.dataset.embed === "1") return setFit(680); // a frame grows with its content, so use a fixed height
+      const top = (layout.current?.getBoundingClientRect().top ?? 0) + window.scrollY;
+      setFit(Math.max(520, Math.floor(window.innerHeight - top - 20)));
+    };
+    measure();
+    const later = setTimeout(measure, 400); // once fonts and the heading have settled
+    window.addEventListener("resize", measure);
+    return () => {
+      clearTimeout(later);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
   // Private notes under the vendor's messages can be hidden; the choice is remembered.
   const [showInsights, setShowInsights] = useState(true);
   useEffect(() => {
@@ -267,9 +286,9 @@ function Workspace({ initial }: { initial: SessionView }) {
         subtitle={`${s.item_description} · ${num(s.qty)} ${s.unit}`}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div ref={layout} className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]" style={fit ? { height: fit } : undefined}>
         {/* The chat fills the height of the window: messages scroll in the middle, the answer bar stays at the bottom. */}
-        <section className="flex min-h-[32rem] flex-col rounded-card border border-line bg-panel shadow-card xl:h-[calc(100vh-10.5rem)]">
+        <section className="flex min-h-[32rem] flex-col rounded-card border border-line bg-panel shadow-card xl:h-full xl:min-h-0">
           <header className="shrink-0 border-b border-line2 px-4 py-3">
             <ChatHeader
               name={s.vendor_name}
@@ -396,7 +415,7 @@ function Workspace({ initial }: { initial: SessionView }) {
         </section>
 
         <ProfileDialog who={profile} session={s} onClose={() => setProfile(null)} />
-        <div className="grid content-start gap-5">
+        <div className="grid content-start gap-5 xl:min-h-0 xl:overflow-y-auto">
           <Panel title="Permission">
             <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
           </Panel>
