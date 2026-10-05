@@ -20,6 +20,8 @@ import {
   STATE_TONE,
   STATUS_LABEL,
   STATUS_TONE,
+  BAND_LABEL,
+  BAND_TONE,
   deltaLabel,
   quoteLabel,
   quotesLabel,
@@ -86,6 +88,7 @@ function Body({ data }: { data: EventDetail }) {
       align: "right",
       cell: (i) => <Delta value={i.potential_delta} direction={e.direction} />,
     },
+    { key: "handling", header: "Handled by", sort: (i) => i.policy.band, cell: (i) => <Pill tone={BAND_TONE[i.policy.band]}>{BAND_LABEL[i.policy.band]}</Pill> },
     { key: "state", header: "Status", sort: (i) => i.state, cell: (i) => <Pill tone={STATE_TONE[i.state]}>{STATE_LABEL[i.state]}</Pill> },
     {
       key: "rec",

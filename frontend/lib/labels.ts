@@ -145,8 +145,8 @@ export const SESSION_LABEL: Record<"active" | "agreed" | "handed_back", string> 
 
 /** Who handles a deal of a given size (see the policy in the backend). */
 export const BAND_LABEL: Record<"auto" | "supervised" | "management", string> = {
-  auto: "Bot can negotiate alone",
-  supervised: "Person in the loop",
+  auto: "Handled by the bot",
+  supervised: "You check it",
   management: "Higher management",
 };
 export const BAND_TONE: Record<"auto" | "supervised" | "management", Tone> = { auto: "ok", supervised: "info", management: "amber" };

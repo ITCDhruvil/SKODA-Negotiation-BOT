@@ -10,6 +10,7 @@ import { NextStep } from "@/components/item/NextStep";
 import { OpportunityPanel } from "@/components/item/OpportunityPanel";
 import { SupplierDialog } from "@/components/item/SupplierDialog";
 import { PointsPanel } from "@/components/item/PointsPanel";
+import { HandlingCard } from "@/components/item/HandlingCard";
 import { Stepper } from "@/components/item/Stepper";
 import { Button, DirectionBadge, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -426,6 +427,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
           </div>
         </Panel>
         <div className="grid content-start gap-5">
+          <HandlingCard policy={item.policy} offers={item.bid_count} />
           <div id="opportunity-panel" className={`scroll-mt-4 rounded-card transition-shadow duration-500 ${glow ? "ring-2 ring-brand ring-offset-2 ring-offset-bg" : ""}`}>
             <OpportunityPanel detail={detail} />
           </div>

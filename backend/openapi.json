@@ -4961,6 +4961,14 @@
       ],
       "title": "Default Mode"
      },
+     "headline": {
+      "type": "string",
+      "title": "Headline"
+     },
+     "min_offers": {
+      "type": "integer",
+      "title": "Min Offers"
+     },
      "auto_allowed": {
       "type": "boolean",
       "title": "Auto Allowed"
@@ -4983,6 +4991,8 @@
      "band",
      "value_inr",
      "default_mode",
+     "headline",
+     "min_offers",
      "auto_allowed",
      "auto_limit_inr",
      "management_limit_inr",

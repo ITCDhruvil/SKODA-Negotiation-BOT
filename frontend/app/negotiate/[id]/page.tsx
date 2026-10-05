@@ -6,6 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { NextVendorsLoader } from "@/components/negotiation/NextBestVendors";
 import { buildResult, inAis, markSent, openCaseInAis, sendToAis, wasSent } from "@/lib/ais";
+import { HandlingCard } from "@/components/item/HandlingCard";
 import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
@@ -512,6 +513,7 @@ function Workspace({ initial }: { initial: SessionView }) {
 
         <ProfileDialog who={profile} session={s} onClose={() => setProfile(null)} />
         <div className="grid content-start gap-5 xl:min-h-0 xl:overflow-y-auto">
+          <HandlingCard policy={s.policy} compact />
           <CollapsiblePanel title="Chat settings" storageKey="chat-settings" defaultOpen={false} summary={`${MODE_LABEL[s.mode]} · ${LANGUAGE_LABEL[s.language].split(" ")[0]}`}>
             <div className="grid gap-4">
               <div>

@@ -90,7 +90,6 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
       <Field label="Who sends the messages?">
         <ModeSelect id="start-mode" value={mode} onChange={setMode} allowAuto={policy.auto_allowed} />
       </Field>
-      <p className="text-xs text-muted">{policy.message}</p>
       {mode === "auto" && <Notice tone="amber">{MODE_LABEL.auto}: {MODE_HINT.auto}</Notice>}
       {error && <Notice tone="red">{error}</Notice>}
       <Button variant="primary" className="w-full" disabled={busy} onClick={start}>

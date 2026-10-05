@@ -101,7 +101,8 @@ def policy_view(item: Item) -> sch.PolicyView:
     value = deal.value(item.qty, item.reference_price)
     b = policy.band(value)
     return sch.PolicyView(
-        band=b, value_inr=value, default_mode=policy.default_mode(b), auto_allowed=policy.allows_auto(b),
+        band=b, value_inr=value, default_mode=policy.default_mode(b), headline=policy.headline(b),
+        min_offers=policy.min_offers(value), auto_allowed=policy.allows_auto(b),
         auto_limit_inr=policy.AUTO_LIMIT_INR, management_limit_inr=policy.MANAGEMENT_LIMIT_INR, message=policy.message(b))
 
 

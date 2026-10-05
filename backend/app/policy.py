@@ -12,6 +12,7 @@ Band = Literal["auto", "supervised", "management"]
 
 EUR_INR = 100.0  # assumed exchange rate, rupees per euro; change here when the real rate is known
 AUTO_LIMIT_INR = 1_000_000.0  # below ten lakh rupees the bot may run on its own
+PHASE_1_LIMIT_INR = 350_000.0  # up to here the bot needs two offers; above it, three
 MANAGEMENT_LIMIT_EUR = 50_000.0  # above this, higher management handles the deal
 MANAGEMENT_LIMIT_INR = MANAGEMENT_LIMIT_EUR * EUR_INR
 
@@ -33,11 +34,20 @@ def allows_auto(b: Band) -> bool:
     return b == "auto"
 
 
+def headline(b: Band) -> str:
+    return {"auto": "Handled by the bot", "supervised": "You check it before it goes", "management": "Handled by higher management"}[b]
+
+
+def min_offers(value_inr: float) -> int:
+    """Offers the bot needs to start (blueprint, Negotiation Bot phases): 2 up to INR 3.5 lakh, 3 above."""
+    return 2 if value_inr <= PHASE_1_LIMIT_INR else 3
+
+
 def message(b: Band) -> str:
     if b == "management":
-        return ("This deal is above EUR 50,000, so it is handled by higher management. "
+        return ("This deal is above EUR 50,000 (about INR 50 lakh), so higher management handles it. "
                 "The bot does not negotiate it.")
     if b == "supervised":
-        return ("This deal is between ten lakh rupees and EUR 50,000, so a person stays in the loop: "
-                "messages are drafted for your approval. You may also write them yourself.")
-    return "This deal is below ten lakh rupees, so the bot may negotiate it fully on its own."
+        return ("This deal is between INR 10 lakh and EUR 50,000. The bot drafts every message, "
+                "and you check each one before it is sent.")
+    return "This deal is below INR 10 lakh, so the bot negotiates it on its own. You confirm the result."

@@ -1738,6 +1738,10 @@ export interface components {
              * @enum {string}
              */
             default_mode: "auto" | "approve" | "manual";
+            /** Headline */
+            headline: string;
+            /** Min Offers */
+            min_offers: number;
             /** Auto Allowed */
             auto_allowed: boolean;
             /** Auto Limit Inr */

@@ -22,6 +22,8 @@ class PolicyView(BaseModel):
     band: Literal["auto", "supervised", "management"]
     value_inr: float
     default_mode: Literal["auto", "approve", "manual"]
+    headline: str
+    min_offers: int  # offers the bot needs for a deal of this size
     auto_allowed: bool
     auto_limit_inr: float
     management_limit_inr: float
