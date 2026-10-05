@@ -315,8 +315,11 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
   const { item, event } = detail;
   const { data: sessions, reload: reloadSessions } = useApi(() => api.sessionsForItem(item.id), [item.id, item.state]);
   const list = sessions ?? [];
-  const [tab, setTab] = useState<"quotes" | "negotiation" | "history">(list.length > 0 ? "negotiation" : "quotes");
-  const [chosen, setChosen] = useState(false);
+  // The row menu on the event page links here with ?tab=quotes|negotiation|history to land on that tab.
+  const asked = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("tab");
+  const requested = asked === "quotes" || asked === "negotiation" || asked === "history" ? asked : null;
+  const [tab, setTab] = useState<"quotes" | "negotiation" | "history">(requested ?? (list.length > 0 ? "negotiation" : "quotes"));
+  const [chosen, setChosen] = useState(requested !== null);
   // Land on the conversation once there is one, unless the user already picked a tab.
   useEffect(() => {
     if (!chosen && list.length > 0) setTab("negotiation");

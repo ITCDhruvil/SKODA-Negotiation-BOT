@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
-import { ItemQuickView } from "@/components/item/ItemQuickView";
 import { Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
-import { IconAction, IconLink } from "@/components/ui/TableToolbar";
+import { IconLink } from "@/components/ui/TableToolbar";
+import { RowMenu } from "@/components/ui/RowMenu";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { api, type EventDetail, type ItemView } from "@/lib/api";
 import { dateShort, money, moneyCompact, num } from "@/lib/format";
@@ -63,7 +62,6 @@ function EventNegotiations({ eventId }: { eventId: string }) {
 function Body({ data }: { data: EventDetail }) {
   const e = data.event;
   const closed = e.status === "closed";
-  const [quick, setQuick] = useState<ItemView | null>(null);
   const columns: Column<ItemView>[] = [
     {
       key: "item",
@@ -98,7 +96,17 @@ function Body({ data }: { data: EventDetail }) {
       key: "action",
       header: "",
       align: "right",
-      cell: (i) => <IconAction icon="more" label="More about this item" onClick={() => setQuick(i)} />,
+      cell: (i) => (
+        <RowMenu
+          label={`More about ${i.description}`}
+          items={[
+            { label: "Details", hint: "Quantity, target, limit and status", href: `/items/${i.id}`, icon: "eye" },
+            { label: "Compare vendors", hint: "Quotes side by side", href: `/items/${i.id}?tab=quotes`, icon: "comparison" },
+            { label: "Price history", hint: "Past deals and trend", href: `/items/${i.id}?tab=history`, icon: "history" },
+            { label: "Conversations", hint: "Messages with each vendor", href: `/items/${i.id}?tab=negotiation`, icon: "chat" },
+          ]}
+        />
+      ),
     },
   ];
 
@@ -190,7 +198,6 @@ function Body({ data }: { data: EventDetail }) {
         </Panel>
         </div>
       </div>
-      <ItemQuickView itemId={quick?.id ?? ""} title={quick?.description ?? "Item"} open={quick !== null} onClose={() => setQuick(null)} />
     </>
   );
 }

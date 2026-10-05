@@ -19,7 +19,7 @@ export function Dialog({
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "md" | "lg" | "xl";
+  size?: "md" | "lg";
 }) {
   const box = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -64,7 +64,7 @@ export function Dialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`max-h-[90vh] w-full ${size === "xl" ? "max-w-5xl" : size === "lg" ? "max-w-3xl" : "max-w-lg"} overflow-auto rounded-card border border-line bg-panel shadow-card`}
+        className={`max-h-[90vh] w-full ${size === "lg" ? "max-w-3xl" : "max-w-lg"} overflow-auto rounded-card border border-line bg-panel shadow-card`}
       >
         <header className="flex items-center justify-between gap-3 border-b border-line2 px-5 py-4">
           <h2 className="text-base font-bold text-ink">{title}</h2>
