@@ -120,11 +120,11 @@ function DraftCard({ s, onResult, onError }: { s: SessionView } & Handlers) {
   );
 }
 
-function Row({ label, children, updating = false }: { label: string; children: React.ReactNode; updating?: boolean }) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-line2 py-2 last:border-0">
       <dt className="text-sm text-muted">{label}</dt>
-      <dd className={`text-right font-semibold tabular-nums ${updating ? "shimmer-text" : "text-ink"}`}>{children}</dd>
+      <dd className="text-right font-semibold tabular-nums text-ink">{children}</dd>
     </div>
   );
 }
@@ -194,7 +194,6 @@ function Workspace({ initial }: { initial: SessionView }) {
   }, [visible, typing]);
 
   const revealing = visible < s.turns.length;
-  const updating = revealing || typing !== null; // the figures are about to change
   // The end of a conversation (agreed, handed back) is only announced after its last message has been shown.
   const shownStatus = revealing && s.status !== "active" ? "active" : s.status;
   useEffect(() => {
@@ -486,19 +485,19 @@ function Workspace({ initial }: { initial: SessionView }) {
           </CollapsiblePanel>
           <StrategyPanel strategy={s.strategy} />
           <CollapsiblePanel
-            title={<span className={shownStatus === "active" ? "shimmer-text" : ""}>Live intelligence</span>}
+            title="Live intelligence"
             storageKey="live-intelligence"
             summary={shownStatus === "active" ? <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-ok" aria-hidden />Live</span> : undefined}
           >
             <dl>
-              <Row updating={updating} label="Original quote">{money(i.current_bid)}</Row>
-              <Row updating={updating} label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
-              <Row updating={updating} label="Our last offer">{money(i.our_offer)}</Row>
-              <Row updating={updating} label="Movement / unit">{money(i.movement)}</Row>
-              <Row updating={updating} label="Target">{money(i.target)}</Row>
-              <Row updating={updating} label={limitLabel(d)}>{money(i.limit)}</Row>
-              <Row updating={updating} label={`${deltaLabel(d)} if accepted`}>{i.delta_if_accepted == null ? "Outside limit" : money(i.delta_if_accepted)}</Row>
-              <Row updating={updating} label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
+              <Row label="Original quote">{money(i.current_bid)}</Row>
+              <Row label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
+              <Row label="Our last offer">{money(i.our_offer)}</Row>
+              <Row label="Movement / unit">{money(i.movement)}</Row>
+              <Row label="Target">{money(i.target)}</Row>
+              <Row label={limitLabel(d)}>{money(i.limit)}</Row>
+              <Row label={`${deltaLabel(d)} if accepted`}>{i.delta_if_accepted == null ? "Outside limit" : money(i.delta_if_accepted)}</Row>
+              <Row label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
             </dl>
             <p className="mt-3 rounded-m bg-raise p-3 text-sm text-text">{i.recommendation}</p>
           </CollapsiblePanel>
