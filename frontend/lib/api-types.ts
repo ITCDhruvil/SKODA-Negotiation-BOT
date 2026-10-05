@@ -1023,6 +1023,11 @@ export interface components {
             /** Hero */
             hero: boolean;
             /**
+             * From Ais
+             * @default false
+             */
+            from_ais: boolean;
+            /**
              * Status
              * @enum {string}
              */

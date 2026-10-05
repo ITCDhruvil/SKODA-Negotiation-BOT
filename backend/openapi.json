@@ -2855,6 +2855,11 @@
       "type": "boolean",
       "title": "Hero"
      },
+     "from_ais": {
+      "type": "boolean",
+      "title": "From Ais",
+      "default": false
+     },
      "status": {
       "type": "string",
       "enum": [

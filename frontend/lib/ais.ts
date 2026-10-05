@@ -51,3 +51,13 @@ export function markSent(id: string): void {
     /* storage may be blocked */
   }
 }
+
+/** True when this app is shown inside the AIS prototype. */
+export function inAis(): boolean {
+  return typeof window !== "undefined" && window.parent !== window;
+}
+
+/** Ask the AIS page to open the Negotiation Bot case this event belongs to. */
+export function openCaseInAis(caseNo: string): void {
+  if (inAis()) window.parent.postMessage({ negOpenCase: { case_no: caseNo } }, "*");
+}

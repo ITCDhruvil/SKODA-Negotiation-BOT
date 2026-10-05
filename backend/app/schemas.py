@@ -76,6 +76,7 @@ class EventView(BaseModel):
     due: date
     source_cart_no: Optional[str]
     hero: bool
+    from_ais: bool = False  # the case lives in the AIS prototype
     status: EventStatus
     eligibility: EligibilityView
     item_count: int

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ButtonLink, Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
+import { Button, ButtonLink, Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
+import { inAis, openCaseInAis } from "@/lib/ais";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { IconLink } from "@/components/ui/TableToolbar";
 import { RowMenu } from "@/components/ui/RowMenu";
@@ -113,23 +114,7 @@ function Body({ data }: { data: EventDetail }) {
     },
   ];
 
-  return (
-    <>
-      <PageHeader
-        crumbs={
-          <>
-            <Link href="/events" className="hover:underline">Events</Link> / {e.id}
-          </>
-        }
-        title={
-          <span className="flex flex-wrap items-center gap-3">
-            {e.title}
-            <DirectionBadge direction={e.direction} />
-            <Pill tone={STATUS_TONE[e.status]}>{STATUS_LABEL[e.status]}</Pill>
-          </span>
-        }
-        subtitle={e.category}
-        actions={
+  const actionsFor = (
           closed ? (
             <div className="flex flex-wrap items-center gap-2">
               <ButtonLink href={`/events/${e.id}/contract`} variant="primary" size="md">
@@ -148,6 +133,28 @@ function Body({ data }: { data: EventDetail }) {
               Review &amp; approve
             </Link>
           ) : undefined
+  );
+  return (
+    <>
+      <PageHeader
+        crumbs={
+          <>
+            <Link href="/events" className="hover:underline">Events</Link> / {e.id}
+          </>
+        }
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            {e.title}
+            <DirectionBadge direction={e.direction} />
+            <Pill tone={STATUS_TONE[e.status]}>{STATUS_LABEL[e.status]}</Pill>
+          </span>
+        }
+        subtitle={e.category}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {e.from_ais && inAis() && <Button onClick={() => openCaseInAis(e.id)}>Open case in AIS</Button>}
+            {actionsFor}
+          </div>
         }
       />
 

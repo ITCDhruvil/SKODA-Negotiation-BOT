@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { NextVendorsLoader } from "@/components/negotiation/NextBestVendors";
-import { buildResult, markSent, sendToAis, wasSent } from "@/lib/ais";
+import { buildResult, inAis, markSent, openCaseInAis, sendToAis, wasSent } from "@/lib/ais";
 import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
@@ -181,10 +181,19 @@ function Workspace({ initial }: { initial: SessionView }) {
   // A case that came from the AIS prototype ends by sending its result back there, after the Buyer confirms it.
   const [sent, setSent] = useState(false);
   useEffect(() => setSent(wasSent(s.id)), [s.id]);
-  const sendResult = (status: "AGREED" | "FAILED") => {
+  const sendResult = async (status: "AGREED" | "FAILED") => {
     sendToAis(buildResult(s, status));
     markSent(s.id);
     setSent(true);
+    if (status !== "AGREED") return;
+    // The agreed deal is also closed here, so its contract document can be opened from AIS.
+    try {
+      await api.acceptDeal(s.item_id);
+      await api.approveEvent(s.event_id);
+      apply(await api.session(s.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   };
   const stop = useRef(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -309,6 +318,16 @@ function Workspace({ initial }: { initial: SessionView }) {
               live={shownStatus === "active"}
               onProfile={() => setProfile("vendor")}
               actions={
+                <div className="flex items-center gap-2">
+                  {s.from_ais && inAis() && (
+                    <button
+                      type="button"
+                      onClick={() => openCaseInAis(s.event_id)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-brand"
+                    >
+                      <Icon name="external" size={14} /> Open case in AIS
+                    </button>
+                  )}
                 <button
                   type="button"
                   onClick={toggleInsights}
@@ -318,6 +337,7 @@ function Workspace({ initial }: { initial: SessionView }) {
                 >
                   <Icon name="bulb" size={14} /> Insights {showInsights ? "on" : "off"}
                 </button>
+                </div>
               }
             />
           </header>

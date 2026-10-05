@@ -51,3 +51,19 @@ def test_the_buyers_minimum_must_not_exceed_the_maximum(repo, seed_dataset):
     c = _client(repo, seed_dataset)
     r = c.post("/api/handoff", json={**CASE, "target": 50_000, "limit": 40_000})
     assert r.status_code == 409
+
+
+def test_an_agreed_ais_case_can_be_closed_here_and_gets_a_contract_document(repo, seed_dataset):
+    c = _client(repo, seed_dataset)
+    out = c.post("/api/handoff", json={**CASE, "limit": 60_000}).json()
+    for _ in range(16):
+        s = c.post(f"/api/sessions/{out['session_id']}/advance").json()
+        if s["status"] != "active":
+            break
+    assert s["status"] == "agreed"
+    assert c.get(f"/api/events/{out['event_id']}").json()["event"]["from_ais"] is True
+    assert c.post(f"/api/items/{out['item_id']}/accept-deal").status_code == 200
+    assert c.post(f"/api/events/{out['event_id']}/approve").status_code == 200
+    doc = c.get(f"/api/events/{out['event_id']}/contract").json()[0]
+    assert doc["request_no"] == CASE["case_no"] and doc["seller_name"] == "Alpha Foods"
+    assert doc["total_value"] == s["agreed_price"] and doc["contract_no"] == "CT-E1-00037"
