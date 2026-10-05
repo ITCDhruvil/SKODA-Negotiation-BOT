@@ -4,8 +4,8 @@ from app import lifecycle, services as sv
 from app.models import Dataset
 from app.store import Repo
 
-BUY = "EVT-2026-041-01"
-HANDED_BACK = "EVT-2026-058-01"
+BUY = "AIS-E1-2026-00077-01"
+HANDED_BACK = "AIS-E1-2026-00094-01"
 _EXPECTED = (sv.Conflict, lifecycle.InvalidTransition, sv.NotFound)
 
 

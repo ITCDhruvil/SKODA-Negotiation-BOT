@@ -28,12 +28,12 @@ def test_items_list_filters(client, seed_dataset: Dataset):
     assert len(none) == len(seed_dataset.items) - len(with_bids)
     neg = client.get("/api/items", params={"recommendation": "negotiate"}).json()
     assert neg and all(r["recommendation"] == "negotiate" for r in neg)
-    ev = client.get("/api/items", params={"event_id": "EVT-2026-041"}).json()
-    assert len(ev) == 6 and all(r["event_id"] == "EVT-2026-041" for r in ev)
+    ev = client.get("/api/items", params={"event_id": "AIS-E1-2026-00077"}).json()
+    assert len(ev) == 6 and all(r["event_id"] == "AIS-E1-2026-00077" for r in ev)
     sells = client.get("/api/items", params={"direction": "sell"}).json()
     assert sells and all(r["direction"] == "sell" for r in sells)
     hit = client.get("/api/items", params={"q": "lunch buffet"}).json()
-    assert any(r["id"] == "EVT-2026-041-01" for r in hit)
+    assert any(r["id"] == "AIS-E1-2026-00077-01" for r in hit)
     assert client.get("/api/items", params={"recommendation": "bogus"}).status_code == 422
 
 
@@ -97,7 +97,7 @@ def test_history_points_carry_the_vendor_name(client):
     vendors = {v["id"]: v["name"] for v in client.get("/api/vendors").json()}
     rows = client.get("/api/history").json()
     assert all(r["vendor_name"] == vendors[r["vendor_id"]] for r in rows)
-    item = client.get("/api/items/EVT-2026-041-01/history").json()
+    item = client.get("/api/items/AIS-E1-2026-00077-01/history").json()
     assert item["records"] and all(r["vendor_name"] == vendors[r["vendor_id"]]
                                    for r in item["records"])
     vid = rows[0]["vendor_id"]

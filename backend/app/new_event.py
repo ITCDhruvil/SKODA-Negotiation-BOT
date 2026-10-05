@@ -13,7 +13,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app import clock, eligibility
+from app import clock, eligibility, ids
 from app.models import Direction, Event, Unit
 from app.seed.build import Accumulator, _add_item
 from app.seed.catalog import BUY_CATEGORIES, FAMILY_TITLES, REQUESTORS, SCRAP_MATERIALS
@@ -185,7 +185,7 @@ def suggest_vendors(repo: Repo, direction: str, category_key: str, descriptions:
 
 
 def _next_number(repo: Repo) -> int:
-    return max(int(e.id.rsplit("-", 1)[1]) for e in repo.fetch("event")) + 1
+    return max(ids.event_number(e.id) for e in repo.fetch("event")) + 1
 
 
 def create_event(repo: Repo, body: NewEvent) -> str:
@@ -212,7 +212,7 @@ def create_event(repo: Repo, body: NewEvent) -> str:
         raise Conflict(f"shopping cart number {cart} is already used by another event")
 
     n = _next_number(repo)
-    event_id = f"EVT-2026-{n:03d}"
+    event_id = ids.event_id(n)
     rng = random.Random(SEED + 5000 + n)
     today = clock.today()
     title = (body.title or "").strip() or (

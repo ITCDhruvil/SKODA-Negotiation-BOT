@@ -4,8 +4,8 @@ from app import deal, lifecycle, readmodel as rm
 from app.models import Dataset
 from app.store import Repo
 
-HERO_BUY_ITEM = "EVT-2026-041-01"
-HERO_SELL_EVENT = "EVT-2026-052"
+HERO_BUY_ITEM = "AIS-E1-2026-00077-01"
+HERO_SELL_EVENT = "AIS-E1-2026-00088"
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def snap(repo: Repo):
 
 def test_snapshot_indexes(snap, seed_dataset: Dataset):
     assert len(snap.events) == 85 and len(snap.item_by_id) == len(seed_dataset.items)
-    assert len(snap.items_by_event["EVT-2026-041"]) == 6
+    assert len(snap.items_by_event["AIS-E1-2026-00077"]) == 6
     assert HERO_BUY_ITEM in snap.item_by_id
 
 
@@ -35,7 +35,7 @@ def test_hero_sell_event_before_bids(snap):
 
 
 def test_hero_buy_event_totals(snap):
-    e = rm.event_view(snap, snap.event_by_id["EVT-2026-041"])
+    e = rm.event_view(snap, snap.event_by_id["AIS-E1-2026-00077"])
     assert e.item_count == 6 and e.vendor_count == 5
     assert e.reference_value == 318200 and e.quoted_value == 318200
     assert e.status == "received" and e.direction == "buy"
@@ -118,8 +118,8 @@ def test_history_for_hero_item_matches_by_description(snap):
 
 def test_history_falls_back_to_category(snap):
     item = next(i for i in snap.items if i.description == "Meals For Training Batch"
-                or i.event_id == "EVT-2026-041" and i.position == 2)
-    h = rm.history_view(snap, snap.item_by_id["EVT-2026-041-02"])
+                or i.event_id == "AIS-E1-2026-00077" and i.position == 2)
+    h = rm.history_view(snap, snap.item_by_id["AIS-E1-2026-00077-02"])
     assert h.stats.count >= 2 and item is not None
 
 
@@ -215,7 +215,7 @@ def test_closed_event_summary_matches_the_raw_dataset(snap, seed_dataset: Datase
 
 
 def test_open_events_have_no_final_value_and_zero_summaries(snap):
-    ev = rm.event_view(snap, snap.event_by_id["EVT-2026-041"])
+    ev = rm.event_view(snap, snap.event_by_id["AIS-E1-2026-00077"])
     assert ev.final_value is None and ev.items_negotiated == 0 and ev.duration_minutes == 0
 
 
@@ -241,7 +241,7 @@ def test_services_and_readmodel_agree_at_the_band_edges(repo: Repo):
     from app import eligibility, services as sv
     from app.models import Item
     template = repo.get("item", HERO_BUY_ITEM)
-    event = repo.get("event", "EVT-2026-041")
+    event = repo.get("event", "AIS-E1-2026-00077")
     for n, total in enumerate((1_999.99, 2_000.0, 5_000_000.0, 5_000_000.01)):
         eid = f"EDGE-{n}"
         repo.put("event", eid, event.model_copy(update={"id": eid}))
@@ -263,7 +263,7 @@ def test_services_and_readmodel_agree_at_the_band_edges(repo: Repo):
 
 
 def test_between_keeps_only_events_in_range_and_their_children(snap):
-    day = snap.event_by_id["EVT-2026-041"].created
+    day = snap.event_by_id["AIS-E1-2026-00077"].created
     part = snap.between(day, day)
     assert part.events and all(e.created == day for e in part.events)
     ids = {i.id for i in part.items}

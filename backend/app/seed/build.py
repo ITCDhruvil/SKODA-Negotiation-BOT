@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from app import eligibility
+from app import ids as event_ids
 from app.importer import CartPosition, parse_text, render_report
 from app.models import Bid, Dataset, Event, Item, Outcome
 from app.seed import heroes
@@ -268,7 +269,7 @@ def build_dataset() -> Dataset:
     vendors = build_vendors(random.Random(SEED + 1))
     positions = build_positions()
     rng = random.Random(SEED + 3)
-    ids = [f"EVT-2026-{n:03d}" for n in range(1, 86)]
+    ids = [event_ids.event_id(n) for n in range(1, 86)]
     free = [i for i in ids if i not in (heroes.HERO_BUY_ID, heroes.HERO_SELL_ID)]
     acc = Accumulator()
     _build_buy(rng, vendors, positions, free, acc)

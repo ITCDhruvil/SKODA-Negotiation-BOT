@@ -12,10 +12,11 @@ import zlib
 from dataclasses import dataclass
 from typing import Callable
 
+from app import ids
 from app.seed.constants import HARD_VENDORS
 
-COOPERATIVE_BIDS = {"EVT-2026-041-01-B1", "EVT-2026-052-01-B1"}  # the first two demo stories
-DEMO_PERSONAS = {"EVT-2026-041-01-B2": "bluffer"}  # the hard-vendor demo story
+COOPERATIVE_BIDS = {"AIS-E1-2026-00077-01-B1", "AIS-E1-2026-00088-01-B1"}  # the first two demo stories
+DEMO_PERSONAS = {"AIS-E1-2026-00077-01-B2": "bluffer"}  # the hard-vendor demo story
 
 
 @dataclass(frozen=True)
@@ -47,7 +48,7 @@ PROFILES: dict[str, Profile] = {
 # Vendors that dig in and can refuse or walk away; the rest only push back mildly.
 HARD_PERSONAS = {"anchor", "bluffer", "terms", "crawler", "refuser"}
 # Demo-story bids whose conversations are fixed: no refusals, so the story always ends the same way.
-SCRIPTED_BIDS = COOPERATIVE_BIDS | {"EVT-2026-041-01-B2"}
+SCRIPTED_BIDS = COOPERATIVE_BIDS | {"AIS-E1-2026-00077-01-B2"}
 
 _EASY = ("cooperative",) * 6 + ("deadline", "relationship", "terms", "refuser")
 _HARD = ("anchor", "bluffer", "terms", "anchor", "crawler", "refuser")
@@ -58,6 +59,6 @@ def persona_for(bid_id: str, vendor_id: str) -> str:
         return "cooperative"
     if bid_id in DEMO_PERSONAS:
         return DEMO_PERSONAS[bid_id]
-    pick = zlib.crc32(f"persona:{bid_id}".encode("utf-8"))
+    pick = zlib.crc32(f"persona:{ids.legacy_key(bid_id)}".encode("utf-8"))
     pool = _HARD if vendor_id in HARD_VENDORS else _EASY
     return pool[pick % len(pool)]

@@ -4,8 +4,8 @@ from app import lifecycle, services as sv
 from app import readmodel as rm
 from app.store import Repo
 
-BUY = "EVT-2026-041-01"
-SELL = "EVT-2026-052-01"
+BUY = "AIS-E1-2026-00077-01"
+SELL = "AIS-E1-2026-00088-01"
 
 
 def _state(repo, item_id):

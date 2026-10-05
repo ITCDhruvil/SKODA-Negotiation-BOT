@@ -80,7 +80,7 @@ def test_a_negotiation_attaches_notes_to_vendor_replies_and_never_to_our_message
     from app.api import create_app
 
     c = TestClient(create_app(repo, seed_dataset))
-    item = "EVT-2026-041-01"
+    item = "AIS-E1-2026-00077-01"
     c.put(f"/api/items/{item}/points", json={"target": 250, "limit": 270})
     c.post(f"/api/items/{item}/confirm-points")
     c.post(f"/api/items/{item}/release-bids", json={})

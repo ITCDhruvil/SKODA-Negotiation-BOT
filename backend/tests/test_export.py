@@ -9,8 +9,8 @@ from app.export import TEMPLATE_COLUMNS
 from app.models import Dataset
 from app.store import Repo
 
-BUY, BUY_EVT = "EVT-2026-041-01", "EVT-2026-041"
-SELL, SELL_EVT = "EVT-2026-052-01", "EVT-2026-052"
+BUY, BUY_EVT = "AIS-E1-2026-00077-01", "AIS-E1-2026-00077"
+SELL, SELL_EVT = "AIS-E1-2026-00088-01", "AIS-E1-2026-00088"
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ def test_buy_export_matches_the_template_layout(client):
     if r.status_code == 409:
         pytest.skip("event could not be fully closed in this scenario")
     assert r.headers["content-type"].startswith("text/csv")
-    assert "shopping_cart_template_EVT-2026-041.csv" in r.headers["content-disposition"]
+    assert "shopping_cart_template_AIS-E1-2026-00077.csv" in r.headers["content-disposition"]
     table = rows(r)
     assert table[0] == TEMPLATE_COLUMNS and all(len(row) == 38 for row in table)
     first = next(row for row in table[1:] if row[3] == "1")

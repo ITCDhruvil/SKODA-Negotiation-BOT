@@ -25,9 +25,9 @@ type Scenario = {
 };
 
 const SCENARIOS: Scenario[] = [
-  { key: "buy", direction: "buy", label: "Purchase story", event: "EVT-2026-041", item: "EVT-2026-041-01", target: 250, limit: 270, blurb: "Buying lunch for a delegation visit: we want a lower price per meal." },
-  { key: "hard", direction: "buy", vendor: "V008", label: "Hard vendor story", event: "EVT-2026-041", item: "EVT-2026-041-01", target: 250, limit: 280, blurb: "The same lunch order, but with a vendor whose history says it is hard to crack: a long conversation with real tactics." },
-  { key: "sell", direction: "sell", label: "Scrap story", event: "EVT-2026-052", item: "EVT-2026-052-01", target: 170, limit: 165, blurb: "Selling an aluminium scrap lot: we want a higher price per kg." },
+  { key: "buy", direction: "buy", label: "Purchase story", event: "AIS-E1-2026-00077", item: "AIS-E1-2026-00077-01", target: 250, limit: 270, blurb: "Buying lunch for a delegation visit: we want a lower price per meal." },
+  { key: "hard", direction: "buy", vendor: "V008", label: "Hard vendor story", event: "AIS-E1-2026-00077", item: "AIS-E1-2026-00077-01", target: 250, limit: 280, blurb: "The same lunch order, but with a vendor whose history says it is hard to crack: a long conversation with real tactics." },
+  { key: "sell", direction: "sell", label: "Scrap story", event: "AIS-E1-2026-00088", item: "AIS-E1-2026-00088-01", target: 170, limit: 165, blurb: "Selling an aluminium scrap lot: we want a higher price per kg." },
 ];
 
 type Step = { title: string; short: string; what: string; why: string };

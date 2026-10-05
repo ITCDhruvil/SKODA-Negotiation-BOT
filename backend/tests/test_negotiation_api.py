@@ -8,8 +8,8 @@ from app.api import create_app
 from app.models import Dataset
 from app.store import Repo
 
-BUY = "EVT-2026-041-01"
-SELL = "EVT-2026-052-01"
+BUY = "AIS-E1-2026-00077-01"
+SELL = "AIS-E1-2026-00088-01"
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def test_approve_mode_over_http_to_a_closed_item(client):
     r = client.post(f"/api/items/{BUY}/accept-deal")
     assert r.status_code == 200 and r.json()["item"]["state"] == "awaiting_approval"
     before = client.get("/api/dashboard").json()["kpis"]
-    event = client.post("/api/events/EVT-2026-041/approve").json()
+    event = client.post("/api/events/AIS-E1-2026-00077/approve").json()
     assert next(i for i in event["items"] if i["id"] == BUY)["state"] == "closed"
     item = client.get(f"/api/items/{BUY}").json()
     assert item["outcome"]["final_price"] == 270 and item["outcome"]["value_delta"] == 9000
@@ -141,7 +141,7 @@ def test_hand_back_and_unknown_ids(client):
 
 def test_continue_and_accept_offer_and_approve_needs_something_waiting(client):
     analyzed(client, BUY, 250, 270)
-    assert client.post("/api/events/EVT-2026-041/approve").status_code == 409
+    assert client.post("/api/events/AIS-E1-2026-00077/approve").status_code == 409
     sid = start(client, BUY, "auto")["id"]
     while client.post(f"/api/sessions/{sid}/advance").json()["status"] == "active":
         pass
@@ -154,7 +154,7 @@ def test_continue_and_accept_offer_and_approve_needs_something_waiting(client):
 def test_accepting_the_best_quote_without_negotiating(client):
     analyzed(client, BUY, 250, 270)
     assert client.post(f"/api/items/{BUY}/accept-deal").json()["item"]["state"] == "awaiting_approval"
-    client.post("/api/events/EVT-2026-041/approve")
+    client.post("/api/events/AIS-E1-2026-00077/approve")
     o = client.get(f"/api/items/{BUY}").json()["outcome"]
     assert (o["negotiated"], o["original_price"], o["final_price"]) == (False, 285, 285)
 
@@ -200,7 +200,7 @@ def test_all_negotiations_lists_every_session_with_its_context(client):
     analyzed(client, BUY, 250, 270)
     sid = start(client, BUY, "approve")["id"]
     (row,) = client.get("/api/negotiations").json()
-    assert row["id"] == sid and row["event_id"] == "EVT-2026-041" and row["direction"] == "buy"
+    assert row["id"] == sid and row["event_id"] == "AIS-E1-2026-00077" and row["direction"] == "buy"
     assert row["item_description"] and row["original_price"] == 285 and row["status"] == "active"
 
 

@@ -11,7 +11,7 @@ from app.negotiation.personas import PROFILES
 from app.store import Repo
 from tests.test_negotiation_engine import play
 
-BUY = "EVT-2026-041-01"
+BUY = "AIS-E1-2026-00077-01"
 
 
 @pytest.fixture

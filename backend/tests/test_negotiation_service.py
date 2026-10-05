@@ -5,8 +5,8 @@ from app.negotiation import guardrails
 from app.negotiation import service as neg
 from app.store import Repo
 
-BUY = "EVT-2026-041-01"
-SELL = "EVT-2026-052-01"
+BUY = "AIS-E1-2026-00077-01"
+SELL = "AIS-E1-2026-00088-01"
 
 
 def analyzed(repo: Repo, item_id: str, target: float, limit: float) -> None:
@@ -237,7 +237,7 @@ def test_result_continue_accept_and_approve_records_the_outcome(buy: Repo):
     assert s.status == "agreed" and s.agreed_price == 270
 
     assert neg.accept_deal(buy, BUY).state == "awaiting_approval"
-    made = neg.approve_event(buy, "EVT-2026-041")
+    made = neg.approve_event(buy, "AIS-E1-2026-00077")
     assert len(made) == 1
     o = buy.get("outcome", BUY)
     assert (o.original_price, o.final_price, o.negotiated, o.payment_code) == (285, 270, True, "ZD45")
@@ -250,19 +250,19 @@ def test_result_continue_accept_and_approve_records_the_outcome(buy: Repo):
 
 def test_the_best_quote_can_be_accepted_as_it_stands(buy: Repo):
     assert neg.accept_deal(buy, BUY).state == "awaiting_approval"
-    neg.approve_event(buy, "EVT-2026-041")
+    neg.approve_event(buy, "AIS-E1-2026-00077")
     o = buy.get("outcome", BUY)
     assert (o.original_price, o.final_price, o.negotiated, o.duration_minutes) == (285, 285, False, 0)
 
 
 def test_approval_needs_something_awaiting_and_a_result_to_accept(buy: Repo):
     with pytest.raises(services.Conflict):
-        neg.approve_event(buy, "EVT-2026-041")
+        neg.approve_event(buy, "AIS-E1-2026-00077")
     with pytest.raises(services.Conflict):
         neg.continue_negotiation(buy, BUY)
     s = neg.start(buy, BUY, mode="manual")
     with pytest.raises(lifecycle.InvalidTransition):
-        neg.accept_deal(buy, "EVT-2026-041-02")        # a draft item cannot be accepted
+        neg.accept_deal(buy, "AIS-E1-2026-00077-02")        # a draft item cannot be accepted
     with pytest.raises(lifecycle.InvalidTransition):
         neg.accept_deal(buy, BUY)                       # still negotiating, nothing agreed
     assert s.status == "active"

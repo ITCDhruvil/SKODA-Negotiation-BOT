@@ -26,13 +26,13 @@ Open **Demo story** in the sidebar for a guided, nine-step walk through the whol
 
 ## Demo script (manual)
 
-**Hero BUY** (`EVT-2026-041`, Delegation Lunch Buffet, 600 EA)
+**Hero BUY** (`AIS-E1-2026-00077`, Delegation Lunch Buffet, 600 EA)
 1. Open the item, set target 250 and ceiling 270, confirm the points.
 2. Use "Simulate response" on a vendor (mock invite, consent and code 123456), or "Load all scripted replies". Analyze the quotes.
 3. Start negotiation in Full auto. It opens at 250, the vendor first explains why it cannot move, then the two sides trade offers over five rounds (we reach 257, 262, 265, 270; the vendor 280, 277, 275) and it agrees at 270 with 45-day payment: savings 9,000. "Keep negotiating" pushes on and lands at 269.
 4. Accept the deal, review and approve the event, then download the Shopping Cart template (CSV) from the event page.
 
-**Hero SELL** (`EVT-2026-052`, scrap lot): target 170, floor 165. Try Approve each message or Manual. It takes four rounds and agrees at 167: uplift 20,000 ("Keep negotiating" reaches 168). Closed sell events export a plain deal summary.
+**Hero SELL** (`AIS-E1-2026-00088`, scrap lot): target 170, floor 165. Try Approve each message or Manual. It takes four rounds and agrees at 167: uplift 20,000 ("Keep negotiating" reaches 168). Closed sell events export a plain deal summary.
 
 ## Behaviour to know
 

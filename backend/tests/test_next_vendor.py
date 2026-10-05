@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.api import create_app
 
-ITEM = "EVT-2026-041-01"
+ITEM = "AIS-E1-2026-00077-01"
 
 
 def _prepare(client):

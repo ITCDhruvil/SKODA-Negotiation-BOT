@@ -9,11 +9,11 @@ import zlib
 from dataclasses import dataclass
 from typing import Optional
 
-from app import deal
+from app import deal, ids
 from app.negotiation.personas import HARD_PERSONAS, PROFILES
 
 # Demo vendors with a known story (spec section 5): the best bidder on each hero item.
-HERO_FLEX = {"EVT-2026-041-01-B1": 0.3, "EVT-2026-052-01-B1": 0.4}
+HERO_FLEX = {"AIS-E1-2026-00077-01-B1": 0.3, "AIS-E1-2026-00088-01-B1": 0.4}
 _FLEX = (0.3, 0.4, 0.5)
 MAX_VENDOR_ROUNDS = 12
 STEP = 0.6  # the vendor gives up this share of its flexibility per round, so it takes several rounds
@@ -31,7 +31,7 @@ def flexibility(bid_id: str) -> float:
     """How far the vendor moves toward our offer each round (0..1), fixed per bid."""
     if bid_id in HERO_FLEX:
         return HERO_FLEX[bid_id]
-    return _FLEX[zlib.crc32(bid_id.encode("utf-8")) % len(_FLEX)]
+    return _FLEX[zlib.crc32(ids.legacy_key(bid_id).encode("utf-8")) % len(_FLEX)]
 
 
 @dataclass(frozen=True)
@@ -116,7 +116,7 @@ def _crawl(mover: str, vendor_price: float, offer_price: float, bound: float) ->
 
 
 def _roll(seed: str, round_no: int) -> int:
-    return zlib.crc32(f"roll:{seed}:{round_no}".encode("utf-8")) % 100
+    return zlib.crc32(f"roll:{ids.legacy_key(seed)}:{round_no}".encode("utf-8")) % 100
 
 
 def next_mood(mood: int, *, accepts: bool, offer_price: float, reserve: float, our_prev: Optional[float]) -> int:

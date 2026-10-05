@@ -9,6 +9,7 @@ from __future__ import annotations
 import zlib
 from typing import Optional
 
+from app import ids
 from app.negotiation.personas import SCRIPTED_BIDS
 
 # How far our offer was from the vendor's price, as a share of the vendor's price.
@@ -86,7 +87,7 @@ def pauses_before(round_no: int, kind: str, bid_id: Optional[str] = None) -> boo
         return False
     if bid_id is None or bid_id in SCRIPTED_BIDS:
         return round_no % 3 == 1
-    h = zlib.crc32(f"pause-plan:{bid_id}".encode("utf-8"))
+    h = zlib.crc32(f"pause-plan:{ids.legacy_key(bid_id)}".encode("utf-8"))
     if h % 10 < 3:
         return False  # three vendors in ten never stop to check
     first = 2 + (h >> 4) % 3
@@ -103,7 +104,7 @@ _BACK_RANGE = {  # persona -> (shortest, longest) wait after "let me check and c
 
 
 def _pick(seed: str, lo: int, hi: int) -> int:
-    return lo + zlib.crc32(seed.encode("utf-8")) % max(1, hi - lo)
+    return lo + zlib.crc32(ids.legacy_key(seed).encode("utf-8")) % max(1, hi - lo)
 
 
 def our_delay(bid_id: str, round_no: int) -> int:

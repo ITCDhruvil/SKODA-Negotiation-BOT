@@ -4,7 +4,7 @@ from __future__ import annotations
 import random
 from datetime import timedelta
 
-from app import deal, eligibility
+from app import deal, eligibility, ids
 from app.seed.build import Accumulator, add_buy_event, add_sell_event
 from app.seed.carts import make_position
 from app.seed.catalog import BUY_CATEGORIES, REQUESTORS, SCRAP_MATERIALS
@@ -14,7 +14,7 @@ from app.store import Repo
 
 
 def _next_number(repo: Repo) -> int:
-    return max(int(e.id.rsplit("-", 1)[1]) for e in repo.fetch("event")) + 1
+    return max(ids.event_number(e.id) for e in repo.fetch("event")) + 1
 
 
 def _buy(rng: random.Random, vendors, event_id: str, n: int, acc: Accumulator) -> None:
@@ -50,7 +50,7 @@ def simulate_event(repo: Repo, direction: str) -> str:
     if direction not in ("buy", "sell"):
         raise ValueError(f"direction must be 'buy' or 'sell', got {direction!r}")
     n = _next_number(repo)
-    event_id = f"EVT-2026-{n:03d}"
+    event_id = ids.event_id(n)
     rng = random.Random(SEED + 1000 + n)
     vendors = repo.fetch("vendor")
     acc = Accumulator()

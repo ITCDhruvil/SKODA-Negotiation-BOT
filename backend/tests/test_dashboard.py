@@ -91,7 +91,7 @@ def test_opportunities_only_from_live_bids_and_sorted(dash):
     assert deltas == sorted(deltas, reverse=True) and all(d > 0 for d in deltas)
     assert all(o.state in ("bids_in", "analyzed", "points_reviewed", "awaiting_bids")
                for o in dash.opportunities)
-    assert "EVT-2026-041-01" not in {o.item_id for o in dash.opportunities}
+    assert "AIS-E1-2026-00077-01" not in {o.item_id for o in dash.opportunities}
 
 
 def test_status_distribution(dash):

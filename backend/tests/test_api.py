@@ -7,8 +7,8 @@ from app.api import create_app
 from app.models import Dataset
 from app.store import Repo
 
-BUY = "EVT-2026-041-01"
-SELL = "EVT-2026-052-01"
+BUY = "AIS-E1-2026-00077-01"
+SELL = "AIS-E1-2026-00088-01"
 
 
 @pytest.fixture
@@ -34,12 +34,12 @@ def test_event_list_filters(client):
     closed = client.get("/api/events", params={"status": "closed"}).json()
     assert len(closed) == 4
     hit = client.get("/api/events", params={"q": "aluminium turnings"}).json()
-    assert any(e["id"] == "EVT-2026-052" for e in hit)
+    assert any(e["id"] == "AIS-E1-2026-00088" for e in hit)
     assert client.get("/api/events", params={"direction": "swap"}).status_code == 422
 
 
 def test_event_detail_and_404(client):
-    d = client.get("/api/events/EVT-2026-041").json()
+    d = client.get("/api/events/AIS-E1-2026-00077").json()
     assert d["event"]["item_count"] == 6 and len(d["items"]) == 6
     assert client.get("/api/events/NOPE").status_code == 404
     assert client.get("/api/items/NOPE").status_code == 404
@@ -99,7 +99,7 @@ def test_history_and_comparison_routes(client):
 
 def test_simulate_and_reset(client):
     r = client.post("/api/events/simulate", json={"direction": "sell"})
-    assert r.status_code == 200 and r.json()["event"]["id"] == "EVT-2026-086"
+    assert r.status_code == 200 and r.json()["event"]["id"] == "AIS-E1-2026-00122"
     assert client.get("/api/dashboard").json()["kpis"]["total_events"] == 86
     assert client.post("/api/events/simulate", json={"direction": "swap"}).status_code == 422
     assert client.post("/api/admin/reset").json() == {"events": 85}
@@ -172,10 +172,10 @@ def test_reset_restores_the_seed_even_after_a_restart(tmp_path, seed_dataset: Da
 
     restarted = TestClient(create_app(Repo(tmp_path / "app.db"), seed_dataset))
     assert restarted.get(f"/api/items/{BUY}").json()["item"]["state"] == "bids_in"
-    assert restarted.get("/api/events/EVT-2026-086").status_code == 200
+    assert restarted.get("/api/events/AIS-E1-2026-00122").status_code == 200
     assert restarted.post("/api/admin/reset").json() == {"events": 85}
     assert restarted.get(f"/api/items/{BUY}").json()["item"]["state"] == "draft"
-    assert restarted.get("/api/events/EVT-2026-086").status_code == 404
+    assert restarted.get("/api/events/AIS-E1-2026-00122").status_code == 404
 
 
 @pytest.mark.parametrize("raw", ['{"target": Infinity, "limit": 270}',
@@ -251,7 +251,7 @@ def test_points_without_objective_keep_it_and_null_clears_it(client):
 
 
 def test_handed_back_item_reopens_as_analyzed_over_http(client):
-    r = client.put("/api/items/EVT-2026-058-01/points", json={"target": 64000, "limit": 68000})
+    r = client.put("/api/items/AIS-E1-2026-00094-01/points", json={"target": 64000, "limit": 68000})
     assert r.status_code == 200 and r.json()["item"]["state"] == "analyzed"
     assert r.json()["item"]["bid_count"] == 4
 

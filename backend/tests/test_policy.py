@@ -32,15 +32,15 @@ def _ready(c, item, target, limit):
 
 def test_item_detail_shows_the_policy(repo, seed_dataset):
     c = _client(repo, seed_dataset)
-    p = c.get("/api/items/EVT-2026-041-01").json()["item"]["policy"]
+    p = c.get("/api/items/AIS-E1-2026-00077-01").json()["item"]["policy"]
     assert p["band"] == "auto" and p["auto_allowed"] and p["default_mode"] == "auto"
-    big = c.get("/api/items/EVT-2026-063-01").json()["item"]["policy"]
+    big = c.get("/api/items/AIS-E1-2026-00099-01").json()["item"]["policy"]
     assert big["band"] == "supervised" and not big["auto_allowed"] and big["default_mode"] == "approve"
 
 
 def test_full_auto_is_refused_for_a_deal_above_ten_lakh_but_approval_mode_works(repo, seed_dataset):
     c = _client(repo, seed_dataset)
-    item = "EVT-2026-063-01"
+    item = "AIS-E1-2026-00099-01"
     detail = c.get(f"/api/items/{item}").json()
     if detail["item"]["state"] != "analyzed":
         _ready(c, item, detail["item"]["target"], detail["item"]["limit"])
@@ -56,7 +56,7 @@ def test_full_auto_is_refused_for_a_deal_above_ten_lakh_but_approval_mode_works(
 def test_a_deal_above_the_management_limit_cannot_be_negotiated(repo, seed_dataset, monkeypatch):
     monkeypatch.setattr(policy, "MANAGEMENT_LIMIT_INR", 100_000.0)  # make an ordinary item count as a large one
     c = _client(repo, seed_dataset)
-    item = "EVT-2026-041-01"
+    item = "AIS-E1-2026-00077-01"
     _ready(c, item, 250, 270)
     assert c.get(f"/api/items/{item}").json()["item"]["policy"]["band"] == "management"
     r = c.post(f"/api/items/{item}/negotiations", json={"mode": "approve"})

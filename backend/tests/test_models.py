@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from app.models import Bid, Dataset, Event, Item, Vendor
 
 
-def _event(eid="EVT-2026-001"):
+def _event(eid="AIS-E1-2026-00037"):
     return Event(
         id=eid, type="shopping_cart", direction="buy", title="t", company_id="0800",
         company="SKODA Auto VW India", plant="Plant Pune", purch_org="LPOS", purch_group="A05",
@@ -18,7 +18,7 @@ def _event(eid="EVT-2026-001"):
 
 def _item(iid, qty, ref):
     return Item(
-        id=iid, event_id="EVT-2026-001", position=1, description="d", kind="goods", qty=qty,
+        id=iid, event_id="AIS-E1-2026-00037", position=1, description="d", kind="goods", qty=qty,
         unit="EA", reference_price=ref, suggested_target=1, suggested_limit=2, target=None,
         limit=None, incoterm="FH", delivery_days=5, state="draft",
     )
@@ -35,7 +35,7 @@ def test_event_value_sums_qty_times_reference_price():
         vendors=[], events=[_event()], items=[_item("a", 10, 5.5), _item("b", 2, 100)],
         bids=[], scripted_bids=[], outcomes=[], history=[], reserves={},
     )
-    assert ds.event_value("EVT-2026-001") == 255.0
+    assert ds.event_value("AIS-E1-2026-00037") == 255.0
 
 
 def test_item_bids_splits_live_and_scripted():

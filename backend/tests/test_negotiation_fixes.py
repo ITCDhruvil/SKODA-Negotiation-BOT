@@ -13,8 +13,8 @@ from app.negotiation import service as neg
 from app.negotiation import views as negviews
 from app.store import Repo
 
-BUY = "EVT-2026-041-01"
-SELL = "EVT-2026-052-01"
+BUY = "AIS-E1-2026-00077-01"
+SELL = "AIS-E1-2026-00088-01"
 
 
 def analyzed(repo: Repo, item_id: str, target: float, limit: float) -> None:
@@ -444,7 +444,7 @@ def test_today_is_the_indian_calendar_date(monkeypatch):
 def test_approval_records_the_indian_date(buy: Repo, monkeypatch):
     neg.accept_deal(buy, BUY)
     monkeypatch.setattr(clock, "now", lambda: datetime(2026, 9, 30, 20, 0, tzinfo=timezone.utc))
-    neg.approve_event(buy, "EVT-2026-041")
+    neg.approve_event(buy, "AIS-E1-2026-00077")
     assert buy.get("outcome", BUY).closed_date.isoformat() == "2026-10-01"
 
 
@@ -458,7 +458,7 @@ def client(repo: Repo, seed_dataset: Dataset):
 def test_session_actions_and_event_id(buy: Repo):
     s = neg.start(buy, BUY, mode="approve")
     v = negviews.session_view(buy, s.id)
-    assert v.event_id == "EVT-2026-041"
+    assert v.event_id == "AIS-E1-2026-00077"
     a = v.actions
     assert (a.can_advance, a.can_send, a.can_accept_offer, a.can_hand_back) == (True, True, False, True)
     assert (a.can_continue, a.can_accept_deal) == (False, False)
@@ -489,7 +489,7 @@ def test_item_detail_reports_the_sessions_and_events_list_them(client, repo: Rep
     client.post(f"/api/sessions/{sid}/hand-back")
     d = client.get(f"/api/items/{BUY}").json()
     assert d["active_session_id"] is None and d["latest_session_status"] == "handed_back"
-    r = client.get("/api/events/EVT-2026-041/sessions")
+    r = client.get("/api/events/AIS-E1-2026-00077/sessions")
     assert r.status_code == 200 and [x["id"] for x in r.json()] == [sid]
     assert client.get("/api/events/NOPE/sessions").status_code == 404
 

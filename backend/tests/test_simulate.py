@@ -9,7 +9,7 @@ from app.store import Repo
 def test_simulated_event_is_a_fresh_eligible_draft(repo: Repo, direction):
     before_reserves = len(repo.reserves())
     event_id = simulate_event(repo, direction)
-    assert event_id == "EVT-2026-086"
+    assert event_id == "AIS-E1-2026-00122"
     snap = rm.snapshot(repo)
     ev = rm.event_view(snap, snap.event_by_id[event_id])
     assert ev.direction == direction and ev.status == "received" and ev.eligibility.eligible
@@ -25,7 +25,7 @@ def test_simulated_event_is_a_fresh_eligible_draft(repo: Repo, direction):
 def test_two_simulations_get_distinct_ids_and_content(repo: Repo):
     a = simulate_event(repo, "buy")
     b = simulate_event(repo, "buy")
-    assert (a, b) == ("EVT-2026-086", "EVT-2026-087")
+    assert (a, b) == ("AIS-E1-2026-00122", "AIS-E1-2026-00123")
     snap = rm.snapshot(repo)
     assert snap.event_by_id[a].title != snap.event_by_id[b].title
 

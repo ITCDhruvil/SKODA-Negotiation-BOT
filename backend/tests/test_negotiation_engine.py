@@ -119,7 +119,7 @@ def test_vendor_grants_at_most_15_extra_days():
 
 
 def test_vendor_never_goes_below_its_reserve_and_flexibility_is_stable():
-    assert vendor_sim.flexibility("EVT-2026-041-01-B1") == 0.3
+    assert vendor_sim.flexibility("AIS-E1-2026-00077-01-B1") == 0.3
     assert vendor_sim.flexibility("X-1") == vendor_sim.flexibility("X-1")
     r = vendor_sim.reply("buy", reserve=268, flex=0.5, vendor_price=271, vendor_payment="ZD30",
                          offer_price=200, offer_payment=None, round_no=1)

@@ -8,8 +8,8 @@ from app.seed.carts import make_position
 from app.seed.catalog import BUY_CATEGORIES
 from app.seed.constants import TODAY
 
-HERO_BUY_ID = "EVT-2026-041"
-HERO_SELL_ID = "EVT-2026-052"
+HERO_BUY_ID = "AIS-E1-2026-00077"
+HERO_SELL_ID = "AIS-E1-2026-00088"
 HERO_BUY_CART = "1012399041"
 HERO_BUY_TITLE = "Meals For Delegation Visit To Savwipl"
 
