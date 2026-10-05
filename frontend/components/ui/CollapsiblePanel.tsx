@@ -8,11 +8,14 @@ export function CollapsiblePanel({
   title,
   storageKey,
   defaultOpen = true,
+  summary,
   children,
 }: {
   title: ReactNode;
   storageKey: string;
   defaultOpen?: boolean;
+  /** Shown beside the title while the panel is folded, so the current choice is visible without opening it. */
+  summary?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -45,7 +48,8 @@ export function CollapsiblePanel({
           aria-controls={bodyId}
           className="flex w-full items-center justify-between gap-2 rounded-card px-4 py-3.5 text-left text-[15px] font-bold text-ink hover:bg-raise"
         >
-          {title}
+          <span className="min-w-0 truncate">{title}</span>
+          {summary && !open && <span className="ml-auto min-w-0 truncate text-xs font-medium text-muted">{summary}</span>}
           <Icon name="down" size={18} className={`shrink-0 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </button>
       </h2>

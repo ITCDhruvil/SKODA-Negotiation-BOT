@@ -16,7 +16,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { ApiError, api, type DraftView, type Mode, type SessionView } from "@/lib/api";
 import { money, num } from "@/lib/format";
-import { LANGUAGE_LABEL, deltaLabel, limitLabel } from "@/lib/labels";
+import { LANGUAGE_LABEL, MODE_LABEL, deltaLabel, limitLabel } from "@/lib/labels";
 
 // A short pause before the next round starts, once the last message has been shown.
 const stepDelay = () => 900 + Math.floor(Math.random() * 900);
@@ -118,11 +118,11 @@ function DraftCard({ s, onResult, onError }: { s: SessionView } & Handlers) {
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children, updating = false }: { label: string; children: React.ReactNode; updating?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-line2 py-2 last:border-0">
       <dt className="text-sm text-muted">{label}</dt>
-      <dd className="text-right font-semibold text-ink tabular-nums">{children}</dd>
+      <dd className={`text-right font-semibold tabular-nums ${updating ? "shimmer-text" : "text-ink"}`}>{children}</dd>
     </div>
   );
 }
@@ -184,6 +184,7 @@ function Workspace({ initial }: { initial: SessionView }) {
   }, [visible, typing]);
 
   const revealing = visible < s.turns.length;
+  const updating = revealing || typing !== null; // the figures are about to change
   // The end of a conversation (agreed, handed back) is only announced after its last message has been shown.
   const shownStatus = revealing && s.status !== "active" ? "active" : s.status;
   useEffect(() => {
@@ -421,30 +422,40 @@ function Workspace({ initial }: { initial: SessionView }) {
 
         <ProfileDialog who={profile} session={s} onClose={() => setProfile(null)} />
         <div className="grid content-start gap-5 xl:min-h-0 xl:overflow-y-auto">
-          <Panel title="Permission">
-            <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
-          </Panel>
-          <Panel title="Conversation language">
-            <Select<"en" | "hi" | "mr">
-              id="ws-language"
-              ariaLabel="Conversation language"
-              value={s.language}
-              disabled={busy || s.status !== "active"}
-              onChange={(l) => act(() => api.setLanguage(s.id, l))}
-              options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
-            />
-          </Panel>
+          <CollapsiblePanel title="Chat settings" storageKey="chat-settings" defaultOpen={false} summary={`${MODE_LABEL[s.mode]} · ${LANGUAGE_LABEL[s.language].split(" ")[0]}`}>
+            <div className="grid gap-4">
+              <div>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Who sends the messages</p>
+                <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
+              </div>
+              <div>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Language</p>
+                <Select<"en" | "hi" | "mr">
+                  id="ws-language"
+                  ariaLabel="Conversation language"
+                  value={s.language}
+                  disabled={busy || s.status !== "active"}
+                  onChange={(l) => act(() => api.setLanguage(s.id, l))}
+                  options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
+                />
+              </div>
+            </div>
+          </CollapsiblePanel>
           <StrategyPanel strategy={s.strategy} />
-          <CollapsiblePanel title="Live intelligence" storageKey="live-intelligence">
+          <CollapsiblePanel
+            title={<span className={shownStatus === "active" ? "shimmer-text" : ""}>Live intelligence</span>}
+            storageKey="live-intelligence"
+            summary={shownStatus === "active" ? <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-ok" aria-hidden />Live</span> : undefined}
+          >
             <dl>
-              <Row label="Original quote">{money(i.current_bid)}</Row>
-              <Row label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
-              <Row label="Our last offer">{money(i.our_offer)}</Row>
-              <Row label="Movement / unit">{money(i.movement)}</Row>
-              <Row label="Target">{money(i.target)}</Row>
-              <Row label={limitLabel(d)}>{money(i.limit)}</Row>
-              <Row label={`${deltaLabel(d)} if accepted`}>{i.delta_if_accepted == null ? "Outside limit" : money(i.delta_if_accepted)}</Row>
-              <Row label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
+              <Row updating={updating} label="Original quote">{money(i.current_bid)}</Row>
+              <Row updating={updating} label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
+              <Row updating={updating} label="Our last offer">{money(i.our_offer)}</Row>
+              <Row updating={updating} label="Movement / unit">{money(i.movement)}</Row>
+              <Row updating={updating} label="Target">{money(i.target)}</Row>
+              <Row updating={updating} label={limitLabel(d)}>{money(i.limit)}</Row>
+              <Row updating={updating} label={`${deltaLabel(d)} if accepted`}>{i.delta_if_accepted == null ? "Outside limit" : money(i.delta_if_accepted)}</Row>
+              <Row updating={updating} label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
             </dl>
             <p className="mt-3 rounded-m bg-raise p-3 text-sm text-text">{i.recommendation}</p>
           </CollapsiblePanel>
