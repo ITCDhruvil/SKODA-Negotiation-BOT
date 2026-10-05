@@ -1,4 +1,5 @@
-import { Panel, Pill } from "@/components/ui/basics";
+import { Pill } from "@/components/ui/basics";
+import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import type { Strategy } from "@/lib/api";
 import { duration } from "@/lib/format";
 import { MOOD_LABEL, MOOD_TONE, PHASE_LABEL, STANCE_LABEL, STANCE_TONE, TACTIC_LABEL, TOUGH_LABEL, TOUGH_TONE } from "@/lib/labels";
@@ -9,7 +10,7 @@ export function StrategyPanel({ strategy }: { strategy: Strategy }) {
   const used = Array.from(new Set(strategy.tactics_used)).filter((t) => TACTIC_LABEL[t]);
   const share = Math.min(100, Math.round((round / max) * 100));
   return (
-    <Panel title="Strategy">
+    <CollapsiblePanel title="Strategy" storageKey="strategy">
       <div className="grid gap-3 text-sm">
         <div>
           <div className="mb-1 flex items-baseline justify-between">
@@ -68,6 +69,6 @@ export function StrategyPanel({ strategy }: { strategy: Strategy }) {
           </div>
         )}
       </div>
-    </Panel>
+    </CollapsiblePanel>
   );
 }

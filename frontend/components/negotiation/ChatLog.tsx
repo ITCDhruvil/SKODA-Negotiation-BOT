@@ -9,23 +9,28 @@ function clock(base: string, minutes: number): string {
   return d.toLocaleString("en-IN", { weekday: "short", hour: "numeric", minute: "2-digit" });
 }
 
+/** "Name is typing…" with three bouncing dots, on the side of whoever is writing. `label` reads "<name> is typing". */
 export function TypingDots({ label, side = "vendor" }: { label: string; side?: "us" | "vendor" }) {
   const ours = side === "us";
+  const name = label.replace(/ (is|are) typing$/, "");
   return (
     <div className={`flex ${ours ? "justify-end" : "justify-start"}`}>
       <div
-        className={`px-4 py-3 text-xs text-muted ${
+        className={`grid gap-1 px-4 py-2.5 ${
           ours ? "rounded-card rounded-br-chip border border-transparent bg-brand-soft" : "rounded-card rounded-bl-chip border border-line bg-raise"
         }`}
         role="status"
       >
-        <span className="sr-only">{label}</span>
-        <span aria-hidden className="flex items-center gap-1 motion-reduce:hidden">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" style={{ animationDelay: `${i * 150}ms` }} />
-          ))}
+        <span className="text-xs font-semibold text-muted">{name}</span>
+        <span className="flex items-center gap-2 text-xs italic text-muted">
+          <span aria-hidden className="flex items-center gap-1 motion-reduce:hidden">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" style={{ animationDelay: `${i * 150}ms` }} />
+            ))}
+          </span>
+          typing…
         </span>
-        <span aria-hidden className="hidden motion-reduce:inline">{label}</span>
+        <span className="sr-only">{label}</span>
       </div>
     </div>
   );

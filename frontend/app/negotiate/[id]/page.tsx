@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatLog } from "@/components/negotiation/ChatLog";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
 import { ChatComposer } from "@/components/negotiation/ChatComposer";
+import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { StrategyPanel } from "@/components/negotiation/StrategyPanel";
 import { Select } from "@/components/ui/Select";
 import { Button, DirectionBadge, Field, Panel, Pill, inputClass } from "@/components/ui/basics";
@@ -341,7 +342,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             />
           </Panel>
           <StrategyPanel strategy={s.strategy} />
-          <Panel title="Live intelligence">
+          <CollapsiblePanel title="Live intelligence" storageKey="live-intelligence">
             <dl>
               <Row label="Original quote">{money(i.current_bid)}</Row>
               <Row label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
@@ -353,7 +354,7 @@ function Workspace({ initial }: { initial: SessionView }) {
               <Row label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
             </dl>
             <p className="mt-3 rounded-m bg-raise p-3 text-sm text-text">{i.recommendation}</p>
-          </Panel>
+          </CollapsiblePanel>
           {s.status === "active" && (s.actions.can_accept_offer || s.actions.can_hand_back) && (
             <Panel title="Actions">
               <div className="grid gap-2">
