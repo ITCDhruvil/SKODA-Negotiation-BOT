@@ -61,7 +61,7 @@ export function TypingDots({ label, side = "vendor" }: { label: string; side?: "
   const ours = side === "us";
   const name = label.replace(/ (is|are) typing$/, "");
   return (
-    <div className={`mt-3 flex items-end gap-2 ${ours ? "justify-end" : "justify-start"}`} role="status">
+    <div className={`mt-3 flex items-start gap-2 ${ours ? "justify-end" : "justify-start"}`} role="status">
       {!ours && <Avatar name={name} />}
       <div
         className={`rounded-[14px] px-3.5 py-2.5 shadow-sm ${
@@ -112,7 +112,7 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
                 </span>
               </div>
             )}
-            <div className={`flex items-end gap-2 ${ours ? "justify-end" : "justify-start"} ${startsGroup ? "mt-3" : "mt-0.5"}`}>
+            <div className={`flex items-start gap-2 ${ours ? "justify-end" : "justify-start"} ${startsGroup ? "mt-3" : "mt-0.5"}`}>
               {!ours && (startsGroup ? <Avatar name={vendorName} /> : <span className="w-8 shrink-0" aria-hidden />)}
               <div
                 className={`max-w-[78%] rounded-[14px] px-3 pb-1.5 pt-2 text-[14px] leading-snug shadow-sm ${
