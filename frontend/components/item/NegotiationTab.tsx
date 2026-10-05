@@ -61,7 +61,7 @@ function SessionCard({ s, defaultOpen }: { s: SessionSummary; defaultOpen: boole
                 )}
               </div>
               <div className="max-h-[28rem] overflow-auto">
-                <ChatLog turns={full.turns} vendorName={full.vendor_name} />
+                <ChatLog turns={full.turns} vendorName={full.vendor_name} showInsights />
               </div>
             </>
           )}

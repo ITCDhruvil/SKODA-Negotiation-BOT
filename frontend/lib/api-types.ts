@@ -1106,6 +1106,18 @@ export interface components {
             /** Worst Price */
             worst_price: number;
         };
+        /** InsightView */
+        InsightView: {
+            /** Kind */
+            kind: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "info" | "good" | "warn";
+            /** Text */
+            text: string;
+        };
         /** Intelligence */
         Intelligence: {
             /** Current Bid */
@@ -1802,6 +1814,11 @@ export interface components {
              * @default 0
              */
             elapsed_minutes: number;
+            /**
+             * Insights
+             * @default []
+             */
+            insights: components["schemas"]["InsightView"][];
         };
         /** ValidationError */
         ValidationError: {

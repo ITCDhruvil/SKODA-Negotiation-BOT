@@ -347,6 +347,12 @@ class HistoryDeal(BaseModel):
 
 # --- negotiation sessions ------------------------------------------------------------------
 
+class InsightView(BaseModel):
+    kind: str
+    tone: Literal["info", "good", "warn"]
+    text: str  # a private note for the buyer; never sent to the vendor
+
+
 class TurnView(BaseModel):
     seq: int
     speaker: Literal["us", "vendor"]
@@ -358,6 +364,7 @@ class TurnView(BaseModel):
     tactic: Optional[str] = None  # what the message was doing, for the buyer
     delay_minutes: int = 0  # how long after the previous message this one came (conversation time)
     elapsed_minutes: int = 0  # since the first message
+    insights: list[InsightView] = []  # private notes for the buyer about this reply
 
 
 class DraftView(BaseModel):

@@ -14,7 +14,7 @@ from typing import Optional
 
 from app import clock, deal, lifecycle
 from app.models import Bid, Draft, Event, Item, Mode, Outcome, Session, Turn
-from app.negotiation import guardrails, info, messages, personas, tactics, vendor_sim, vendor_talk
+from app.negotiation import guardrails, info, insights, messages, personas, tactics, vendor_sim, vendor_talk
 from app.services import Conflict, NotFound
 from app.store import Repo
 
@@ -273,7 +273,7 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         _add_turn(repo, s, "vendor", "vendor", vendor_talk.pause(s.language, s.round), None, None,
                   delay=vendor_talk.pause_delay(s.bid_id, s.round))
     gap = abs(s.vendor_offer - price) / s.vendor_offer if (s.vendor_offer and s.round >= 1) else None  # nothing to react to at first
-    _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
+    vendor_turn = _add_turn(repo, s, "vendor", "vendor", messages.vendor_message(
         reply.kind, direction=event.direction, lang=s.language, price=reply.price,
         unit=item.unit, payment=changed_payment, variant=s.round, answer=answer, ask=question, gap=gap,
         flavour=reply.flavour),
@@ -302,6 +302,9 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
         "our_offer": price, "our_payment": payment, "round": s.round + 1,
         "previous_vendor_offer": s.vendor_offer, "vendor_offer": reply.price,
         "vendor_payment": reply.payment, "vendor_final": reply.final, "continuing": False})
+    notes = _notes(repo, s, item, event, reply)
+    if notes:
+        repo.put("turn", vendor_turn.id, vendor_turn.model_copy(update={"insights": notes}), parent=s.id)
     if reply.kind == "accept":
         return _finish(repo, s, item, agreed=True, price=price, payment=reply.payment)
     if reply.ends:
@@ -312,6 +315,25 @@ def _send_offer(repo: Repo, s: Session, price: float, payment: Optional[str], te
                   "adjust your limit yourself, or close without a deal.")
         return _finish(repo, s, item, agreed=False, reason=reason, vendor_ended=True)
     return _save_session(repo, s)
+
+
+def _notes(repo: Repo, s: Session, item: Item, event: Event, reply: vendor_sim.VendorReply) -> list:
+    """The private note for this round, from the session after the vendor's reply."""
+    from app import readmodel  # imported here: the read model imports this package too
+
+    target, limit = _points(item)
+    tough = readmodel.vendor_toughness(repo.fetch("history"), s.vendor_id)
+    others = [(vendor_name(repo, b.vendor_id), b) for b in sorted(repo.fetch("bid", parent=s.item_id), key=lambda b: b.id)
+              if b.vendor_id != s.vendor_id]
+    earlier = [i.kind for t in turns(repo, s.id) for i in t.insights]
+    return insights.pick(insights.Round(
+        direction=event.direction, vendor_name=vendor_name(repo, s.vendor_id), qty=item.qty,
+        original_price=s.original_price, original_payment=s.original_payment, price=s.vendor_offer,
+        previous_price=s.previous_vendor_offer, payment=s.vendor_payment, round_no=s.round, stalls=s.stall_count,
+        tokens=s.token_count, mood=s.mood, flavour=reply.flavour, kind=reply.kind, ended=reply.ends,
+        final=reply.final, target=target, limit=limit, own_bid=_bid(repo, s), others=others,
+        toughness_pct=tough.average_concession_pct, toughness_deals=tough.negotiated_deals,
+        recent=tuple(earlier[-2:])))
 
 
 def _accept(repo: Repo, s: Session, text: Optional[str], author: str) -> Session:

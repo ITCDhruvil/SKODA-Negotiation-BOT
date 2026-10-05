@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app import deal
 
@@ -194,6 +194,14 @@ class Session(_Model):
     ended_at: Optional[datetime]
 
 
+class Insight(_Model):
+    """A private note for the buyer, stored with a vendor's reply. It is never sent to the vendor."""
+
+    kind: str  # position | terms | alternative | history | crawl | mood | checkpoint | left
+    tone: Literal["info", "good", "warn"]
+    text: str
+
+
 class Turn(_Model):
     id: str
     session_id: str
@@ -207,6 +215,7 @@ class Turn(_Model):
     tactic: Optional[str] = None  # what our message was doing (buyer-only label)
     delay_minutes: int = 0  # conversation time since the previous message
     elapsed_minutes: int = 0  # conversation time since the first message
+    insights: list[Insight] = Field(default_factory=list)  # buyer-only notes about this reply
 
 
 class Draft(_Model):

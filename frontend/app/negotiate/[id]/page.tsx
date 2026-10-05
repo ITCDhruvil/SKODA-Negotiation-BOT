@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
+import { Icon } from "@/components/ui/Icon";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
 import { ChatComposer } from "@/components/negotiation/ChatComposer";
 import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
@@ -132,6 +133,24 @@ function Workspace({ initial }: { initial: SessionView }) {
   const [visible, setVisible] = useState(initial.turns.length);
   const [typing, setTyping] = useState<{ side: "us" | "vendor"; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  // Private notes under the vendor's messages can be hidden; the choice is remembered.
+  const [showInsights, setShowInsights] = useState(true);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("chat:insights") === "0") setShowInsights(false);
+    } catch {
+      /* storage may be blocked */
+    }
+  }, []);
+  const toggleInsights = () =>
+    setShowInsights((on) => {
+      try {
+        window.localStorage.setItem("chat:insights", on ? "0" : "1");
+      } catch {
+        /* storage may be blocked */
+      }
+      return !on;
+    });
   const [handBackOpen, setHandBackOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [accepted, setAccepted] = useState(false);
@@ -255,6 +274,17 @@ function Workspace({ initial }: { initial: SessionView }) {
               subtitle={shownStatus === "active" ? "online" : shownStatus === "agreed" ? "Deal agreed" : s.vendor_ended ? "Left the conversation" : "Conversation ended"}
               typing={typing?.side === "vendor"}
               live={shownStatus === "active"}
+              actions={
+                <button
+                  type="button"
+                  onClick={toggleInsights}
+                  aria-pressed={showInsights}
+                  title="Private notes for you under the vendor's messages: other quotes, history, hints"
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${showInsights ? "border-brand bg-brand-soft text-brand" : "border-line bg-panel text-muted hover:border-brand"}`}
+                >
+                  <Icon name="bulb" size={14} /> Insights {showInsights ? "on" : "off"}
+                </button>
+              }
             />
           </header>
           <div
@@ -262,7 +292,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             className="min-h-0 flex-1 overflow-y-auto bg-raise px-4 py-3"
             style={{ backgroundImage: "radial-gradient(color-mix(in srgb, var(--line) 80%, transparent) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
           >
-            <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} />
+            <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} showInsights={showInsights} />
           </div>
           <div className="grid max-h-[60%] shrink-0 gap-3 overflow-y-auto border-t border-line2 p-3">
             {error && <Notice tone="red">{error}</Notice>}

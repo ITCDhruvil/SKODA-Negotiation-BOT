@@ -1,3 +1,4 @@
+import { Icon } from "@/components/ui/Icon";
 import type { TurnView } from "@/lib/api";
 import { duration, initials, money } from "@/lib/format";
 import { TACTIC_LABEL } from "@/lib/labels";
@@ -32,7 +33,7 @@ export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
 }
 
 /** Top of the chat: who you are talking to and whether they are typing, like a messaging app. */
-export function ChatHeader({ name, subtitle, typing, live }: { name: string; subtitle: string; typing: boolean; live: boolean }) {
+export function ChatHeader({ name, subtitle, typing, live, actions }: { name: string; subtitle: string; typing: boolean; live: boolean; actions?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
       <Avatar name={name} size={40} />
@@ -43,7 +44,38 @@ export function ChatHeader({ name, subtitle, typing, live }: { name: string; sub
           {typing ? "typing…" : subtitle}
         </p>
       </div>
+      {actions && <div className="ml-auto shrink-0">{actions}</div>}
     </div>
+  );
+}
+
+const INSIGHT_LABEL: Record<string, string> = {
+  position: "Where they stand",
+  terms: "Terms compared",
+  alternative: "Other quotes",
+  history: "From history",
+  crawl: "Small steps",
+  mood: "Mood",
+  checkpoint: "Within reach",
+  left: "Vendor left",
+};
+const INSIGHT_TONE: Record<string, string> = {
+  info: "border-info bg-info-soft text-info",
+  good: "border-ok bg-ok-soft text-ok",
+  warn: "border-amber bg-amber-soft text-amber",
+};
+
+/** A private note for the buyer under a vendor message. It is never sent to the vendor. */
+function InsightCard({ kind, tone, text }: { kind: string; tone: string; text: string }) {
+  return (
+    <aside className={`mx-auto mt-2 w-[min(92%,44rem)] rounded-m border border-dashed px-3.5 py-2.5 ${INSIGHT_TONE[tone] ?? INSIGHT_TONE.info}`} aria-label="Private note, only you can see this">
+      <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide">
+        <Icon name="bulb" size={14} />
+        {INSIGHT_LABEL[kind] ?? "Note"}
+        <span className="font-medium normal-case tracking-normal opacity-90">· only you can see this</span>
+      </p>
+      <p className="mt-1 text-sm leading-snug text-ink">{text}</p>
+    </aside>
   );
 }
 
@@ -75,7 +107,7 @@ export function TypingDots({ label, side = "vendor" }: { label: string; side?: "
   );
 }
 
-export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typing?: string | { side: "us" | "vendor"; label: string } | null; vendorName: string }) {
+export function ChatLog({ turns, typing, vendorName, showInsights = false }: { turns: TurnView[]; typing?: string | { side: "us" | "vendor"; label: string } | null; vendorName: string; showInsights?: boolean }) {
   const who = typeof typing === "string" ? { side: "vendor" as const, label: typing } : typing;
   const base = turns[0]?.at ?? "";
   return (
@@ -137,6 +169,7 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
                 </div>
               </div>
             </div>
+            {showInsights && t.insights?.map((n, k) => <InsightCard key={k} kind={n.kind} tone={n.tone} text={n.text} />)}
           </div>
         );
       })}

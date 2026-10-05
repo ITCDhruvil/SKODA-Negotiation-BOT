@@ -22,7 +22,8 @@ def summary(repo: Repo, s: Session) -> sch.SessionSummary:
 def _turn(t: Turn) -> sch.TurnView:
     return sch.TurnView(seq=t.seq, speaker=t.speaker, author=t.author, text=t.text, price=t.price,
                         payment_code=t.payment_code, at=t.at, tactic=t.tactic,
-                        delay_minutes=t.delay_minutes, elapsed_minutes=t.elapsed_minutes)
+                        delay_minutes=t.delay_minutes, elapsed_minutes=t.elapsed_minutes,
+                        insights=[sch.InsightView(kind=i.kind, tone=i.tone, text=i.text) for i in t.insights])
 
 
 def _draft(d: Draft) -> sch.DraftView:

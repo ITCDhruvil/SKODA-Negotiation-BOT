@@ -3212,6 +3212,34 @@
     ],
     "title": "Insight"
    },
+   "InsightView": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "tone": {
+      "type": "string",
+      "enum": [
+       "info",
+       "good",
+       "warn"
+      ],
+      "title": "Tone"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "kind",
+     "tone",
+     "text"
+    ],
+    "title": "InsightView"
+   },
    "Intelligence": {
     "properties": {
      "current_bid": {
@@ -5209,6 +5237,14 @@
       "type": "integer",
       "title": "Elapsed Minutes",
       "default": 0
+     },
+     "insights": {
+      "items": {
+       "$ref": "#/components/schemas/InsightView"
+      },
+      "type": "array",
+      "title": "Insights",
+      "default": []
      }
     },
     "type": "object",
