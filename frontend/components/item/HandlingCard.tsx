@@ -21,11 +21,11 @@ function position(p: Policy): number {
 }
 
 /** Who handles this deal, by its value: the bot, you with the bot's help, or higher management. */
-export function HandlingCard({ policy, offers, compact = false }: { policy: Policy; offers?: number; compact?: boolean }) {
+export function HandlingCard({ policy, offers, compact = false, className = "" }: { policy: Policy; offers?: number; compact?: boolean; className?: string }) {
   const look = LOOK[policy.band];
   const enough = offers == null || offers >= policy.min_offers;
   return (
-    <section className={`rounded-card border p-4 ${look.box}`} aria-label="Who handles this deal">
+    <section className={`flex flex-col rounded-card border p-4 ${look.box} ${className}`} aria-label="Who handles this deal">
       <div className="flex items-start gap-3">
         <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${look.chip}`}>
           <Icon name={look.icon} size={20} />
@@ -39,7 +39,7 @@ export function HandlingCard({ policy, offers, compact = false }: { policy: Poli
 
       {!compact && (
         <>
-          <div className="mt-4" aria-hidden>
+          <div className="mt-auto pt-4" aria-hidden>
             <div className="relative grid grid-cols-3 gap-1">
               {(["auto", "supervised", "management"] as const).map((b) => (
                 <span key={b} className={`h-2 rounded-full ${b === policy.band ? LOOK[b].chip : "bg-line"}`} />
