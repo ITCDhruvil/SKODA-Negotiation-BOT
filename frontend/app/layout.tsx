@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell/AppShell";
+import { EmbedBridge } from "@/components/shell/EmbedBridge";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
 
@@ -16,7 +17,7 @@ const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="dark"||t==
 
 // Inside the AIS prototype the page is shown in a frame with ?embed=1. That flag is kept for the whole visit, and the
 // navigation and top bar are hidden because the host page already has its own.
-const EMBED_SCRIPT = `try{if(location.search.indexOf("embed=1")>-1)sessionStorage.setItem("embed","1");if(sessionStorage.getItem("embed")==="1")document.documentElement.dataset.embed="1"}catch(e){}`;
+const EMBED_SCRIPT = `try{var m=location.search.match(/theme=(light|dark)/);if(location.search.indexOf("embed=1")>-1)sessionStorage.setItem("embed","1");if(m)sessionStorage.setItem("embedTheme",m[1]);if(sessionStorage.getItem("embed")==="1"){document.documentElement.dataset.embed="1";var t=sessionStorage.getItem("embedTheme");if(t)document.documentElement.dataset.theme=t}}catch(e){}`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <Providers>
           <AppShell>{children}</AppShell>
+          <EmbedBridge />
         </Providers>
       </body>
     </html>
