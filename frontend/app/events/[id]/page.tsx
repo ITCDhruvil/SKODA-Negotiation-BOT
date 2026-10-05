@@ -100,6 +100,9 @@ function Body({ data }: { data: EventDetail }) {
         <RowMenu
           label={`More about ${i.description}`}
           items={[
+            ...(i.state === "closed"
+              ? [{ label: "Download contract", hint: "Print or save the contract as PDF", href: `/events/${e.id}/contract?print=1`, icon: "download" as const }]
+              : []),
             { label: "Details", hint: "Quantity, target, limit and status", href: `/items/${i.id}`, icon: "eye" },
             { label: "Compare vendors", hint: "Quotes side by side", href: `/items/${i.id}?tab=quotes`, icon: "comparison" },
             { label: "Price history", hint: "Past deals and trend", href: `/items/${i.id}?tab=history`, icon: "history" },

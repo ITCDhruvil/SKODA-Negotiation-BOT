@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Button } from "@/components/ui/basics";
 import { ErrorBox, Loading, PageHeader } from "@/components/ui/State";
 import { api, type ContractDoc } from "@/lib/api";
@@ -154,6 +154,12 @@ function Sheet({ d }: { d: ContractDoc }) {
 export default function ContractPage() {
   const { id } = useParams<{ id: string }>();
   const { data, error, errorStatus, loading, reload } = useApi(() => api.contract(id), [id]);
+  // "Download contract" links here with ?print=1: the print dialog opens once the document is on screen.
+  useEffect(() => {
+    if (!data || new URLSearchParams(window.location.search).get("print") !== "1") return;
+    const t = setTimeout(() => window.print(), 500);
+    return () => clearTimeout(t);
+  }, [data]);
   if (loading && !data) return <Loading label="Preparing the contract" />;
   if (error && !data) return <ErrorBox message={error} status={errorStatus} onRetry={reload} />;
   if (!data) return null;
