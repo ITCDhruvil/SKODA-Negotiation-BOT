@@ -63,6 +63,7 @@ class Event(_Model):
     # Seed-time stage used to lay out demo data. Live event status is derived from item states
     # (received / in_progress / closed) and must not be read from `stage` by the API.
     stage: EventStage
+    origin: Optional[str] = None  # "AIS" for an event opened from a case in the AIS prototype
 
 
 class Item(_Model):

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { NextVendorsLoader } from "@/components/negotiation/NextBestVendors";
+import { buildResult, markSent, sendToAis, wasSent } from "@/lib/ais";
 import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
@@ -177,6 +178,14 @@ function Workspace({ initial }: { initial: SessionView }) {
   const [reason, setReason] = useState("");
   const router = useRouter();
   const [accepted, setAccepted] = useState(false);
+  // A case that came from the AIS prototype ends by sending its result back there, after the Buyer confirms it.
+  const [sent, setSent] = useState(false);
+  useEffect(() => setSent(wasSent(s.id)), [s.id]);
+  const sendResult = (status: "AGREED" | "FAILED") => {
+    sendToAis(buildResult(s, status));
+    markSent(s.id);
+    setSent(true);
+  };
   const stop = useRef(false);
   const scroller = useRef<HTMLDivElement>(null);
   // Keep the newest message in view.
@@ -378,7 +387,25 @@ function Workspace({ initial }: { initial: SessionView }) {
                     ))}
                   </dl>
                   <div className="ml-auto flex flex-wrap items-center gap-2">
-                    {accepted || (!s.actions.can_accept_deal && !s.actions.can_continue) ? (
+                    {s.from_ais ? (
+                      sent ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-sm font-semibold text-ok ring-1 ring-line2">
+                          <Icon name="check" size={15} />
+                          Sent to AIS: handed over at NB 9
+                        </span>
+                      ) : (
+                        <>
+                          {s.actions.can_continue && (
+                            <Button disabled={busy} onClick={() => act(() => api.continueNegotiation(s.item_id))}>
+                              Keep negotiating
+                            </Button>
+                          )}
+                          <Button variant="primary" onClick={() => sendResult("AGREED")}>
+                            Confirm and send to AIS
+                          </Button>
+                        </>
+                      )
+                    ) : accepted || (!s.actions.can_accept_deal && !s.actions.can_continue) ? (
                       <>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-sm font-semibold text-ok ring-1 ring-line2">
                           <Icon name="check" size={15} />
@@ -415,10 +442,21 @@ function Workspace({ initial }: { initial: SessionView }) {
                   <p className="mb-2 text-sm font-bold">Try the next-best vendor</p>
                   <NextVendorsLoader itemId={s.item_id} mode={s.mode} unit={s.unit} />
                 </div>
-                <div className="mt-3">
-                  <Link href={`/items/${s.item_id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink">
-                    Back to item
-                  </Link>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {s.from_ais ? (
+                    sent ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-sm font-semibold text-ink ring-1 ring-line2">
+                        <Icon name="check" size={15} />
+                        Result sent to AIS
+                      </span>
+                    ) : (
+                      <Button onClick={() => sendResult("FAILED")}>Send &ldquo;no agreement&rdquo; to AIS</Button>
+                    )
+                  ) : (
+                    <Link href={`/items/${s.item_id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink">
+                      Back to item
+                    </Link>
+                  )}
                 </div>
               </div>
             )}

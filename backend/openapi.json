@@ -359,6 +359,45 @@
     }
    }
   },
+  "/api/handoff": {
+   "post": {
+    "summary": "Open Ais Case",
+    "description": "Open (or reopen) the negotiation for a case that lives in the AIS prototype.",
+    "operationId": "open_ais_case_api_handoff_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HandoffIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HandoffOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/events/simulate": {
    "post": {
     "summary": "Simulate Event",
@@ -2667,6 +2706,105 @@
     },
     "type": "object",
     "title": "HandBackIn"
+   },
+   "HandoffIn": {
+    "properties": {
+     "case_no": {
+      "type": "string",
+      "maxLength": 40,
+      "minLength": 3,
+      "title": "Case No"
+     },
+     "supplier_id": {
+      "type": "string",
+      "title": "Supplier Id"
+     },
+     "topic": {
+      "type": "string",
+      "maxLength": 160,
+      "minLength": 2,
+      "title": "Topic"
+     },
+     "suppliers": {
+      "items": {
+       "$ref": "#/components/schemas/Supplier"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Suppliers"
+     },
+     "target": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "title": "Target"
+     },
+     "limit": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "title": "Limit"
+     },
+     "entity": {
+      "type": "string",
+      "title": "Entity",
+      "default": "E1"
+     },
+     "cart_no": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cart No"
+     },
+     "requestor": {
+      "type": "string",
+      "title": "Requestor",
+      "default": "Buyer"
+     },
+     "cost_centre": {
+      "type": "string",
+      "title": "Cost Centre",
+      "default": "\u2014"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "case_no",
+     "supplier_id",
+     "topic",
+     "suppliers",
+     "target",
+     "limit"
+    ],
+    "title": "HandoffIn"
+   },
+   "HandoffOut": {
+    "properties": {
+     "event_id": {
+      "type": "string",
+      "title": "Event Id"
+     },
+     "item_id": {
+      "type": "string",
+      "title": "Item Id"
+     },
+     "session_id": {
+      "type": "string",
+      "title": "Session Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "event_id",
+     "item_id",
+     "session_id"
+    ],
+    "title": "HandoffOut"
    },
    "Health": {
     "properties": {
@@ -5065,6 +5203,11 @@
      },
      "policy": {
       "$ref": "#/components/schemas/PolicyView"
+     },
+     "from_ais": {
+      "type": "boolean",
+      "title": "From Ais",
+      "default": false
      }
     },
     "type": "object",
@@ -5242,6 +5385,58 @@
     ],
     "title": "Strategy",
     "description": "Where the conversation stands, from what the vendor has actually done (never its hidden settings)."
+   },
+   "Supplier": {
+    "properties": {
+     "sid": {
+      "type": "string",
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Sid"
+     },
+     "name": {
+      "type": "string",
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Name"
+     },
+     "lang": {
+      "type": "string",
+      "enum": [
+       "en",
+       "hi",
+       "mr"
+      ],
+      "title": "Lang",
+      "default": "en"
+     },
+     "total": {
+      "type": "number",
+      "maximum": 100000000.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Total"
+     },
+     "rating": {
+      "type": "number",
+      "maximum": 5.0,
+      "minimum": 0.0,
+      "title": "Rating",
+      "default": 4.0
+     },
+     "payment_code": {
+      "type": "string",
+      "title": "Payment Code",
+      "default": "ZD30"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "sid",
+     "name",
+     "total"
+    ],
+    "title": "Supplier"
    },
    "Toughness": {
     "properties": {

@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import deal, export, lifecycle, new_event, readmodel, services, simulate
+from app import deal, export, handoff, lifecycle, new_event, readmodel, services, simulate
 from app import schemas as sch
 from app.models import Dataset, Direction, Language, Mode, Objective
 from app.negotiation import service as neg
@@ -182,6 +182,11 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         event_id = new_event.create_event(repo, body)
         s = snap()
         return readmodel.event_detail(s, s.event_by_id[event_id])
+
+    @app.post("/api/handoff", response_model=handoff.HandoffOut)
+    def open_ais_case(body: handoff.HandoffIn):
+        """Open (or reopen) the negotiation for a case that lives in the AIS prototype."""
+        return handoff.open_case(repo, body)
 
     @app.post("/api/events/simulate", response_model=sch.EventDetail)
     def simulate_event(body: SimulateIn):

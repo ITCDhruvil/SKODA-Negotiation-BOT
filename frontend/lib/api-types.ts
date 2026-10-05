@@ -90,6 +90,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/handoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Ais Case
+         * @description Open (or reopen) the negotiation for a case that lives in the AIS prototype.
+         */
+        post: operations["open_ais_case_api_handoff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/simulate": {
         parameters: {
             query?: never;
@@ -923,6 +943,47 @@ export interface components {
         HandBackIn: {
             /** Reason */
             reason?: string | null;
+        };
+        /** HandoffIn */
+        HandoffIn: {
+            /** Case No */
+            case_no: string;
+            /** Supplier Id */
+            supplier_id: string;
+            /** Topic */
+            topic: string;
+            /** Suppliers */
+            suppliers: components["schemas"]["Supplier"][];
+            /** Target */
+            target: number;
+            /** Limit */
+            limit: number;
+            /**
+             * Entity
+             * @default E1
+             */
+            entity: string;
+            /** Cart No */
+            cart_no?: string | null;
+            /**
+             * Requestor
+             * @default Buyer
+             */
+            requestor: string;
+            /**
+             * Cost Centre
+             * @default —
+             */
+            cost_centre: string;
+        };
+        /** HandoffOut */
+        HandoffOut: {
+            /** Event Id */
+            event_id: string;
+            /** Item Id */
+            item_id: string;
+            /** Session Id */
+            session_id: string;
         };
         /** Health */
         Health: {
@@ -1759,6 +1820,11 @@ export interface components {
             intelligence: components["schemas"]["Intelligence"];
             strategy: components["schemas"]["Strategy"];
             policy: components["schemas"]["PolicyView"];
+            /**
+             * From Ais
+             * @default false
+             */
+            from_ais: boolean;
         };
         /** SimulateIn */
         SimulateIn: {
@@ -1814,6 +1880,31 @@ export interface components {
             /** Alternative */
             alternative: string | null;
             history: components["schemas"]["Toughness"];
+        };
+        /** Supplier */
+        Supplier: {
+            /** Sid */
+            sid: string;
+            /** Name */
+            name: string;
+            /**
+             * Lang
+             * @default en
+             * @enum {string}
+             */
+            lang: "en" | "hi" | "mr";
+            /** Total */
+            total: number;
+            /**
+             * Rating
+             * @default 4
+             */
+            rating: number;
+            /**
+             * Payment Code
+             * @default ZD30
+             */
+            payment_code: string;
         };
         /**
          * Toughness
@@ -2119,6 +2210,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_ais_case_api_handoff_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HandoffIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffOut"];
                 };
             };
             /** @description Validation Error */

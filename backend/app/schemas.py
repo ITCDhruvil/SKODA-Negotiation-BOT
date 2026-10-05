@@ -491,3 +491,4 @@ class SessionView(SessionSummary):
     intelligence: Intelligence
     strategy: Strategy
     policy: PolicyView
+    from_ais: bool = False  # the case lives in the AIS prototype: the result is sent back to it

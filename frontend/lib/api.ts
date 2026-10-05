@@ -26,6 +26,7 @@ export type DraftView = S["DraftView"];
 export type SessionRow = S["SessionRow"];
 export type NewEvent = S["NewEvent"];
 export type NewItem = S["NewItem"];
+export type HandoffCase = S["HandoffIn"];
 export type EventCategory = {
   key: string;
   label: string;
@@ -149,6 +150,7 @@ export const api = {
     ),
   eventOptions: () => request<EventOptions>("/api/event-options"),
   addEvent: (body: NewEvent) => post<EventDetail>("/api/events", body),
+  handoff: (body: HandoffCase) => post<S["HandoffOut"]>("/api/handoff", body),
   simulate: (direction: Direction) => post<EventDetail>("/api/events/simulate", { direction }),
   items: (p: {
     event_id?: string;

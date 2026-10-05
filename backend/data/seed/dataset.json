@@ -653,7 +653,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00038",
@@ -676,7 +677,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00039",
@@ -699,7 +701,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00040",
@@ -722,7 +725,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00041",
@@ -745,7 +749,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00042",
@@ -768,7 +773,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00043",
@@ -791,7 +797,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00044",
@@ -814,7 +821,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00045",
@@ -837,7 +845,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00046",
@@ -860,7 +869,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00047",
@@ -883,7 +893,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "negotiating"
+   "stage": "negotiating",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00048",
@@ -906,7 +917,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00049",
@@ -929,7 +941,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00050",
@@ -952,7 +965,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00051",
@@ -975,7 +989,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00052",
@@ -998,7 +1013,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00053",
@@ -1021,7 +1037,8 @@
    "hero": false,
    "acceptable": true,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00054",
@@ -1044,7 +1061,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00055",
@@ -1067,7 +1085,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00056",
@@ -1090,7 +1109,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00057",
@@ -1113,7 +1133,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00058",
@@ -1136,7 +1157,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00059",
@@ -1159,7 +1181,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "closed"
+   "stage": "closed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00060",
@@ -1182,7 +1205,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00061",
@@ -1205,7 +1229,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00062",
@@ -1228,7 +1253,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00063",
@@ -1251,7 +1277,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00064",
@@ -1274,7 +1301,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00065",
@@ -1297,7 +1325,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00066",
@@ -1320,7 +1349,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00067",
@@ -1343,7 +1373,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00068",
@@ -1366,7 +1397,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00069",
@@ -1389,7 +1421,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00070",
@@ -1412,7 +1445,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00071",
@@ -1435,7 +1469,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00072",
@@ -1458,7 +1493,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "closed"
+   "stage": "closed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00073",
@@ -1481,7 +1517,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00074",
@@ -1504,7 +1541,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00075",
@@ -1527,7 +1565,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00076",
@@ -1550,7 +1589,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00077",
@@ -1573,7 +1613,8 @@
    "hero": true,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00078",
@@ -1596,7 +1637,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00079",
@@ -1619,7 +1661,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00080",
@@ -1642,7 +1685,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00081",
@@ -1665,7 +1709,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00082",
@@ -1688,7 +1733,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00083",
@@ -1711,7 +1757,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00084",
@@ -1734,7 +1781,8 @@
    "hero": false,
    "acceptable": true,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00085",
@@ -1757,7 +1805,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00086",
@@ -1780,7 +1829,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00087",
@@ -1803,7 +1853,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00088",
@@ -1826,7 +1877,8 @@
    "hero": true,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00089",
@@ -1849,7 +1901,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00090",
@@ -1872,7 +1925,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00091",
@@ -1895,7 +1949,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00092",
@@ -1918,7 +1973,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00093",
@@ -1941,7 +1997,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00094",
@@ -1964,7 +2021,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": true,
-   "stage": "handed_back"
+   "stage": "handed_back",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00095",
@@ -1987,7 +2045,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00096",
@@ -2010,7 +2069,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00097",
@@ -2033,7 +2093,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00098",
@@ -2056,7 +2117,8 @@
    "hero": false,
    "acceptable": true,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00099",
@@ -2079,7 +2141,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00100",
@@ -2102,7 +2165,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00101",
@@ -2125,7 +2189,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "closed"
+   "stage": "closed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00102",
@@ -2148,7 +2213,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "closed"
+   "stage": "closed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00103",
@@ -2171,7 +2237,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00104",
@@ -2194,7 +2261,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00105",
@@ -2217,7 +2285,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00106",
@@ -2240,7 +2309,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00107",
@@ -2263,7 +2333,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00108",
@@ -2286,7 +2357,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00109",
@@ -2309,7 +2381,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00110",
@@ -2332,7 +2405,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00111",
@@ -2355,7 +2429,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00112",
@@ -2378,7 +2453,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00113",
@@ -2401,7 +2477,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00114",
@@ -2424,7 +2501,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "awaiting_bids"
+   "stage": "awaiting_bids",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00115",
@@ -2447,7 +2525,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "negotiating"
+   "stage": "negotiating",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00116",
@@ -2470,7 +2549,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00117",
@@ -2493,7 +2573,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00118",
@@ -2516,7 +2597,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00119",
@@ -2539,7 +2621,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "draft"
+   "stage": "draft",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00120",
@@ -2562,7 +2645,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": true,
-   "stage": "handed_back"
+   "stage": "handed_back",
+   "origin": null
   },
   {
    "id": "AIS-E1-2026-00121",
@@ -2585,7 +2669,8 @@
    "hero": false,
    "acceptable": false,
    "no_deal": false,
-   "stage": "analyzed"
+   "stage": "analyzed",
+   "origin": null
   }
  ],
  "items": [

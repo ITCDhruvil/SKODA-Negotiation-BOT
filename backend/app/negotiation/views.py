@@ -109,7 +109,8 @@ def session_view(repo: Repo, session_id: str) -> sch.SessionView:
         handback_reason=s.handback_reason, vendor_ended=s.vendor_ended, ended_at=s.ended_at,
         turns=[_turn(t) for t in service.turns(repo, s.id)],
         pending_draft=_draft(draft) if draft else None, intelligence=intelligence,
-        strategy=_strategy(repo, s, item, event), policy=_policy(item))
+        strategy=_strategy(repo, s, item, event), policy=_policy(item),
+        from_ais=event.origin == "AIS")
 
 
 def _policy(item):
