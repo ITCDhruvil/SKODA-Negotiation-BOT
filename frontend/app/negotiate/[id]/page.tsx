@@ -135,6 +135,8 @@ function Workspace({ initial }: { initial: SessionView }) {
   // Messages are shown one at a time, each after a "typing" pause, so the conversation does not appear all at once.
   const [visible, setVisible] = useState(initial.turns.length);
   const [typing, setTyping] = useState<{ side: "us" | "vendor"; label: string } | null>(null);
+  // Our own next message, shown being typed into the message bar before it is sent.
+  const [typed, setTyped] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState<"us" | "vendor" | null>(null);
   // On a wide screen the conversation fills the space below the page heading, so the page itself never scrolls;
@@ -220,7 +222,32 @@ function Workspace({ initial }: { initial: SessionView }) {
       setVisible((v) => v + 1); // what the buyer typed by hand appears at once
       return;
     }
-    setTyping({ side, label: side === "us" ? "You are typing" : `${s.vendor_name} is typing` });
+    if (side === "us") {
+      // Our message is typed into the message bar a few characters at a time, then sent.
+      const text = next.text;
+      const total = Math.min(5200, Math.max(1500, text.length * 26));
+      const started = Date.now();
+      setTyping(null);
+      setTyped("");
+      let sendTimer: ReturnType<typeof setTimeout> | undefined;
+      const tick = setInterval(() => {
+        const n = Math.min(text.length, Math.ceil((text.length * (Date.now() - started)) / total));
+        setTyped(text.slice(0, n));
+        if (n >= text.length) {
+          clearInterval(tick);
+          sendTimer = setTimeout(() => {
+            setTyped(null);
+            setVisible((v) => v + 1);
+          }, 450);
+        }
+      }, 40);
+      return () => {
+        clearInterval(tick);
+        if (sendTimer) clearTimeout(sendTimer);
+        setTyped(null);
+      };
+    }
+    setTyping({ side, label: `${s.vendor_name} is typing` });
     const t = setTimeout(() => {
       setTyping(null);
       setVisible((v) => v + 1);
@@ -366,6 +393,7 @@ function Workspace({ initial }: { initial: SessionView }) {
                 session={s}
                 running={autoOn || revealing}
                 busy={busy || revealing}
+                typed={typed}
                 onStop={() => changeMode("manual")}
                 onResult={apply}
                 onError={setError}

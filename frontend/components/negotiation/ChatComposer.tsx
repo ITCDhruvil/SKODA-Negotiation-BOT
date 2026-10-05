@@ -26,10 +26,13 @@ export function ChatComposer({
   onStop,
   onResult,
   onError,
+  typed = null,
 }: {
   session: SessionView;
   running: boolean;
   busy: boolean;
+  /** Our next message as it is being typed into the bar, before it is sent. Null when nothing is being typed. */
+  typed?: string | null;
   onStop: () => void;
   onResult: (s: SessionView) => void;
   onError: (m: string) => void;
@@ -46,8 +49,8 @@ export function ChatComposer({
     const el = field.current;
     if (!el) return;
     el.style.height = "40px";
-    if (text) el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 140)}px`;
-  }, [text]);
+    if (typed ?? text) el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 140)}px`;
+  }, [text, typed]);
 
   useEffect(() => {
     if (!menu) return;
@@ -138,9 +141,9 @@ export function ChatComposer({
       )}
 
       <div
-        className={`flex items-end gap-2 rounded-[28px] border border-line bg-raise px-2 py-2 transition focus-within:border-brand ${
-          running ? "opacity-80" : ""
-        }`}
+        className={`flex items-end gap-2 rounded-[28px] border bg-raise px-2 py-2 transition focus-within:border-brand ${
+          typed !== null ? "border-brand" : "border-line"
+        } ${running && typed === null ? "opacity-80" : ""}`}
       >
         <div className="relative">
           <button
@@ -190,8 +193,9 @@ export function ChatComposer({
         <textarea
           ref={field}
           rows={1}
-          value={text}
-          disabled={running}
+          value={typed !== null ? `${typed}\u258d` : text}
+          readOnly={typed !== null}
+          disabled={running && typed === null}
           aria-label="Message"
           placeholder={running ? "Messages are going out automatically. Press stop to write your own." : offer ? "Add a note (optional)" : "Message the vendor"}
           onChange={(e) => setText(e.target.value)}
