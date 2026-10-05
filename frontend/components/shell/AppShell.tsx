@@ -99,7 +99,7 @@ function Topbar({ onMenu, menuRef, pathname }: { onMenu: () => void; menuRef: Re
     router.push(q.trim() ? `/events?q=${encodeURIComponent(q.trim())}` : "/events");
   };
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-line2 bg-bg/90 px-4 py-2.5 backdrop-blur md:px-6">
+    <header className="app-topbar sticky top-0 z-20 flex items-center gap-2 border-b border-line2 bg-bg/90 px-4 py-2.5 backdrop-blur md:px-6">
       <button
         ref={menuRef}
         type="button"
@@ -167,8 +167,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
   return (
-    <div className="lg:grid lg:min-h-screen lg:grid-cols-[252px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen lg:block">
+    <div className="app-grid lg:grid lg:min-h-screen lg:grid-cols-[252px_minmax(0,1fr)]">
+      <aside className="app-aside sticky top-0 hidden h-screen lg:block">
         <Sidebar pathname={pathname} onNavigate={() => {}} />
       </aside>
       {open && (
