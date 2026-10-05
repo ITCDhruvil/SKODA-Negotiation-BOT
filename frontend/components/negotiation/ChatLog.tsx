@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import type { TurnView } from "@/lib/api";
 import { duration, initials, money } from "@/lib/format";
+import { USER } from "@/lib/user";
 import { TACTIC_LABEL } from "@/lib/labels";
 
 /** The time a message carries in the conversation: the first message time plus the conversation time elapsed. */
@@ -22,24 +23,36 @@ function colourFor(name: string): string {
 }
 
 /** A round badge with the initials of a name, in a colour that stays the same for that name. */
-export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
+export function Avatar({ name, size = 32, onClick, label }: { name: string; size?: number; onClick?: () => void; label?: string }) {
   const c = colourFor(name);
-  return (
+  const face = (
     <span
       aria-hidden
-      className="grid shrink-0 place-items-center rounded-full font-bold"
+      className="grid place-items-center rounded-full font-bold"
       style={{ width: size, height: size, fontSize: size * 0.38, color: c, background: `color-mix(in srgb, ${c} 16%, var(--panel))`, border: `1px solid color-mix(in srgb, ${c} 35%, transparent)` }}
     >
       {initials(name)}
     </span>
   );
+  if (!onClick) return <span className="shrink-0">{face}</span>;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label ?? `View profile of ${name}`}
+      title={label ?? `View profile of ${name}`}
+      className="shrink-0 rounded-full transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    >
+      {face}
+    </button>
+  );
 }
 
 /** Top of the chat: who you are talking to and whether they are typing, like a messaging app. */
-export function ChatHeader({ name, subtitle, typing, live, actions }: { name: string; subtitle: string; typing: boolean; live: boolean; actions?: React.ReactNode }) {
+export function ChatHeader({ name, subtitle, typing, live, actions, onProfile }: { name: string; subtitle: string; typing: boolean; live: boolean; actions?: React.ReactNode; onProfile?: () => void }) {
   return (
     <div className="flex items-center gap-3">
-      <Avatar name={name} size={40} />
+      <Avatar name={name} size={40} onClick={onProfile} />
       <div className="min-w-0">
         <h2 className="truncate text-[15px] font-bold leading-tight text-ink">{name}</h2>
         <p className={`flex items-center gap-1.5 truncate text-xs ${typing ? "font-semibold text-ok" : "text-muted"}`}>
@@ -120,11 +133,12 @@ export function TypingDots({ label, side = "vendor" }: { label: string; side?: "
         <span aria-hidden className="shimmer-text text-sm font-medium italic">typing…</span>
         <span className="sr-only">{label}</span>
       </div>
+      {ours && <Avatar name={USER.name} />}
     </div>
   );
 }
 
-export function ChatLog({ turns, typing, vendorName, showInsights = false }: { turns: TurnView[]; typing?: string | { side: "us" | "vendor"; label: string } | null; vendorName: string; showInsights?: boolean }) {
+export function ChatLog({ turns, typing, vendorName, showInsights = false, onProfile }: { turns: TurnView[]; typing?: string | { side: "us" | "vendor"; label: string } | null; vendorName: string; showInsights?: boolean; onProfile?: (who: "us" | "vendor") => void }) {
   const who = typeof typing === "string" ? { side: "vendor" as const, label: typing } : typing;
   const base = turns[0]?.at ?? "";
   return (
@@ -157,7 +171,7 @@ export function ChatLog({ turns, typing, vendorName, showInsights = false }: { t
               </div>
             )}
             <div className={`flex items-start gap-2 ${ours ? "justify-end" : "justify-start"} ${startsGroup ? "mt-3" : "mt-0.5"}`}>
-              {!ours && (startsGroup ? <Avatar name={vendorName} /> : <span className="w-8 shrink-0" aria-hidden />)}
+              {!ours && (startsGroup ? <Avatar name={vendorName} onClick={onProfile && (() => onProfile("vendor"))} /> : <span className="w-8 shrink-0" aria-hidden />)}
               <div
                 className={`max-w-[78%] rounded-[14px] px-3 pb-1.5 pt-2 text-[14px] leading-snug shadow-sm ${
                   ours ? "bg-brand-soft text-ink" : "border border-line bg-panel text-ink"
@@ -185,6 +199,7 @@ export function ChatLog({ turns, typing, vendorName, showInsights = false }: { t
                   </span>
                 </div>
               </div>
+              {ours && (startsGroup ? <Avatar name={USER.name} onClick={onProfile && (() => onProfile("us"))} label="View your profile" /> : <span className="w-8 shrink-0" aria-hidden />)}
             </div>
             {showInsights && t.insights?.map((n, k) => <InsightNote key={k} kind={n.kind} tone={n.tone} text={n.text} />)}
           </div>

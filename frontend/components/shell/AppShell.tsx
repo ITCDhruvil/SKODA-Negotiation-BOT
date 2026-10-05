@@ -18,7 +18,9 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/settings", label: "Settings", icon: "ops" },
 ];
 
-const USER = { name: "Dhruvil Patel", role: "Buyer · SAVWIPL Pune" };
+import { USER as PROFILE } from "@/lib/user";
+
+const USER = { name: PROFILE.name, role: `${PROFILE.role} · ${PROFILE.site}` };
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";

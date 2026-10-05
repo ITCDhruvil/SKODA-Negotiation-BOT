@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
+import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
 import { ChatComposer } from "@/components/negotiation/ChatComposer";
@@ -133,6 +134,7 @@ function Workspace({ initial }: { initial: SessionView }) {
   const [visible, setVisible] = useState(initial.turns.length);
   const [typing, setTyping] = useState<{ side: "us" | "vendor"; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [profile, setProfile] = useState<"us" | "vendor" | null>(null);
   // Private notes under the vendor's messages can be hidden; the choice is remembered.
   const [showInsights, setShowInsights] = useState(true);
   useEffect(() => {
@@ -274,6 +276,7 @@ function Workspace({ initial }: { initial: SessionView }) {
               subtitle={shownStatus === "active" ? "online" : shownStatus === "agreed" ? "Deal agreed" : s.vendor_ended ? "Left the conversation" : "Conversation ended"}
               typing={typing?.side === "vendor"}
               live={shownStatus === "active"}
+              onProfile={() => setProfile("vendor")}
               actions={
                 <button
                   type="button"
@@ -292,7 +295,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             className="min-h-0 flex-1 overflow-y-auto bg-raise px-4 py-3"
             style={{ backgroundImage: "radial-gradient(color-mix(in srgb, var(--line) 80%, transparent) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
           >
-            <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} showInsights={showInsights} />
+            <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} showInsights={showInsights} onProfile={setProfile} />
           </div>
           <div className="grid max-h-[60%] shrink-0 gap-3 overflow-y-auto border-t border-line2 p-3">
             {error && <Notice tone="red">{error}</Notice>}
@@ -366,6 +369,7 @@ function Workspace({ initial }: { initial: SessionView }) {
           </div>
         </section>
 
+        <ProfileDialog who={profile} session={s} onClose={() => setProfile(null)} />
         <div className="grid content-start gap-5">
           <Panel title="Permission">
             <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
