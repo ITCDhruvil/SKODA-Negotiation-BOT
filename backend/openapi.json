@@ -3409,6 +3409,14 @@
        }
       ],
       "title": "Latest Session Status"
+     },
+     "next_vendors": {
+      "items": {
+       "$ref": "#/components/schemas/NextVendor"
+      },
+      "type": "array",
+      "title": "Next Vendors",
+      "default": []
      }
     },
     "type": "object",
@@ -4255,6 +4263,54 @@
      "reference_price"
     ],
     "title": "NewItem"
+   },
+   "NextVendor": {
+    "properties": {
+     "vendor_id": {
+      "type": "string",
+      "title": "Vendor Id"
+     },
+     "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+     },
+     "unit_price": {
+      "type": "number",
+      "title": "Unit Price"
+     },
+     "effective_price": {
+      "type": "number",
+      "title": "Effective Price"
+     },
+     "payment_code": {
+      "type": "string",
+      "title": "Payment Code"
+     },
+     "rating": {
+      "type": "number",
+      "title": "Rating"
+     },
+     "within_limit": {
+      "type": "boolean",
+      "title": "Within Limit"
+     },
+     "toughness": {
+      "$ref": "#/components/schemas/Toughness"
+     }
+    },
+    "type": "object",
+    "required": [
+     "vendor_id",
+     "vendor_name",
+     "unit_price",
+     "effective_price",
+     "payment_code",
+     "rating",
+     "within_limit",
+     "toughness"
+    ],
+    "title": "NextVendor",
+    "description": "A vendor that has quoted on the item and has not been negotiated with yet, best first."
    },
    "Opportunity": {
     "properties": {

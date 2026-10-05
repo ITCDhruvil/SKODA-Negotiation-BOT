@@ -4,18 +4,20 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/basics";
 import { api, type ItemDetail, type SessionSummary } from "@/lib/api";
-import { quoteLabel } from "@/lib/labels";
+import { STEPS, quoteLabel } from "@/lib/labels";
 
 /** A one-line "what to do now" bar, driven by the item's state. */
 export function NextStep({
   detail,
   sessions,
   onOpenVendors,
+  onOpenOpportunity,
   onChanged,
 }: {
   detail: ItemDetail;
   sessions: SessionSummary[];
   onOpenVendors: () => void;
+  onOpenOpportunity: () => void;
   onChanged: () => Promise<void>;
 }) {
   const { item, event } = detail;
@@ -24,19 +26,29 @@ export function NextStep({
   const quote = quoteLabel(event.direction).toLowerCase();
   const last = sessions[sessions.length - 1];
 
+  const stepIndex = Math.max(0, STEPS.findIndex((x) => x.states.includes(item.state)));
+  const stepName = STEPS[stepIndex]?.label ?? "";
+  let headline = "";
   let text: ReactNode = null;
+  let then = "";
   let action: ReactNode = null;
   switch (item.state) {
     case "draft":
-      text = "Set your target and walk-away limit, then confirm the points (panel on the right).";
+      headline = "Set your target and walk-away limit";
+      text = "Fill in the points panel on the right, then confirm them.";
+      then = "the vendors on this item are asked for their quotes.";
       break;
     case "points_reviewed":
     case "awaiting_bids":
-      text = `Waiting for vendors to send their ${quote}s. Open the vendor list and create each response.`;
+      headline = `Get the vendor ${quote}s`;
+      text = `The vendors below were invited when the event was created. In this demo their replies are simulated: use "Get quote" for each vendor, or "Get all quotes".`;
+      then = `compare the ${quote}s and analyse them.`;
       action = <Button variant="primary" onClick={onOpenVendors}>Go to vendors</Button>;
       break;
     case "bids_in":
-      text = `The ${quote}s are in. Analyze them to see the comparison and the negotiation opportunity.`;
+      headline = `Analyse the ${quote}s`;
+      text = "This marks the comparison as reviewed and shows the negotiation opportunity.";
+      then = "choose a vendor and start the negotiation.";
       action = (
         <Button
           variant="primary"
@@ -54,40 +66,59 @@ export function NextStep({
             }
           }}
         >
-          Analyze {quote}s
+          {busy ? "Analysing…" : `Analyse ${quote}s`}
         </Button>
       );
       break;
     case "analyzed":
-      text = "Ready to negotiate. Choose the vendor and how much runs on its own in the card on the right, then start.";
+      headline = "Start the negotiation";
+      text = "Choose the vendor and who sends the messages in the highlighted card on the right, then start.";
+      then = "review the agreed deal and send it for approval.";
+      action = <Button variant="primary" onClick={onOpenOpportunity}>Choose vendor and start</Button>;
       break;
     case "negotiating":
-      text = last ? `A conversation with ${last.vendor_name} is in progress.` : "A negotiation is in progress.";
-      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Open workspace</Link> : null;
+      headline = "A conversation is in progress";
+      text = last ? `Negotiating with ${last.vendor_name}.` : "A negotiation is in progress.";
+      then = "when the vendor agrees you review the deal.";
+      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Open conversation</Link> : null;
       break;
     case "result_pending":
+      headline = "Review the agreed deal";
       text = last ? `${last.vendor_name} agreed. Accept the deal or keep negotiating.` : "A deal was reached.";
-      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Review result</Link> : null;
+      then = "the deal goes for approval.";
+      action = last ? <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Review the deal</Link> : null;
       break;
     case "awaiting_approval":
-      text = "The deal is ready for approval.";
+      headline = "Approve the deal";
+      text = "The deal is ready for your final approval.";
+      then = "the item is closed and recorded.";
       action = <Link href={`/events/${event.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Review &amp; approve</Link>;
       break;
     case "closed":
-      text = "This item is closed. The result is recorded in the Outcome card and the dashboard.";
+      headline = "This item is closed";
+      text = "The result is recorded in the Outcome card and on the dashboard.";
       break;
     case "handed_back":
-      text = "The negotiation was handed back to you. Set new points and start again, or close the item without a deal.";
+      headline = "No deal yet: try the next-best vendor";
+      text = last ? `${last.vendor_name} did not agree. The next-best vendors are listed in the card on the right.` : "The last negotiation did not end in a deal.";
+      then = "or close the item without a deal.";
+      action = <Button variant="primary" onClick={onOpenOpportunity}>Show next-best vendors</Button>;
       break;
   }
 
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-m bg-brand-soft px-4 py-3" role="status">
-      <p className="min-w-0 text-sm text-ink">
-        <span className="font-bold">Next step: </span>
-        {text}
-        {error && <span className="ml-2 text-red">{error}</span>}
-      </p>
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-m bg-brand-soft px-4 py-3.5" role="status">
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-wide text-brand">
+          Next step · Step {stepIndex + 1} of {STEPS.length}: {stepName}
+        </p>
+        <p className="mt-0.5 text-base font-bold text-ink">{headline}</p>
+        <p className="text-sm text-text">
+          {text}
+          {error && <span className="ml-2 text-red">{error}</span>}
+        </p>
+        {then && <p className="mt-1 text-xs text-muted">After this: {then}</p>}
+      </div>
       {action}
     </div>
   );

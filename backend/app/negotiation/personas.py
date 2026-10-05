@@ -40,15 +40,17 @@ PROFILES: dict[str, Profile] = {
     "relationship": Profile(step=lambda r: 0.6 if r < 3 else 1.5),
     # moves by a token rupee or two each round, and only really moves when terms or the middle are offered
     "crawler": Profile(step=lambda r: 1.0, accept_after=5),
+    # moves little and loses patience early: it states a final price and leaves if the offers stay below its floor
+    "refuser": Profile(step=lambda r: 0.25 if r < 3 else 0.4, accept_after=5),
 }
 
 # Vendors that dig in and can refuse or walk away; the rest only push back mildly.
-HARD_PERSONAS = {"anchor", "bluffer", "terms", "crawler"}
+HARD_PERSONAS = {"anchor", "bluffer", "terms", "crawler", "refuser"}
 # Demo-story bids whose conversations are fixed: no refusals, so the story always ends the same way.
 SCRIPTED_BIDS = COOPERATIVE_BIDS | {"EVT-2026-041-01-B2"}
 
-_EASY = ("cooperative",) * 7 + ("deadline", "relationship", "terms")
-_HARD = ("anchor", "bluffer", "terms", "anchor", "crawler")
+_EASY = ("cooperative",) * 6 + ("deadline", "relationship", "terms", "refuser")
+_HARD = ("anchor", "bluffer", "terms", "anchor", "crawler", "refuser")
 
 
 def persona_for(bid_id: str, vendor_id: str) -> str:

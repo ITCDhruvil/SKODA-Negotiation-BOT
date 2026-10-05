@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
+import { NextVendorsLoader } from "@/components/negotiation/NextBestVendors";
 import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
@@ -410,6 +411,10 @@ function Workspace({ initial }: { initial: SessionView }) {
               <div className="rounded-card border border-transparent bg-red-soft p-4 text-sm text-red" role="status">
                 <p className="font-bold">{s.vendor_ended ? "The vendor ended the conversation" : "Handed back to you"}</p>
                 <p className="mt-1">{s.handback_reason ?? "No acceptable deal could be reached within your limits."}</p>
+                <div className="mt-3 rounded-m bg-panel p-3 text-ink">
+                  <p className="mb-2 text-sm font-bold">Try the next-best vendor</p>
+                  <NextVendorsLoader itemId={s.item_id} mode={s.mode} unit={s.unit} />
+                </div>
                 <div className="mt-3">
                   <Link href={`/items/${s.item_id}`} className="rounded-m border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-ink">
                     Back to item

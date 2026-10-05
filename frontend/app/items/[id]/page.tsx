@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { HistoryTab } from "@/components/item/HistoryTab";
 import { NegotiationTab } from "@/components/item/NegotiationTab";
@@ -124,7 +124,7 @@ function QuotesTab({
           </Button>
         ) : !r.invitee.responded && canCollect ? (
           <Button size="sm" disabled={busy} onClick={() => setInviting(r.invitee.vendor_id)}>
-            <Icon name="plus" size={14} /> Create response
+            <Icon name="plus" size={14} /> Get quote
           </Button>
         ) : null,
     },
@@ -205,6 +205,12 @@ function QuotesTab({
           rowKey={(r) => r.invitee.vendor_id}
           empty={invitees.length === 0 ? "No vendors invited for this item." : "No vendors match."}
         />
+        {(item.state === "draft" || item.state === "points_reviewed" || item.state === "awaiting_bids") && (
+          <p className="border-t border-line2 px-5 py-3 text-xs text-muted">
+            These are the vendors invited when the event was created (chosen by category, rating and past dealings). In this demo their
+            quotes are simulated: &ldquo;Get quote&rdquo; makes a vendor reply with its quote.
+          </p>
+        )}
         {showFooter && (
           <div className="grid gap-3 border-t border-line2 px-5 py-4">
             {item.state === "draft" && <Notice tone="info">Confirm your negotiation points first. Vendors are invited once the points are confirmed.</Notice>}
@@ -217,10 +223,10 @@ function QuotesTab({
             {canCollect && (
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="primary" disabled={busy} onClick={() => act(() => api.releaseBids(item.id))}>
-                  Create all responses
+                  Get all quotes
                 </Button>
                 <span className="text-xs text-muted">
-                  Or create each response from the list above.
+                  Or use &ldquo;Get quote&rdquo; for each vendor in the list above.
                 </span>
               </div>
             )}
@@ -328,6 +334,23 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
     setChosen(true);
     setTab(t);
   };
+  // After the quotes are analysed nothing in the main area changes, so point at the card where the next step happens.
+  const [glow, setGlow] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const focusOpportunity = useCallback(() => {
+    document.getElementById("opportunity-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setGlow(true);
+    setTimeout(() => setGlow(false), 2600);
+  }, []);
+  const previous = useRef(item.state);
+  useEffect(() => {
+    if (previous.current === "bids_in" && item.state === "analyzed") {
+      setNote("Quotes analysed. Next: choose the vendor and start the negotiation in the highlighted card on the right.");
+      setTimeout(focusOpportunity, 150);
+      setTimeout(() => setNote(null), 9000);
+    }
+    previous.current = item.state;
+  }, [item.state, focusOpportunity]);
   return (
     <>
       <PageHeader
@@ -360,12 +383,18 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
               panel?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
             }, 50);
           }}
+          onOpenOpportunity={focusOpportunity}
           onChanged={async () => {
             await reload();
             await reloadSessions();
           }}
         />
       </div>
+      {note && (
+        <div className="mb-4">
+          <Notice tone="ok">{note}</Notice>
+        </div>
+      )}
       {!event.eligibility.eligible && (
         <div className="mb-4">
           <Notice tone="amber">Not eligible for negotiation: {event.eligibility.reason}.</Notice>
@@ -396,7 +425,9 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
           </div>
         </Panel>
         <div className="grid content-start gap-5">
-          <OpportunityPanel detail={detail} />
+          <div id="opportunity-panel" className={`scroll-mt-4 rounded-card transition-shadow duration-500 ${glow ? "ring-2 ring-brand ring-offset-2 ring-offset-bg" : ""}`}>
+            <OpportunityPanel detail={detail} />
+          </div>
           <PointsPanel detail={detail} eventDirection={event.direction} onChanged={reload} />
           <ItemActions detail={detail} onChanged={reload} />
           <OutcomePanel detail={detail} />

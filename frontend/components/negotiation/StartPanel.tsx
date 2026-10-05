@@ -8,6 +8,7 @@ import { Notice } from "@/components/ui/State";
 import { api, type ItemDetail, type Mode } from "@/lib/api";
 import { MODE_HINT, MODE_LABEL, TOUGH_LABEL } from "@/lib/labels";
 import { ModeSelect } from "./ModeSelect";
+import { NextBestVendors } from "./NextBestVendors";
 
 /** Lets the buyer start a negotiation (or reopen the running one). The buyer always starts it. */
 export function StartPanel({ detail }: { detail: ItemDetail }) {
@@ -28,6 +29,14 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
       <Button variant="primary" className="w-full" onClick={() => router.push(`/negotiate/${open}`)}>
         Open negotiation workspace
       </Button>
+    );
+  }
+  if (item.state === "handed_back") {
+    return (
+      <div className="grid gap-2.5">
+        <p className="text-sm font-semibold text-ink">The last negotiation ended without a deal. Try the next-best vendor:</p>
+        <NextBestVendors itemId={item.id} vendors={detail.next_vendors} unit={item.unit} />
+      </div>
     );
   }
   if (!canStart) {

@@ -184,6 +184,9 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
         item = _item(repo, item_id)
         event = _event(repo, item)
         existing = sessions_for_item(repo, item_id)
+        if item.state == "handed_back":
+            # The last vendor did not agree. The buyer may try the next one with the same points.
+            item = _move_item(repo, item, "analyzed")
         if item.state == "analyzed":
             item = _move_item(repo, item, "negotiating")
         elif item.state == "negotiating" and not any(x.status in ("active", "agreed") for x in existing):

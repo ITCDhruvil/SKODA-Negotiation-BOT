@@ -192,6 +192,18 @@ class Invitee(BaseModel):
     toughness: Toughness
 
 
+class NextVendor(BaseModel):
+    """A vendor that has quoted on the item and has not been negotiated with yet, best first."""
+    vendor_id: str
+    vendor_name: str
+    unit_price: float
+    effective_price: float
+    payment_code: str
+    rating: float
+    within_limit: bool
+    toughness: Toughness
+
+
 class ItemDetail(BaseModel):
     item: ItemView
     event: EventView
@@ -202,6 +214,7 @@ class ItemDetail(BaseModel):
     bids_eligibility: EligibilityView
     active_session_id: Optional[str] = None
     latest_session_status: Optional[str] = None
+    next_vendors: list[NextVendor] = []  # who to try next when a negotiation did not end in a deal
 
 
 class Kpis(BaseModel):

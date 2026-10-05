@@ -1172,6 +1172,11 @@ export interface components {
             active_session_id?: string | null;
             /** Latest Session Status */
             latest_session_status?: string | null;
+            /**
+             * Next Vendors
+             * @default []
+             */
+            next_vendors: components["schemas"]["NextVendor"][];
         };
         /**
          * ItemRow
@@ -1436,6 +1441,27 @@ export interface components {
             incoterm?: string | null;
             /** Delivery Days */
             delivery_days?: number | null;
+        };
+        /**
+         * NextVendor
+         * @description A vendor that has quoted on the item and has not been negotiated with yet, best first.
+         */
+        NextVendor: {
+            /** Vendor Id */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Unit Price */
+            unit_price: number;
+            /** Effective Price */
+            effective_price: number;
+            /** Payment Code */
+            payment_code: string;
+            /** Rating */
+            rating: number;
+            /** Within Limit */
+            within_limit: boolean;
+            toughness: components["schemas"]["Toughness"];
         };
         /** Opportunity */
         Opportunity: {

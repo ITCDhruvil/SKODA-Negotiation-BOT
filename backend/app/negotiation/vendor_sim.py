@@ -20,6 +20,9 @@ STEP = 0.6  # the vendor gives up this share of its flexibility per round, so it
 MIN_ROUNDS_TO_ACCEPT = 3  # replies it gives before it will say yes to an offer it could accept
 HOLD_GAP = 0.03  # a first offer this far from its price (as a share of it) is met with a pushback, not a move
 GRANT_PAYMENT_DAYS = 15  # the vendor will improve payment terms by up to this many days
+# Irritation at which a hard vendor names a final price, and at which it leaves after one. A refuser has less patience.
+PATIENCE = {"refuser": (10, 18)}
+PATIENCE_DEFAULT = (32, 50)
 SNAP = 0.003  # within 0.3% of its reserve the vendor stops haggling and calls it final
 CRAWL = 1.0  # a crawler moves this many rupees a round (a quarter of a rupee below Rs 100)
 
@@ -163,6 +166,7 @@ def reply(
     if scripted:
         return VendorReply(base.kind, base.price, base.payment, base.final, mood=mood)
     hard = persona in HARD_PERSONAS
+    ult_mood, walk_mood = PATIENCE.get(persona, PATIENCE_DEFAULT)
     below = 0.0 if accepts else abs(offer_price - reserve) / reserve
     near_floor = deal.within_pct(base.price, reserve, 0.04)
     roll = _roll(seed, round_no)
@@ -170,9 +174,13 @@ def reply(
     if base.kind == "accept":
         if round_no >= 3 and roll < 20:
             flavour = "nibble"
-    elif hard and ultimatum_round >= 0 and round_no >= ultimatum_round + 2 and mood >= 50 and not accepts:
+    elif (hard and persona != "crawler" and our_prev is not None and round_no >= 3 and not accepts
+          and abs(offer_price - our_prev) / our_prev <= 0.003):
+        # The buyer has stopped moving and is still below its floor: a hard vendor ends it rather than go round again.
         flavour, ends, kind, price, payment, final = "walkaway", True, "firm", vendor_price, vendor_payment, True
-    elif hard and ultimatum_round < 0 and round_no >= 3 and mood >= 32 and near_floor and not accepts:
+    elif hard and ultimatum_round >= 0 and round_no >= ultimatum_round + (1 if persona == "refuser" else 2) and mood >= walk_mood and not accepts:
+        flavour, ends, kind, price, payment, final = "walkaway", True, "firm", vendor_price, vendor_payment, True
+    elif hard and ultimatum_round < 0 and round_no >= (2 if persona == "refuser" else 3) and mood >= ult_mood and (near_floor or persona == "refuser") and not accepts:
         flavour, kind, final = "ultimatum", "firm", True
     elif hard and base.kind in ("hold", "firm") and round_no >= 2 and mood >= 25 and roll < 60 and not accepts:
         flavour = "nothing_left"

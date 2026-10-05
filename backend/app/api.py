@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import export, lifecycle, new_event, readmodel, services, simulate
+from app import deal, export, lifecycle, new_event, readmodel, services, simulate
 from app import schemas as sch
 from app.models import Dataset, Direction, Language, Mode, Objective
 from app.negotiation import service as neg
@@ -119,9 +119,24 @@ def create_app(repo: Repo, seed_dataset: Dataset,
             raise services.NotFound(f"item {item_id} not found")
         view = readmodel.item_detail(s, s.item_by_id[item_id])
         sessions = neg.sessions_for_item(repo, item_id)
+        tried = {x.vendor_id for x in sessions}
+        item = s.item_by_id[item_id]
+        limit = item.limit if item.limit is not None else item.suggested_limit
+        direction = s.event_by_id[item.event_id].direction
+        by_vendor = {b.vendor_id: b for b in s.bids_by_item.get(item_id, [])}
+        nexts = []
+        for row in view.comparison.rows:  # already best first, by effective price
+            if row.vendor_id in tried or row.vendor_id not in by_vendor:
+                continue
+            nexts.append(sch.NextVendor(
+                vendor_id=row.vendor_id, vendor_name=row.vendor_name, unit_price=row.unit_price,
+                effective_price=row.effective_price, payment_code=row.payment_code, rating=row.vendor_rating,
+                within_limit=deal.within_limit(direction, row.unit_price, limit),
+                toughness=next(i.toughness for i in view.invitees if i.vendor_id == row.vendor_id)))
         return view.model_copy(update={
             "active_session_id": next((x.id for x in sessions if x.status == "active"), None),
-            "latest_session_status": sessions[-1].status if sessions else None})
+            "latest_session_status": sessions[-1].status if sessions else None,
+            "next_vendors": nexts})
 
     @app.get("/api/health", response_model=sch.Health)
     def health():
