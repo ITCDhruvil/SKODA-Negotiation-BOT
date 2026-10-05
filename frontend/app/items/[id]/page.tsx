@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { HistoryTab } from "@/components/item/HistoryTab";
 import { NegotiationTab } from "@/components/item/NegotiationTab";
@@ -343,24 +343,6 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
     setGlow(true);
     setTimeout(() => setGlow(false), 2600);
   }, []);
-  // On a wide screen the work area fills the space below the steps, so the page does not scroll; each column scrolls inside it.
-  const layout = useRef<HTMLDivElement>(null);
-  const [fit, setFit] = useState<number | null>(null);
-  useLayoutEffect(() => {
-    const measure = () => {
-      if (window.innerWidth < 1280) return setFit(null);
-      if (document.documentElement.dataset.embed === "1") return setFit(720); // a frame grows with its content, so use a fixed height
-      const top = (layout.current?.getBoundingClientRect().top ?? 0) + window.scrollY;
-      setFit(Math.max(480, Math.floor(window.innerHeight - top - 20)));
-    };
-    measure();
-    const later = setTimeout(measure, 400); // once fonts and the heading have settled
-    window.addEventListener("resize", measure);
-    return () => {
-      clearTimeout(later);
-      window.removeEventListener("resize", measure);
-    };
-  }, [note, event.eligibility.eligible, item.state]);
   const previous = useRef(item.state);
   useEffect(() => {
     if (previous.current === "bids_in" && item.state === "analyzed") {
@@ -423,8 +405,8 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
           <Notice tone="amber">Not eligible for negotiation: {event.eligibility.reason}.</Notice>
         </div>
       )}
-      <div ref={layout} className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]" style={fit ? { height: fit } : undefined}>
-        <Panel flush className="min-w-0 xl:h-full xl:overflow-y-auto">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <Panel flush className="min-w-0">
           <div className="px-5">
             <Tabs
               idPrefix="item"
@@ -447,7 +429,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
             )}
           </div>
         </Panel>
-        <div className="grid content-start gap-5 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:pr-1">
+        <div className="grid content-start gap-5">
           <div id="opportunity-panel" className={`scroll-mt-4 rounded-card transition-shadow duration-500 ${glow ? "ring-2 ring-brand ring-offset-2 ring-offset-bg" : ""}`}>
             <OpportunityPanel detail={detail} />
           </div>
