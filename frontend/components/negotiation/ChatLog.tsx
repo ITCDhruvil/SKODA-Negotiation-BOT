@@ -9,10 +9,16 @@ function clock(base: string, minutes: number): string {
   return d.toLocaleString("en-IN", { weekday: "short", hour: "numeric", minute: "2-digit" });
 }
 
-export function TypingDots({ label }: { label: string }) {
+export function TypingDots({ label, side = "vendor" }: { label: string; side?: "us" | "vendor" }) {
+  const ours = side === "us";
   return (
-    <div className="flex justify-start">
-      <div className="rounded-card rounded-bl-chip border border-line bg-raise px-4 py-3 text-xs text-muted" role="status">
+    <div className={`flex ${ours ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`px-4 py-3 text-xs text-muted ${
+          ours ? "rounded-card rounded-br-chip border border-transparent bg-brand-soft" : "rounded-card rounded-bl-chip border border-line bg-raise"
+        }`}
+        role="status"
+      >
         <span className="sr-only">{label}</span>
         <span aria-hidden className="flex items-center gap-1 motion-reduce:hidden">
           {[0, 1, 2].map((i) => (
@@ -25,10 +31,11 @@ export function TypingDots({ label }: { label: string }) {
   );
 }
 
-export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typing?: string | null; vendorName: string }) {
+export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typing?: string | { side: "us" | "vendor"; label: string } | null; vendorName: string }) {
+  const who = typeof typing === "string" ? { side: "vendor" as const, label: typing } : typing;
   return (
     <div role="log" aria-live="polite" aria-label="Conversation" className="grid gap-3">
-      {turns.length === 0 && !typing && <p className="py-6 text-center text-sm text-muted">No messages yet.</p>}
+      {turns.length === 0 && !who && <p className="py-6 text-center text-sm text-muted">No messages yet.</p>}
       {turns.map((t, idx) => {
         const ours = t.speaker === "us";
         const gap = t.delay_minutes >= 60 && idx > 0;
@@ -62,7 +69,7 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
           </div>
         );
       })}
-      {typing && <TypingDots label={typing} />}
+      {who && <TypingDots label={who.label} side={who.side} />}
     </div>
   );
 }

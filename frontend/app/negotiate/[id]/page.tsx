@@ -15,8 +15,15 @@ import { ApiError, api, type DraftView, type Mode, type SessionView } from "@/li
 import { money, num } from "@/lib/format";
 import { LANGUAGE_LABEL, deltaLabel, limitLabel } from "@/lib/labels";
 
-// Replies arrive after a short, uneven pause, the way a person would write back.
-const stepDelay = () => 1400 + Math.floor(Math.random() * 1600);
+// A short pause before the next round starts, once the last message has been shown.
+const stepDelay = () => 900 + Math.floor(Math.random() * 900);
+
+/** How long someone would take to type this message: longer messages take longer, with a little variation. */
+function typingMs(text: string, side: "us" | "vendor", seq: number): number {
+  const base = side === "us" ? 800 : 1000;
+  const perChar = side === "us" ? 16 : 22;
+  return Math.min(4200, Math.max(1200, base + text.length * perChar + ((seq * 137) % 700)));
+}
 
 function useSession(id: string) {
   const [session, setSession] = useState<SessionView | null>(null);
@@ -120,7 +127,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function Workspace({ initial }: { initial: SessionView }) {
   const [s, setS] = useState(initial);
   const [error, setError] = useState<string | null>(null);
-  const [typing, setTyping] = useState<string | null>(null);
+  // Messages are shown one at a time, each after a "typing" pause, so the conversation does not appear all at once.
+  const [visible, setVisible] = useState(initial.turns.length);
+  const [typing, setTyping] = useState<{ side: "us" | "vendor"; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [handBackOpen, setHandBackOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -130,7 +139,33 @@ function Workspace({ initial }: { initial: SessionView }) {
   // Keep the newest message in view.
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [s.turns.length, typing]);
+  }, [visible, typing]);
+
+  const revealing = visible < s.turns.length;
+  // The end of a conversation (agreed, handed back) is only announced after its last message has been shown.
+  const shownStatus = revealing && s.status !== "active" ? "active" : s.status;
+  useEffect(() => {
+    if (s.turns.length < visible) {
+      setVisible(s.turns.length);
+      return;
+    }
+    if (visible >= s.turns.length) {
+      setTyping(null);
+      return;
+    }
+    const next = s.turns[visible];
+    const side = next.speaker === "us" ? "us" : "vendor";
+    if (side === "us" && next.author === "human") {
+      setVisible((v) => v + 1); // what the buyer typed by hand appears at once
+      return;
+    }
+    setTyping({ side, label: side === "us" ? "You are typing" : `${s.vendor_name} is typing` });
+    const t = setTimeout(() => {
+      setTyping(null);
+      setVisible((v) => v + 1);
+    }, typingMs(next.text, side, next.seq));
+    return () => clearTimeout(t);
+  }, [visible, s.turns, s.vendor_name]);
 
   const apply = useCallback((next: SessionView) => {
     setError(null);
@@ -140,10 +175,9 @@ function Workspace({ initial }: { initial: SessionView }) {
   // Full auto: one round per tick. A mode change, a status change or an error ends the loop.
   const autoOn = s.mode === "auto" && s.status === "active" && s.actions.can_advance;
   useEffect(() => {
-    if (!autoOn) return;
+    if (!autoOn || revealing) return;
     stop.current = false;
     let cancelled = false;
-    setTyping(`${s.vendor_name} is typing`);
     const t = setTimeout(async () => {
       if (cancelled || stop.current) return;
       try {
@@ -151,16 +185,13 @@ function Workspace({ initial }: { initial: SessionView }) {
         if (!cancelled && !stop.current) apply(next);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        if (!cancelled) setTyping(null);
       }
     }, stepDelay());
     return () => {
       cancelled = true;
       clearTimeout(t);
-      setTyping(null);
     };
-  }, [autoOn, s.round, s.id, s.turns.length, s.vendor_name, apply]);
+  }, [autoOn, revealing, s.round, s.id, s.turns.length, apply]);
 
   const act = async (fn: () => Promise<SessionView>) => {
     setBusy(true);
@@ -206,8 +237,8 @@ function Workspace({ initial }: { initial: SessionView }) {
           <span className="flex flex-wrap items-center gap-3">
             {s.vendor_name}
             <DirectionBadge direction={d} />
-            <Pill tone={s.status === "agreed" ? "ok" : s.status === "handed_back" ? "red" : "amber"}>
-              {s.status === "agreed" ? "Agreed" : s.status === "handed_back" ? (s.vendor_ended ? "Vendor left" : "Handed back") : `Round ${s.round}`}
+            <Pill tone={shownStatus === "agreed" ? "ok" : shownStatus === "handed_back" ? "red" : "amber"}>
+              {shownStatus === "agreed" ? "Agreed" : shownStatus === "handed_back" ? (s.vendor_ended ? "Vendor left" : "Handed back") : `Round ${s.round}`}
             </Pill>
           </span>
         }
@@ -221,14 +252,14 @@ function Workspace({ initial }: { initial: SessionView }) {
             <h2 className="text-[15px] font-bold text-ink">Conversation</h2>
           </header>
           <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
-            <ChatLog turns={s.turns} typing={typing} vendorName={s.vendor_name} />
+            <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} />
           </div>
           <div className="grid max-h-[60%] shrink-0 gap-3 overflow-y-auto border-t border-line2 p-3">
             {error && <Notice tone="red">{error}</Notice>}
 
-            {s.status === "active" && s.pending_draft && <DraftCard s={s} onResult={apply} onError={setError} />}
+            {shownStatus === "active" && !revealing && s.pending_draft && <DraftCard s={s} onResult={apply} onError={setError} />}
 
-            {s.status === "active" && s.mode === "approve" && !s.pending_draft && s.actions.can_advance && (
+            {shownStatus === "active" && !revealing && s.mode === "approve" && !s.pending_draft && s.actions.can_advance && (
               <div>
                 <Button variant="primary" disabled={busy} onClick={() => act(() => api.advance(s.id))}>
                   Prepare next message
@@ -236,18 +267,18 @@ function Workspace({ initial }: { initial: SessionView }) {
               </div>
             )}
 
-            {s.status === "active" && (
+            {shownStatus === "active" && (
               <ChatComposer
                 session={s}
-                running={autoOn}
-                busy={busy}
+                running={autoOn || revealing}
+                busy={busy || revealing}
                 onStop={() => changeMode("manual")}
                 onResult={apply}
                 onError={setError}
               />
             )}
 
-            {s.status === "agreed" && (
+            {shownStatus === "agreed" && (
               <div className="rounded-card border border-transparent bg-ok-soft p-4 text-sm text-ok" role="status">
                 <p className="text-base font-bold">
                   Agreed at {money(s.agreed_price)} per {s.unit}
@@ -281,7 +312,7 @@ function Workspace({ initial }: { initial: SessionView }) {
               </div>
             )}
 
-            {s.status === "handed_back" && (
+            {shownStatus === "handed_back" && (
               <div className="rounded-card border border-transparent bg-red-soft p-4 text-sm text-red" role="status">
                 <p className="font-bold">{s.vendor_ended ? "The vendor ended the conversation" : "Handed back to you"}</p>
                 <p className="mt-1">{s.handback_reason ?? "No acceptable deal could be reached within your limits."}</p>
