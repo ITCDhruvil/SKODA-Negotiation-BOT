@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChatLog } from "@/components/negotiation/ChatLog";
+import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { ModeSelect } from "@/components/negotiation/ModeSelect";
 import { ChatComposer } from "@/components/negotiation/ChatComposer";
 import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
@@ -249,10 +249,19 @@ function Workspace({ initial }: { initial: SessionView }) {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* The chat fills the height of the window: messages scroll in the middle, the answer bar stays at the bottom. */}
         <section className="flex min-h-[32rem] flex-col rounded-card border border-line bg-panel shadow-card xl:h-[calc(100vh-10.5rem)]">
-          <header className="flex shrink-0 items-center justify-between gap-2 px-4 pt-3.5 pb-2">
-            <h2 className="text-[15px] font-bold text-ink">Conversation</h2>
+          <header className="shrink-0 border-b border-line2 px-4 py-3">
+            <ChatHeader
+              name={s.vendor_name}
+              subtitle={shownStatus === "active" ? "online" : shownStatus === "agreed" ? "Deal agreed" : s.vendor_ended ? "Left the conversation" : "Conversation ended"}
+              typing={typing?.side === "vendor"}
+              live={shownStatus === "active"}
+            />
           </header>
-          <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+          <div
+            ref={scroller}
+            className="min-h-0 flex-1 overflow-y-auto bg-raise/60 px-4 py-3"
+            style={{ backgroundImage: "radial-gradient(color-mix(in srgb, var(--line) 80%, transparent) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
+          >
             <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} />
           </div>
           <div className="grid max-h-[60%] shrink-0 gap-3 overflow-y-auto border-t border-line2 p-3">
