@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { ProfileDialog } from "@/components/negotiation/ProfileDialog";
@@ -11,7 +11,7 @@ import { ChatComposer } from "@/components/negotiation/ChatComposer";
 import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { StrategyPanel } from "@/components/negotiation/StrategyPanel";
 import { Select } from "@/components/ui/Select";
-import { Button, DirectionBadge, Field, Panel, Pill, inputClass } from "@/components/ui/basics";
+import { Button, ButtonLink, DirectionBadge, Field, Panel, Pill, inputClass } from "@/components/ui/basics";
 import { Dialog } from "@/components/ui/Dialog";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { ApiError, api, type DraftView, type Mode, type SessionView } from "@/lib/api";
@@ -174,6 +174,7 @@ function Workspace({ initial }: { initial: SessionView }) {
     });
   const [handBackOpen, setHandBackOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const router = useRouter();
   const [accepted, setAccepted] = useState(false);
   const stop = useRef(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -256,6 +257,7 @@ function Workspace({ initial }: { initial: SessionView }) {
       await api.acceptDeal(s.item_id);
       setAccepted(true);
       setError(null);
+      router.push(`/events/${s.event_id}/approve`); // one step: accepting sends the deal straight to its review
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -374,13 +376,16 @@ function Workspace({ initial }: { initial: SessionView }) {
                     ))}
                   </dl>
                   <div className="ml-auto flex flex-wrap items-center gap-2">
-                    {accepted ? (
-                      <p className="text-sm text-ok">
-                        Sent for approval.{" "}
-                        <Link href={`/events/${s.event_id}/approve`} className="font-semibold underline">
+                    {accepted || (!s.actions.can_accept_deal && !s.actions.can_continue) ? (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-sm font-semibold text-ok ring-1 ring-line2">
+                          <Icon name="check" size={15} />
+                          Sent for approval
+                        </span>
+                        <ButtonLink href={`/events/${s.event_id}/approve`} variant="primary" size="md">
                           Review &amp; approve
-                        </Link>
-                      </p>
+                        </ButtonLink>
+                      </>
                     ) : (
                       <>
                         {s.actions.can_continue && (
@@ -390,7 +395,7 @@ function Workspace({ initial }: { initial: SessionView }) {
                         )}
                         {s.actions.can_accept_deal && (
                           <Button variant="primary" disabled={busy} onClick={acceptDeal}>
-                            Accept deal
+                            {busy ? "Sending…" : "Accept & send for review"}
                           </Button>
                         )}
                       </>
