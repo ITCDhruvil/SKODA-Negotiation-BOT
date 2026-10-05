@@ -92,3 +92,13 @@ html[data-embed="1"] main { padding-left: 0; padding-right: 0; padding-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   .shimmer-text { animation: none; background-image: none; -webkit-text-fill-color: currentColor; }
 }
+
+/* A contract document prints on its own: the navigation and the toolbar are left out. */
+@media print {
+  .app-aside, .app-topbar, .no-print { display: none !important; }
+  html, body { background: #fff !important; }
+  .app-grid { display: block !important; }
+  main { padding: 0 !important; }
+  .contract-sheet { box-shadow: none !important; border: 0 !important; margin: 0 !important; break-after: page; }
+  .contract-sheet:last-child { break-after: auto; }
+}

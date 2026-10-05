@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
+import { ButtonLink, Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { IconLink } from "@/components/ui/TableToolbar";
 import { RowMenu } from "@/components/ui/RowMenu";
@@ -128,13 +128,18 @@ function Body({ data }: { data: EventDetail }) {
         subtitle={e.category}
         actions={
           closed ? (
-            <a
-              href={api.exportUrl(e.id)}
-              download
-              className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand"
-            >
-              {e.direction === "buy" ? "Download Shopping Cart template (CSV)" : "Download deal summary (CSV)"}
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              <ButtonLink href={`/events/${e.id}/contract`} variant="primary" size="md">
+                View contract document
+              </ButtonLink>
+              <a
+                href={api.exportUrl(e.id)}
+                download
+                className="rounded-m border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink hover:border-brand"
+              >
+                {e.direction === "buy" ? "Download Shopping Cart template (CSV)" : "Download deal summary (CSV)"}
+              </a>
+            </div>
           ) : data.items.some((i) => i.state === "awaiting_approval") ? (
             <Link href={`/events/${e.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">
               Review &amp; approve

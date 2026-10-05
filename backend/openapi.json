@@ -1961,6 +1961,50 @@
     }
    }
   },
+  "/api/events/{event_id}/contract": {
+   "get": {
+    "summary": "Event Contract",
+    "description": "The sample contract document(s) for the closed deals of an event, one per supplier.",
+    "operationId": "event_contract_api_events__event_id__contract_get",
+    "parameters": [
+     {
+      "name": "event_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Event Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ContractDoc"
+         },
+         "title": "Response Event Contract Api Events  Event Id  Contract Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/events/{event_id}/export": {
    "get": {
     "summary": "Export Event",
@@ -2271,6 +2315,247 @@
      "summary"
     ],
     "title": "ComparisonView"
+   },
+   "ContractApproval": {
+    "properties": {
+     "role": {
+      "type": "string",
+      "title": "Role"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     }
+    },
+    "type": "object",
+    "required": [
+     "role",
+     "name",
+     "status",
+     "date"
+    ],
+    "title": "ContractApproval"
+   },
+   "ContractDoc": {
+    "properties": {
+     "contract_no": {
+      "type": "string",
+      "title": "Contract No"
+     },
+     "contract_type": {
+      "type": "string",
+      "title": "Contract Type"
+     },
+     "request_no": {
+      "type": "string",
+      "title": "Request No"
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Direction"
+     },
+     "buyer_name": {
+      "type": "string",
+      "title": "Buyer Name"
+     },
+     "buyer_detail": {
+      "type": "string",
+      "title": "Buyer Detail"
+     },
+     "seller_name": {
+      "type": "string",
+      "title": "Seller Name"
+     },
+     "seller_detail": {
+      "type": "string",
+      "title": "Seller Detail"
+     },
+     "requestor": {
+      "type": "string",
+      "title": "Requestor"
+     },
+     "cost_centre": {
+      "type": "string",
+      "title": "Cost Centre"
+     },
+     "cart_no": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cart No"
+     },
+     "payment_terms": {
+      "type": "string",
+      "title": "Payment Terms"
+     },
+     "incoterm": {
+      "type": "string",
+      "title": "Incoterm"
+     },
+     "delivery_by": {
+      "type": "string",
+      "format": "date",
+      "title": "Delivery By"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ContractItem"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total_value": {
+      "type": "number",
+      "title": "Total Value"
+     },
+     "original_value": {
+      "type": "number",
+      "title": "Original Value"
+     },
+     "saved": {
+      "type": "number",
+      "title": "Saved"
+     },
+     "approvals": {
+      "items": {
+       "$ref": "#/components/schemas/ContractApproval"
+      },
+      "type": "array",
+      "title": "Approvals"
+     },
+     "terms": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Terms"
+     },
+     "distribution": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Distribution"
+     }
+    },
+    "type": "object",
+    "required": [
+     "contract_no",
+     "contract_type",
+     "request_no",
+     "date",
+     "title",
+     "direction",
+     "buyer_name",
+     "buyer_detail",
+     "seller_name",
+     "seller_detail",
+     "requestor",
+     "cost_centre",
+     "cart_no",
+     "payment_terms",
+     "incoterm",
+     "delivery_by",
+     "valid_until",
+     "items",
+     "total_value",
+     "original_value",
+     "saved",
+     "approvals",
+     "terms",
+     "distribution"
+    ],
+    "title": "ContractDoc",
+    "description": "A sample contract for a closed deal: the document the deal produces (demo data)."
+   },
+   "ContractItem": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "unit": {
+      "type": "string",
+      "enum": [
+       "EA",
+       "AU",
+       "KG",
+       "TON",
+       "LOT"
+      ],
+      "title": "Unit"
+     },
+     "unit_price": {
+      "type": "number",
+      "title": "Unit Price"
+     },
+     "value": {
+      "type": "number",
+      "title": "Value"
+     },
+     "original_price": {
+      "type": "number",
+      "title": "Original Price"
+     }
+    },
+    "type": "object",
+    "required": [
+     "position",
+     "description",
+     "qty",
+     "unit",
+     "unit_price",
+     "value",
+     "original_price"
+    ],
+    "title": "ContractItem"
    },
    "Dashboard": {
     "properties": {

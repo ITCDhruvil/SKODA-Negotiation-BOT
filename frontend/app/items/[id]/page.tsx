@@ -296,7 +296,7 @@ function OutcomePanel({ detail }: { detail: ItemDetail }) {
   if (!o) return null;
   const d = detail.event.direction;
   return (
-    <Panel title="Outcome">
+    <Panel title="Outcome" actions={<Link href={`/events/${detail.event.id}/contract`} className="text-xs font-semibold text-brand hover:underline">View contract</Link>}>
       <dl className="grid gap-2 text-sm">
         {[
           ["Vendor", o.vendor_name],

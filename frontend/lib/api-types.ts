@@ -671,6 +671,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events/{event_id}/contract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Contract
+         * @description The sample contract document(s) for the closed deals of an event, one per supplier.
+         */
+        get: operations["event_contract_api_events__event_id__contract_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{event_id}/export": {
         parameters: {
             query?: never;
@@ -781,6 +801,103 @@ export interface components {
             /** Rows */
             rows: components["schemas"]["ComparisonRow"][];
             summary: components["schemas"]["ComparisonSummary"];
+        };
+        /** ContractApproval */
+        ContractApproval: {
+            /** Role */
+            role: string;
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
+        /**
+         * ContractDoc
+         * @description A sample contract for a closed deal: the document the deal produces (demo data).
+         */
+        ContractDoc: {
+            /** Contract No */
+            contract_no: string;
+            /** Contract Type */
+            contract_type: string;
+            /** Request No */
+            request_no: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Title */
+            title: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "buy" | "sell";
+            /** Buyer Name */
+            buyer_name: string;
+            /** Buyer Detail */
+            buyer_detail: string;
+            /** Seller Name */
+            seller_name: string;
+            /** Seller Detail */
+            seller_detail: string;
+            /** Requestor */
+            requestor: string;
+            /** Cost Centre */
+            cost_centre: string;
+            /** Cart No */
+            cart_no: string | null;
+            /** Payment Terms */
+            payment_terms: string;
+            /** Incoterm */
+            incoterm: string;
+            /**
+             * Delivery By
+             * Format: date
+             */
+            delivery_by: string;
+            /** Valid Until */
+            valid_until: string | null;
+            /** Items */
+            items: components["schemas"]["ContractItem"][];
+            /** Total Value */
+            total_value: number;
+            /** Original Value */
+            original_value: number;
+            /** Saved */
+            saved: number;
+            /** Approvals */
+            approvals: components["schemas"]["ContractApproval"][];
+            /** Terms */
+            terms: string[];
+            /** Distribution */
+            distribution: string[];
+        };
+        /** ContractItem */
+        ContractItem: {
+            /** Position */
+            position: number;
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: number;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "EA" | "AU" | "KG" | "TON" | "LOT";
+            /** Unit Price */
+            unit_price: number;
+            /** Value */
+            value: number;
+            /** Original Price */
+            original_price: number;
         };
         /** Dashboard */
         Dashboard: {
@@ -3283,6 +3400,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    event_contract_api_events__event_id__contract_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractDoc"][];
                 };
             };
             /** @description Validation Error */

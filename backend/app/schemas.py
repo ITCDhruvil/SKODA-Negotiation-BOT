@@ -331,6 +331,51 @@ class VendorDetail(BaseModel):
     recent_bids: list[VendorBidRow]
 
 
+class ContractItem(BaseModel):
+    position: int
+    description: str
+    qty: float
+    unit: Unit
+    unit_price: float
+    value: float
+    original_price: float
+
+
+class ContractApproval(BaseModel):
+    role: str
+    name: str
+    status: str
+    date: date
+
+
+class ContractDoc(BaseModel):
+    """A sample contract for a closed deal: the document the deal produces (demo data)."""
+    contract_no: str
+    contract_type: str
+    request_no: str
+    date: date
+    title: str
+    direction: Direction
+    buyer_name: str
+    buyer_detail: str
+    seller_name: str
+    seller_detail: str
+    requestor: str
+    cost_centre: str
+    cart_no: Optional[str]
+    payment_terms: str
+    incoterm: str
+    delivery_by: date
+    valid_until: Optional[date]
+    items: list[ContractItem]
+    total_value: float
+    original_value: float
+    saved: float  # savings on a purchase, uplift on a sale
+    approvals: list[ContractApproval]
+    terms: list[str]
+    distribution: list[str]
+
+
 class Health(BaseModel):
     status: str
 

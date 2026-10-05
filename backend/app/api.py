@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import deal, export, handoff, lifecycle, new_event, readmodel, services, simulate
+from app import contract, deal, export, handoff, lifecycle, new_event, readmodel, services, simulate
 from app import schemas as sch
 from app.models import Dataset, Direction, Language, Mode, Objective
 from app.negotiation import service as neg
@@ -369,6 +369,11 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         neg.approve_event(repo, event_id)
         s = snap()
         return readmodel.event_detail(s, s.event_by_id[event_id])
+
+    @app.get("/api/events/{event_id}/contract", response_model=list[sch.ContractDoc])
+    def event_contract(event_id: str):
+        """The sample contract document(s) for the closed deals of an event, one per supplier."""
+        return contract.contract_docs(snap(), event_id)
 
     @app.get("/api/events/{event_id}/export", response_class=Response,
              responses={200: {"content": {"text/csv": {}}}})

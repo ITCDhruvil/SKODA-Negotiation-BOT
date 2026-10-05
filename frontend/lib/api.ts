@@ -26,6 +26,7 @@ export type DraftView = S["DraftView"];
 export type SessionRow = S["SessionRow"];
 export type NewEvent = S["NewEvent"];
 export type NewItem = S["NewItem"];
+export type ContractDoc = S["ContractDoc"];
 export type HandoffCase = S["HandoffIn"];
 export type EventCategory = {
   key: string;
@@ -139,6 +140,7 @@ export const api = {
       `/api/events${qs({ q: p.q, direction: p.direction, status: p.status, category_key: p.category_key, date_from: p.from, date_to: p.to })}`,
     ),
   event: (id: string) => request<EventDetail>(`/api/events/${id}`),
+  contract: (id: string) => request<S["ContractDoc"][]>(`/api/events/${id}/contract`),
   vendorSuggestions: (direction: Direction, categoryKey: string, descriptions: string[], categoryLabel?: string) =>
     request<VendorSuggestion[]>(
       `/api/vendor-suggestions?${new URLSearchParams([
