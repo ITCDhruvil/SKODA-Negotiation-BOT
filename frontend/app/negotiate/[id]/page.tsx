@@ -259,7 +259,7 @@ function Workspace({ initial }: { initial: SessionView }) {
           </header>
           <div
             ref={scroller}
-            className="min-h-0 flex-1 overflow-y-auto bg-raise/60 px-4 py-3"
+            className="min-h-0 flex-1 overflow-y-auto bg-raise px-4 py-3"
             style={{ backgroundImage: "radial-gradient(color-mix(in srgb, var(--line) 80%, transparent) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
           >
             <ChatLog turns={s.turns.slice(0, visible)} typing={typing} vendorName={s.vendor_name} />

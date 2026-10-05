@@ -43,7 +43,7 @@ export function CollapsiblePanel({
           onClick={toggle}
           aria-expanded={open}
           aria-controls={bodyId}
-          className="flex w-full items-center justify-between gap-2 rounded-card px-4 py-3.5 text-left text-[15px] font-bold text-ink hover:bg-raise/60"
+          className="flex w-full items-center justify-between gap-2 rounded-card px-4 py-3.5 text-left text-[15px] font-bold text-ink hover:bg-raise"
         >
           {title}
           <Icon name="down" size={18} className={`shrink-0 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />

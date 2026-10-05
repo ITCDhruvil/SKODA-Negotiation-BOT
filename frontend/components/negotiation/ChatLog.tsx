@@ -39,7 +39,7 @@ export function ChatHeader({ name, subtitle, typing, live }: { name: string; sub
       <div className="min-w-0">
         <h2 className="truncate text-[15px] font-bold leading-tight text-ink">{name}</h2>
         <p className={`flex items-center gap-1.5 truncate text-xs ${typing ? "font-semibold text-ok" : "text-muted"}`}>
-          {live && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${typing ? "bg-ok" : "bg-ok/70"}`} aria-hidden />}
+          {live && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${typing ? "bg-ok" : "bg-ok"}`} aria-hidden />}
           {typing ? "typing…" : subtitle}
         </p>
       </div>
@@ -70,7 +70,7 @@ export function TypingDots({ label, side = "vendor" }: { label: string; side?: "
       >
         <span aria-hidden className="flex h-4 items-center gap-1 motion-reduce:hidden">
           {[0, 1, 2].map((i) => (
-            <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-muted/70" style={{ animationDelay: `${i * 150}ms` }} />
+            <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-muted" style={{ animationDelay: `${i * 150}ms` }} />
           ))}
         </span>
         <span aria-hidden className="hidden text-xs italic text-muted motion-reduce:inline">typing…</span>
@@ -128,7 +128,7 @@ export function ChatLog({ turns, typing, vendorName }: { turns: TurnView[]; typi
                 <p className="whitespace-pre-wrap break-words">{t.text}</p>
                 <div className="mt-1.5 flex items-center justify-between gap-4">
                   {t.price != null ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/[0.06] px-2.5 py-0.5 text-xs font-semibold tabular-nums text-ink">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-raise ring-1 ring-line2 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-ink">
                       <span className="text-muted">Offer</span> {money(t.price)}
                       {t.payment_code && <span className="text-muted">· {t.payment_code}</span>}
                     </span>
