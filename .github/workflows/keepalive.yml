@@ -1,0 +1,24 @@
+# Visits the deployed web app and API every 10 minutes so the free Render services do not fall asleep.
+# GitHub may delay or skip scheduled runs, so this reduces sleeping but cannot promise it never happens.
+name: Keep Render services awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Visit the API and the web app
+        run: |
+          for url in \
+            "https://negotiation-api.onrender.com/api/health" \
+            "https://negotiation-web.onrender.com/"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 --retry 2 --retry-delay 10 "$url" || true)
+            echo "$url -> $code"
+          done
