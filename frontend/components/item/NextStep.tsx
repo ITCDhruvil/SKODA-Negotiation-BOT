@@ -71,7 +71,13 @@ export function NextStep({
       );
       break;
     case "analyzed":
-      headline = "Start the negotiation";
+      if (item.policy.band === "management") {
+        headline = "Hand this over to higher management";
+        text = item.policy.message;
+        then = "management decides how to proceed; the quotes and comparison stay available here.";
+        break;
+      }
+      headline = item.policy.band === "supervised" ? "Start the negotiation with a person in the loop" : "Start the negotiation";
       text = "Choose the vendor and who sends the messages in the highlighted card on the right, then start.";
       then = "review the agreed deal and send it for approval.";
       action = <Button variant="primary" onClick={onOpenOpportunity}>Choose vendor and start</Button>;

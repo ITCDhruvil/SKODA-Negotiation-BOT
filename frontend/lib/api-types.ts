@@ -1247,6 +1247,7 @@ export interface components {
              * @enum {string}
              */
             recommendation: "waiting" | "negotiate" | "accept" | "review" | "done";
+            policy: components["schemas"]["PolicyView"];
             /** Event Title */
             event_title: string;
             /**
@@ -1330,6 +1331,7 @@ export interface components {
              * @enum {string}
              */
             recommendation: "waiting" | "negotiate" | "accept" | "review" | "done";
+            policy: components["schemas"]["PolicyView"];
         };
         /** Kpis */
         Kpis: {
@@ -1536,6 +1538,32 @@ export interface components {
             /** Objective */
             objective?: ("reduce_price" | "improve_lead_time" | "improve_payment_terms" | "improve_commercial_terms") | null;
         };
+        /**
+         * PolicyView
+         * @description Who handles a deal of this size: the bot on its own, a person with the bot's help, or higher management.
+         */
+        PolicyView: {
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "auto" | "supervised" | "management";
+            /** Value Inr */
+            value_inr: number;
+            /**
+             * Default Mode
+             * @enum {string}
+             */
+            default_mode: "auto" | "approve" | "manual";
+            /** Auto Allowed */
+            auto_allowed: boolean;
+            /** Auto Limit Inr */
+            auto_limit_inr: number;
+            /** Management Limit Inr */
+            management_limit_inr: number;
+            /** Message */
+            message: string;
+        };
         /** QuestionIn */
         QuestionIn: {
             /** Text */
@@ -1730,6 +1758,7 @@ export interface components {
             pending_draft: components["schemas"]["DraftView"] | null;
             intelligence: components["schemas"]["Intelligence"];
             strategy: components["schemas"]["Strategy"];
+            policy: components["schemas"]["PolicyView"];
         };
         /** SimulateIn */
         SimulateIn: {

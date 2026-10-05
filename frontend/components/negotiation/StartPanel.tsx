@@ -14,7 +14,8 @@ import { NextBestVendors } from "./NextBestVendors";
 export function StartPanel({ detail }: { detail: ItemDetail }) {
   const router = useRouter();
   const { item, event } = detail;
-  const [mode, setMode] = useState<Mode>("approve");
+  const policy = item.policy;
+  const [mode, setMode] = useState<Mode>(policy.default_mode);
   const [vendorId, setVendorId] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,13 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
       <Button variant="primary" className="w-full" onClick={() => router.push(`/negotiate/${open}`)}>
         Open negotiation workspace
       </Button>
+    );
+  }
+  if (policy.band === "management") {
+    return (
+      <Notice tone="amber">
+        <b>Handled by higher management.</b> {policy.message}
+      </Notice>
     );
   }
   if (item.state === "handed_back") {
@@ -80,8 +88,9 @@ export function StartPanel({ detail }: { detail: ItemDetail }) {
         </Notice>
       )}
       <Field label="Who sends the messages?">
-        <ModeSelect id="start-mode" value={mode} onChange={setMode} />
+        <ModeSelect id="start-mode" value={mode} onChange={setMode} allowAuto={policy.auto_allowed} />
       </Field>
+      <p className="text-xs text-muted">{policy.message}</p>
       {mode === "auto" && <Notice tone="amber">{MODE_LABEL.auto}: {MODE_HINT.auto}</Notice>}
       {error && <Notice tone="red">{error}</Notice>}
       <Button variant="primary" className="w-full" disabled={busy} onClick={start}>

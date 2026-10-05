@@ -38,7 +38,7 @@ def test_dates_are_ordered_and_in_the_past():
 def test_exactly_four_carts_are_ineligible():
     carts = _carts(make_cart_positions(random.Random(SEED)))
     bad = [c for c, ps in carts.items()
-           if not eligibility.check_value(sum(p.qty * p.inr_unit_price for p in ps)).eligible]
+           if not eligibility.check_value(sum(p.qty * p.inr_unit_price for p in ps), eligibility.PHASE_2).eligible]
     assert len(bad) == 4
 
 

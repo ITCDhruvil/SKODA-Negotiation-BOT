@@ -17,6 +17,17 @@ class EligibilityView(BaseModel):
     reason: str = ""
 
 
+class PolicyView(BaseModel):
+    """Who handles a deal of this size: the bot on its own, a person with the bot's help, or higher management."""
+    band: Literal["auto", "supervised", "management"]
+    value_inr: float
+    default_mode: Literal["auto", "approve", "manual"]
+    auto_allowed: bool
+    auto_limit_inr: float
+    management_limit_inr: float
+    message: str
+
+
 class ItemView(BaseModel):
     id: str
     event_id: str
@@ -44,6 +55,7 @@ class ItemView(BaseModel):
     within_limit: Optional[bool]
     value: float
     recommendation: Recommendation
+    policy: PolicyView
 
 
 class EventView(BaseModel):
@@ -478,3 +490,4 @@ class SessionView(SessionSummary):
     pending_draft: Optional[DraftView]
     intelligence: Intelligence
     strategy: Strategy
+    policy: PolicyView

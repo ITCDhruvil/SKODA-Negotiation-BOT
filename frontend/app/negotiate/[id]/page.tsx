@@ -431,7 +431,7 @@ function Workspace({ initial }: { initial: SessionView }) {
             <div className="grid gap-4">
               <div>
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Who sends the messages</p>
-                <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} />
+                <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} allowAuto={s.policy.auto_allowed} />
               </div>
               <div>
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Language</p>

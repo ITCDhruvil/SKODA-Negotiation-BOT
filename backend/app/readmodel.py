@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
 
-from app import deal, eligibility, lifecycle
+from app import deal, eligibility, lifecycle, policy
 from app import schemas as sch
 from app.models import Bid, Event, HistoryRecord, Item, Outcome, Vendor
 from app.services import NotFound
@@ -96,6 +96,15 @@ def event_reference_value(snap: Snapshot, event: Event) -> float:
                                 for i in snap.items_by_event[event.id])
 
 
+def policy_view(item: Item) -> sch.PolicyView:
+    """Who handles this item's deal, from its value (reference price times quantity)."""
+    value = deal.value(item.qty, item.reference_price)
+    b = policy.band(value)
+    return sch.PolicyView(
+        band=b, value_inr=value, default_mode=policy.default_mode(b), auto_allowed=policy.allows_auto(b),
+        auto_limit_inr=policy.AUTO_LIMIT_INR, management_limit_inr=policy.MANAGEMENT_LIMIT_INR, message=policy.message(b))
+
+
 def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
     d = snap.event_by_id[item.event_id].direction
     bids = snap.bids_by_item.get(item.id, [])
@@ -144,7 +153,7 @@ def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
                               if bids else None),
         gap=gap, potential_delta=potential, within_limit=within,
         value=deal.value(item.qty, shown),
-        recommendation=recommendation,
+        recommendation=recommendation, policy=policy_view(item),
     )
 
 

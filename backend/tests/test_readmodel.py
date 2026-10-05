@@ -74,8 +74,10 @@ def test_event_status_matches_lifecycle_and_closed_count(snap):
 
 def test_ineligible_events_are_flagged(snap):
     bad = [e for e in snap.events if not rm.event_view(snap, e).eligibility.eligible]
-    assert len(bad) == 7  # 4 carts + 3 lots
-    assert all("value" in rm.event_view(snap, e).eligibility.reason for e in bad)
+    # Of the 7 sample events outside the original band, 5 are above ten lakh: they can be negotiated now, with a person.
+    # Only the 2 below the minimum value stay ineligible.
+    assert len(bad) == 2
+    assert all("below the minimum" in rm.event_view(snap, e).eligibility.reason for e in bad)
 
 
 def _first_analyzed(snap, direction):
@@ -240,7 +242,7 @@ def test_services_and_readmodel_agree_at_the_band_edges(repo: Repo):
     from app.models import Item
     template = repo.get("item", HERO_BUY_ITEM)
     event = repo.get("event", "EVT-2026-041")
-    for n, total in enumerate((1_999.99, 2_000.0, 1_000_000.0, 1_000_000.01)):
+    for n, total in enumerate((1_999.99, 2_000.0, 5_000_000.0, 5_000_000.01)):
         eid = f"EDGE-{n}"
         repo.put("event", eid, event.model_copy(update={"id": eid}))
         iid = f"{eid}-01"

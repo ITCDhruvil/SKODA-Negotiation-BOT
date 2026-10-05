@@ -20,7 +20,7 @@ import { Tabs, panelId, tabId } from "@/components/ui/Tabs";
 import { api, type ItemDetail, type SessionSummary } from "@/lib/api";
 import { dateShort, money, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import { TOUGH_LABEL, TOUGH_TONE, SESSION_LABEL, SESSION_TONE, STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
+import { BAND_LABEL, BAND_TONE, TOUGH_LABEL, TOUGH_TONE, SESSION_LABEL, SESSION_TONE, STATE_LABEL, STATE_TONE, deltaLabel, partyLabel, quoteLabel, quotesLabel } from "@/lib/labels";
 
 const LANG: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi" };
 const VENDOR_STATUS = ["Invited", "Quoted", "In progress", "Agreed", "Handed back"];
@@ -365,6 +365,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
             {item.description}
             <DirectionBadge direction={event.direction} />
             <Pill tone={STATE_TONE[item.state]}>{STATE_LABEL[item.state]}</Pill>
+            <Pill tone={BAND_TONE[item.policy.band]}>{BAND_LABEL[item.policy.band]}</Pill>
           </span>
         }
         subtitle={`${event.title} · ${num(item.qty)} ${item.unit} · reference ${money(item.reference_price)} per ${item.unit} · ${item.incoterm}`}

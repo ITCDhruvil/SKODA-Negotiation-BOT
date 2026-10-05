@@ -9,11 +9,14 @@ export function ModeSelect({
   value,
   onChange,
   disabled,
+  allowAuto = true,
 }: {
   id: string;
   value: Mode;
   onChange: (m: Mode) => void;
   disabled?: boolean;
+  /** Full auto is only for small deals; above that a person stays in the loop. */
+  allowAuto?: boolean;
 }) {
   return (
     <div className="grid gap-1">
@@ -23,10 +26,11 @@ export function ModeSelect({
         value={value}
         disabled={disabled}
         onChange={onChange}
-        options={MODES.map((m) => ({ value: m, label: MODE_LABEL[m], hint: MODE_HINT[m] }))}
+        options={MODES.filter((m) => allowAuto || m !== "auto").map((m) => ({ value: m, label: MODE_LABEL[m], hint: MODE_HINT[m] }))}
       />
       <span id={`${id}-hint`} className="text-xs text-muted">
         {MODE_HINT[value]}
+        {!allowAuto && " Full auto is not available for a deal of this size."}
       </span>
     </div>
   );

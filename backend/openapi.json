@@ -3630,6 +3630,9 @@
       ],
       "title": "Recommendation"
      },
+     "policy": {
+      "$ref": "#/components/schemas/PolicyView"
+     },
      "event_title": {
       "type": "string",
       "title": "Event Title"
@@ -3688,6 +3691,7 @@
      "within_limit",
      "value",
      "recommendation",
+     "policy",
      "event_title",
      "direction",
      "category",
@@ -3895,6 +3899,9 @@
        "done"
       ],
       "title": "Recommendation"
+     },
+     "policy": {
+      "$ref": "#/components/schemas/PolicyView"
      }
     },
     "type": "object",
@@ -3924,7 +3931,8 @@
      "potential_delta",
      "within_limit",
      "value",
-     "recommendation"
+     "recommendation",
+     "policy"
     ],
     "title": "ItemView"
    },
@@ -4501,6 +4509,60 @@
     ],
     "title": "PointsIn"
    },
+   "PolicyView": {
+    "properties": {
+     "band": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "supervised",
+       "management"
+      ],
+      "title": "Band"
+     },
+     "value_inr": {
+      "type": "number",
+      "title": "Value Inr"
+     },
+     "default_mode": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "approve",
+       "manual"
+      ],
+      "title": "Default Mode"
+     },
+     "auto_allowed": {
+      "type": "boolean",
+      "title": "Auto Allowed"
+     },
+     "auto_limit_inr": {
+      "type": "number",
+      "title": "Auto Limit Inr"
+     },
+     "management_limit_inr": {
+      "type": "number",
+      "title": "Management Limit Inr"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "band",
+     "value_inr",
+     "default_mode",
+     "auto_allowed",
+     "auto_limit_inr",
+     "management_limit_inr",
+     "message"
+    ],
+    "title": "PolicyView",
+    "description": "Who handles a deal of this size: the bot on its own, a person with the bot's help, or higher management."
+   },
    "QuestionIn": {
     "properties": {
      "text": {
@@ -5000,6 +5062,9 @@
      },
      "strategy": {
       "$ref": "#/components/schemas/Strategy"
+     },
+     "policy": {
+      "$ref": "#/components/schemas/PolicyView"
      }
     },
     "type": "object",
@@ -5035,7 +5100,8 @@
      "turns",
      "pending_draft",
      "intelligence",
-     "strategy"
+     "strategy",
+     "policy"
     ],
     "title": "SessionView"
    },

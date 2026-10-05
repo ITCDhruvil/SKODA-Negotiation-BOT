@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 from typing import Optional
 
-from app import clock, deal, lifecycle
+from app import clock, deal, lifecycle, policy
 from app.models import Bid, Draft, Event, Item, Mode, Outcome, Session, Turn
 from app.negotiation import guardrails, info, insights, messages, personas, tactics, vendor_sim, vendor_talk
 from app.services import Conflict, NotFound
@@ -145,6 +145,16 @@ def _vendor_name(repo: Repo, s: Session) -> str:
     return vendor_name(repo, s.vendor_id)
 
 
+def _require_handling(item: Item, mode: Mode) -> None:
+    """The deal's size decides who may negotiate it (see app.policy)."""
+    band = policy.band(deal.value(item.qty, item.reference_price))
+    if band == "management":
+        raise Conflict(policy.message(band))
+    if mode == "auto" and not policy.allows_auto(band):
+        raise Conflict("Above ten lakh rupees a person stays in the loop, so the bot cannot send messages on its own. "
+                       "Choose approve each message, or write them yourself.")
+
+
 def _require_active(s: Session) -> None:
     if s.status != "active":
         raise Conflict(f"this negotiation is {s.status.replace('_', ' ')}")
@@ -183,6 +193,7 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
     with repo.transaction():
         item = _item(repo, item_id)
         event = _event(repo, item)
+        _require_handling(item, mode)
         existing = sessions_for_item(repo, item_id)
         if item.state == "handed_back":
             # The last vendor did not agree. The buyer may try the next one with the same points.
@@ -516,6 +527,7 @@ def set_mode(repo: Repo, session_id: str, mode: Mode) -> Session:
     with repo.transaction():
         s = _session(repo, session_id)
         _require_active(s)
+        _require_handling(_item(repo, s.item_id), mode)
         if mode == "manual":
             d = pending_draft(repo, s.id)
             if d is not None:
