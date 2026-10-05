@@ -322,36 +322,62 @@ function Workspace({ initial }: { initial: SessionView }) {
             )}
 
             {shownStatus === "agreed" && (
-              <div className="rounded-card border border-transparent bg-ok-soft p-4 text-sm text-ok" role="status">
-                <p className="text-base font-bold">
-                  Agreed at {money(s.agreed_price)} per {s.unit}
-                  {s.agreed_payment ? ` · ${s.agreed_payment}` : ""}
-                </p>
-                <p className="mt-1">
-                  {deltaLabel(d)}: <span className="font-bold tabular-nums">{money(s.agreed_delta)}</span> on {num(s.qty)} {s.unit} (original{" "}
-                  {money(s.original_price)}).
-                </p>
-                {accepted ? (
-                  <p className="mt-3">
-                    Sent for approval.{" "}
-                    <Link href={`/events/${s.event_id}/approve`} className="font-semibold underline">
-                      Review &amp; approve
-                    </Link>
-                  </p>
-                ) : (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {s.actions.can_accept_deal && (
-                      <Button variant="primary" disabled={busy} onClick={acceptDeal}>
-                        Accept deal
-                      </Button>
-                    )}
-                    {s.actions.can_continue && (
-                      <Button disabled={busy} onClick={() => act(() => api.continueNegotiation(s.item_id))}>
-                        Keep negotiating
-                      </Button>
+              <div className="rounded-card border border-transparent bg-ok-soft px-4 py-3.5" role="status">
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-on-brand">
+                      <Icon name="check" size={22} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wide text-ok">Deal agreed</p>
+                      <p className="text-xl font-extrabold leading-tight tabular-nums text-ink">
+                        {money(s.agreed_price)}
+                        <span className="ml-1.5 text-sm font-semibold text-muted">
+                          per {s.unit}
+                          {s.agreed_payment ? ` · ${s.agreed_payment}` : ""}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <dl className="flex flex-1 flex-wrap gap-x-8 gap-y-2">
+                    {(
+                      [
+                        [deltaLabel(d), money(s.agreed_delta), true],
+                        ["Original quote", `${money(s.original_price)} per ${s.unit}`, false],
+                        ["Quantity", `${num(s.qty)} ${s.unit}`, false],
+                        ["Deal value", money(s.agreed_value), false],
+                      ] as [string, string, boolean][]
+                    ).map(([k, v, good]) => (
+                      <div key={k}>
+                        <dt className="text-xs text-muted">{k}</dt>
+                        <dd className={`text-sm font-bold tabular-nums ${good ? "text-ok" : "text-ink"}`}>{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                    {accepted ? (
+                      <p className="text-sm text-ok">
+                        Sent for approval.{" "}
+                        <Link href={`/events/${s.event_id}/approve`} className="font-semibold underline">
+                          Review &amp; approve
+                        </Link>
+                      </p>
+                    ) : (
+                      <>
+                        {s.actions.can_continue && (
+                          <Button disabled={busy} onClick={() => act(() => api.continueNegotiation(s.item_id))}>
+                            Keep negotiating
+                          </Button>
+                        )}
+                        {s.actions.can_accept_deal && (
+                          <Button variant="primary" disabled={busy} onClick={acceptDeal}>
+                            Accept deal
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
