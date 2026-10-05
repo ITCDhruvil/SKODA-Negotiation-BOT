@@ -18,7 +18,22 @@ export function EmbedBridge() {
     const ro = new ResizeObserver(post);
     ro.observe(el);
     post();
-    return () => ro.disconnect();
+    // The host page tells us when its light or dark switch is used.
+    const onMessage = (e: MessageEvent) => {
+      const t = e.data?.negTheme;
+      if (t !== "light" && t !== "dark") return;
+      document.documentElement.dataset.theme = t;
+      try {
+        sessionStorage.setItem("embedTheme", t);
+      } catch {
+        /* storage may be blocked */
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("message", onMessage);
+    };
   }, []);
   return null;
 }

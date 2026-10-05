@@ -91,6 +91,8 @@ export function DataTable<T>({
     const measure = () => {
       const el = wrap.current;
       if (!el) return;
+      // Inside another page the frame grows with its content, so "fit the window" would show every row: use a fixed page.
+      if (document.documentElement.dataset.embed === "1") return setFit(10);
       const row = el.querySelector("tbody tr");
       const head = el.querySelector("thead");
       const rowH = row && row.getBoundingClientRect().height > 20 ? row.getBoundingClientRect().height : dense ? 40 : 56;
