@@ -64,6 +64,7 @@ Both services run on Render from `render.yaml` (a Blueprint): the API (`negotiat
 
 ## Layout
 
+- The AIS prototype (one HTML file) lives in its own repository, https://github.com/ITCDhruvil/ais-prototype, and is deployed on its own, so working on it never changes the Desk deploy.
 - `backend/`: FastAPI, SQLite store, deal maths in `app/deal.py`, negotiation engine in `app/negotiation/`, export in `app/export.py`. See `backend/README.md`.
 - `frontend/`: Next.js app. See `frontend/README.md`.
 - `assumptions.txt`: every assumption, numbered. `docs/superpowers/`: spec and plans.

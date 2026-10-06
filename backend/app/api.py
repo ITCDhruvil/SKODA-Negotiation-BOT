@@ -79,7 +79,7 @@ def _range(date_from: Optional[date], date_to: Optional[date]) -> tuple[Optional
     return date_from, date_to
 
 
-DEFAULT_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+DEFAULT_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8765", "http://127.0.0.1:8765"]  # the Desk, and the AIS prototype served locally
 
 
 def create_app(repo: Repo, seed_dataset: Dataset,
@@ -187,6 +187,27 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     def open_ais_case(body: handoff.HandoffIn):
         """Open (or reopen) the negotiation for a case that lives in the AIS prototype."""
         return handoff.open_case(repo, body)
+
+    @app.post("/api/handoff/{case_no}/documents", response_model=handoff.DocMeta)
+    def ais_case_document(case_no: str, body: handoff.DocIn):
+        """A file of an AIS case (offer, SFO, comparison sheet). The same name for the same supplier replaces the earlier one."""
+        return handoff.add_document(repo, case_no, body)
+
+    @app.get("/api/events/{event_id}/ais", response_model=handoff.AisInfoOut)
+    def ais_event_info(event_id: str):
+        """What AIS sent with the case: its details and its files."""
+        return handoff.ais_info(repo, event_id)
+
+    @app.get("/api/documents/{doc_id}/download", response_class=Response)
+    def ais_document_download(doc_id: str):
+        d, raw = handoff.download(repo, doc_id)
+        safe = d.name.replace('"', "").replace("\\", "")
+        return Response(raw, media_type=d.mime, headers={"Content-Disposition": f'inline; filename="{safe}"'})
+
+    @app.get("/api/handoff/{case_no}/result", response_model=handoff.HandoffResult)
+    def ais_case_result(case_no: str):
+        """Where the negotiation of an AIS case stands, with the negotiated unit price per supplier and position."""
+        return handoff.case_result(repo, case_no)
 
     @app.post("/api/events/simulate", response_model=sch.EventDetail)
     def simulate_event(body: SimulateIn):

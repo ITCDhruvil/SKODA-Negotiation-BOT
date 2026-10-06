@@ -110,6 +110,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/handoff/{case_no}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ais Case Document
+         * @description A file of an AIS case (offer, SFO, comparison sheet). The same name for the same supplier replaces the earlier one.
+         */
+        post: operations["ais_case_document_api_handoff__case_no__documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{event_id}/ais": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ais Event Info
+         * @description What AIS sent with the case: its details and its files.
+         */
+        get: operations["ais_event_info_api_events__event_id__ais_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ais Document Download */
+        get: operations["ais_document_download_api_documents__doc_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/handoff/{case_no}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ais Case Result
+         * @description Where the negotiation of an AIS case stands, with the negotiated unit price per supplier and position.
+         */
+        get: operations["ais_case_result_api_handoff__case_no__result_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/simulate": {
         parameters: {
             query?: never;
@@ -712,6 +789,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AisInfoOut */
+        AisInfoOut: {
+            /** Details */
+            details: {
+                [key: string]: string;
+            }[];
+            /** Documents */
+            documents: components["schemas"]["DocMeta"][];
+        };
         /** ApproveDraftIn */
         ApproveDraftIn: {
             /** Price */
@@ -817,6 +903,17 @@ export interface components {
              * Format: date
              */
             date: string;
+            /** Esign Id */
+            esign_id: string;
+            /** Signed At */
+            signed_at: string;
+        };
+        /** ContractClause */
+        ContractClause: {
+            /** Heading */
+            heading: string;
+            /** Text */
+            text: string;
         };
         /**
          * ContractDoc
@@ -884,10 +981,25 @@ export interface components {
             saved: number;
             /** Approvals */
             approvals: components["schemas"]["ContractApproval"][];
-            /** Terms */
-            terms: string[];
+            /** Clauses */
+            clauses: components["schemas"]["ContractClause"][];
             /** Distribution */
             distribution: string[];
+            /** Company Address */
+            company_address: string;
+            /** Company Gstin */
+            company_gstin: string;
+            /** Company Cin */
+            company_cin: string;
+            /** Version */
+            version: string;
+            /**
+             * Locked At
+             * Format: date
+             */
+            locked_at: string;
+            /** Doc Hash */
+            doc_hash: string;
         };
         /** ContractItem */
         ContractItem: {
@@ -939,6 +1051,62 @@ export interface components {
             uplift: number;
             /** Total */
             total: number;
+        };
+        /** Detail */
+        Detail: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /** DocIn */
+        DocIn: {
+            /** Name */
+            name: string;
+            /**
+             * Kind
+             * @default other
+             * @enum {string}
+             */
+            kind: "offer" | "sfo" | "comparison" | "other";
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /**
+             * Mime
+             * @default application/octet-stream
+             */
+            mime: string;
+            /** Content B64 */
+            content_b64: string;
+            /**
+             * Generated
+             * @default false
+             */
+            generated: boolean;
+        };
+        /** DocMeta */
+        DocMeta: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Kind */
+            kind: string;
+            /** Supplier Id */
+            supplier_id: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Mime */
+            mime: string;
+            /** Size */
+            size: number;
+            /**
+             * Uploaded At
+             * Format: date-time
+             */
+            uploaded_at: string;
+            /** Generated */
+            generated: boolean;
         };
         /** DraftView */
         DraftView: {
@@ -1107,11 +1275,53 @@ export interface components {
              * @default —
              */
             cost_centre: string;
+            /** Items */
+            items?: components["schemas"]["Line"][];
+            /** Offers */
+            offers?: components["schemas"]["LineOffer"][];
+            /** Details */
+            details?: components["schemas"]["Detail"][];
         };
         /** HandoffOut */
         HandoffOut: {
             /** Event Id */
             event_id: string;
+            /** Item Id */
+            item_id: string;
+            /** Session Id */
+            session_id: string;
+            /** Sessions */
+            sessions: components["schemas"]["HandoffSession"][];
+        };
+        /** HandoffResult */
+        HandoffResult: {
+            /** Case No */
+            case_no: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_started" | "in_negotiation" | "agreed" | "partly_agreed" | "failed";
+            /** Rounds */
+            rounds: number;
+            /** Items */
+            items: components["schemas"]["ResultItem"][];
+            /** Suppliers */
+            suppliers: components["schemas"]["ResultSupplier"][];
+            /** Recommended Supplier */
+            recommended_supplier: string | null;
+            /** Handback Reason */
+            handback_reason: string | null;
+            /**
+             * Messages
+             * @default []
+             */
+            messages: components["schemas"]["ResultMessage"][];
+        };
+        /** HandoffSession */
+        HandoffSession: {
+            /** Position */
+            position: number;
             /** Item Id */
             item_id: string;
             /** Session Id */
@@ -1579,6 +1789,36 @@ export interface components {
              */
             language: "en" | "hi" | "mr";
         };
+        /**
+         * Line
+         * @description One cart position.
+         */
+        Line: {
+            /** Position */
+            position: number;
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: number;
+            /**
+             * Unit
+             * @default EA
+             * @enum {string}
+             */
+            unit: "EA" | "AU" | "KG" | "TON" | "LOT";
+        };
+        /**
+         * LineOffer
+         * @description One supplier's unit price for one cart position.
+         */
+        LineOffer: {
+            /** Sid */
+            sid: string;
+            /** Position */
+            position: number;
+            /** Unit Price */
+            unit_price: number;
+        };
         /** MessageIn */
         MessageIn: {
             /** Price */
@@ -1793,6 +2033,72 @@ export interface components {
         ResetResult: {
             /** Events */
             events: number;
+        };
+        /** ResultItem */
+        ResultItem: {
+            /** Position */
+            position: number;
+            /** Item Id */
+            item_id: string;
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: number;
+            /** Unit */
+            unit: string;
+            /** Session Id */
+            session_id: string | null;
+            /** Session Status */
+            session_status: string | null;
+            /** Round */
+            round: number;
+            /** Handback Reason */
+            handback_reason: string | null;
+            /** Offers */
+            offers: components["schemas"]["ResultOffer"][];
+        };
+        /** ResultMessage */
+        ResultMessage: {
+            /** Position */
+            position: number;
+            /** Seq */
+            seq: number;
+            /**
+             * Speaker
+             * @enum {string}
+             */
+            speaker: "us" | "vendor";
+            /** Text */
+            text: string;
+            /** Price */
+            price: number | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ResultOffer */
+        ResultOffer: {
+            /** Sid */
+            sid: string;
+            /** Name */
+            name: string;
+            /** Initial Unit Price */
+            initial_unit_price: number;
+            /** Negotiated Unit Price */
+            negotiated_unit_price: number | null;
+        };
+        /** ResultSupplier */
+        ResultSupplier: {
+            /** Sid */
+            sid: string;
+            /** Name */
+            name: string;
+            /** Initial Total */
+            initial_total: number;
+            /** Negotiated Total */
+            negotiated_total: number | null;
         };
         /** SessionActions */
         SessionActions: {
@@ -2397,6 +2703,132 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HandoffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ais_case_document_api_handoff__case_no__documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocMeta"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ais_event_info_api_events__event_id__ais_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AisInfoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ais_document_download_api_documents__doc_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ais_case_result_api_handoff__case_no__result_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffResult"];
                 };
             };
             /** @description Validation Error */

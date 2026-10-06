@@ -39,6 +39,45 @@ function Meta({ label, value }: { label: string; value: string }) {
   );
 }
 
+const DOC_KIND: Record<string, string> = { offer: "Supplier offer", sfo: "SFO", comparison: "Comparison sheet", other: "Document" };
+
+/** What the AIS request sent with the case: its details and its files. */
+function FromAis({ eventId }: { eventId: string }) {
+  const { data } = useApi(() => api.aisInfo(eventId), [eventId]);
+  if (!data || (data.details.length === 0 && data.documents.length === 0)) return null;
+  return (
+    <Panel title="From the AIS request">
+      {data.details.length > 0 && (
+        <dl className="grid gap-3 text-sm">
+          {data.details.map((d) => (
+            <Meta key={d.label} label={d.label} value={d.value || "—"} />
+          ))}
+        </dl>
+      )}
+      {data.documents.length > 0 && (
+        <div className={data.details.length > 0 ? "mt-5" : ""}>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Files</h3>
+          <ul className="divide-y divide-line2 rounded-m border border-line">
+            {data.documents.map((f) => (
+              <li key={f.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold text-ink">{f.name}</div>
+                  <div className="text-xs text-muted">
+                    {DOC_KIND[f.kind] ?? f.kind}
+                    {f.supplier_name ? ` · ${f.supplier_name}` : ""} · {Math.max(1, Math.round(f.size / 1024))} KB
+                    {f.generated ? " · summary built by AIS from the offer data" : ""}
+                  </div>
+                </div>
+                <a href={api.documentUrl(f.id)} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">Open</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 function EventNegotiations({ eventId }: { eventId: string }) {
   const { data } = useApi(() => api.negotiations(), [eventId]);
   const rows = (data ?? []).filter((r) => r.event_id === eventId);
@@ -205,6 +244,7 @@ function Body({ data }: { data: EventDetail }) {
           <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} />
         </Panel>
         <div className="grid content-start gap-5">
+        {e.from_ais && <FromAis eventId={e.id} />}
         <EventNegotiations eventId={e.id} />
         <Panel title="Details">
           <dl className="grid gap-3 text-sm">

@@ -39,3 +39,14 @@ def test_an_event_with_no_closed_deal_has_no_contract(repo, seed_dataset):
     c = TestClient(create_app(repo, seed_dataset))
     open_event = next(e for e in c.get("/api/events").json() if e["status"] != "closed")
     assert c.get(f"/api/events/{open_event['id']}/contract").status_code == 404
+
+
+def test_the_contract_is_locked_with_a_stable_hash_and_signed_approvals(repo, seed_dataset):
+    c = TestClient(create_app(repo, seed_dataset))
+    ev = _closed_events(c)[0]
+    a = c.get(f"/api/events/{ev['id']}/contract").json()[0]
+    b = c.get(f"/api/events/{ev['id']}/contract").json()[0]
+    assert len(a["doc_hash"]) == 64 and a["doc_hash"] == b["doc_hash"]
+    assert a["locked_at"] == a["approvals"][-1]["date"] and a["version"] == "1.0"
+    assert all(x["esign_id"].startswith("ESIGN-") and x["signed_at"] for x in a["approvals"])
+    assert a["clauses"] and a["company_gstin"]

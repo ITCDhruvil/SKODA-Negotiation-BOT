@@ -95,10 +95,22 @@ html[data-embed="1"] main { padding-left: 0; padding-right: 0; padding-top: 0; }
 
 /* A contract document prints on its own: the navigation and the toolbar are left out. */
 @media print {
+  /* Own running header and footer on every page. The page margin boxes replace the browser's date, title and address. */
+  @page {
+    size: A4;
+    margin: 22mm 14mm 20mm;
+    @top-left { content: "SKODA Auto Volkswagen India Private Limited"; font: 700 8pt Arial, sans-serif; color: #0e3a2f; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1.5px solid #0e3a2f; padding-bottom: 3mm; vertical-align: bottom; width: 70%; }
+    @top-right { content: "Contract document"; font: 8pt Arial, sans-serif; color: #555; border-bottom: 1.5px solid #0e3a2f; padding-bottom: 3mm; vertical-align: bottom; }
+    @bottom-left { content: "Confidential  |  Approved and locked  |  Verify by the QR code on the last page"; font: 8pt Arial, sans-serif; color: #666; border-top: 1px solid #bbb; padding-top: 3mm; vertical-align: top; width: 80%; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt Arial, sans-serif; color: #444; border-top: 1px solid #bbb; padding-top: 3mm; vertical-align: top; }
+  }
+  /* The first page already carries the full letterhead. */
+  @page :first { @top-left { content: " "; border: 0; } @top-right { content: " "; border: 0; } }
   .app-aside, .app-topbar, .no-print { display: none !important; }
   html, body { background: #fff !important; }
   .app-grid { display: block !important; }
   main { padding: 0 !important; }
-  .contract-sheet { box-shadow: none !important; border: 0 !important; margin: 0 !important; break-after: page; }
+  .contract-sheet { box-shadow: none !important; border: 0 !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; max-width: none !important; break-after: page; }
+  .contract-sheet tr, .contract-sheet li, .contract-sheet .keep { break-inside: avoid; }
   .contract-sheet:last-child { break-after: auto; }
 }

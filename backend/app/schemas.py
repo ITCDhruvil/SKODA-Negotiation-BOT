@@ -353,6 +353,13 @@ class ContractApproval(BaseModel):
     name: str
     status: str
     date: date
+    esign_id: str  # id of the electronic signature
+    signed_at: str  # ISO timestamp of the signature
+
+
+class ContractClause(BaseModel):
+    heading: str
+    text: str
 
 
 class ContractDoc(BaseModel):
@@ -383,8 +390,14 @@ class ContractDoc(BaseModel):
     original_value: float
     saved: float  # savings on a purchase, uplift on a sale
     approvals: list[ContractApproval]
-    terms: list[str]
+    clauses: list[ContractClause]
     distribution: list[str]
+    company_address: str
+    company_gstin: str
+    company_cin: str
+    version: str
+    locked_at: date  # the document is frozen once the last approval is in
+    doc_hash: str  # SHA-256 of the frozen content; the QR code on the page carries its start
 
 
 class Health(BaseModel):

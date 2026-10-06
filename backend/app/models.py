@@ -101,6 +101,27 @@ class Bid(_Model):
     tenure_months: Optional[int] = None  # the contract term this vendor offers (services)
 
 
+class AisDoc(_Model):
+    """A file that came with a case from the AIS prototype (an offer, the SFO, the comparison sheet)."""
+    id: str
+    event_id: str
+    name: str
+    kind: Literal["offer", "sfo", "comparison", "other"]
+    supplier_id: Optional[str] = None
+    supplier_name: Optional[str] = None
+    mime: str = "application/octet-stream"
+    size: int
+    uploaded_at: datetime
+    generated: bool = False  # built by AIS from the offer data because the original file was not kept
+    content_b64: str
+
+
+class AisInfo(_Model):
+    """What AIS knows about the request, shown beside the negotiation."""
+    event_id: str
+    details: list[dict[str, str]]
+
+
 class Outcome(_Model):
     item_id: str
     vendor_id: str

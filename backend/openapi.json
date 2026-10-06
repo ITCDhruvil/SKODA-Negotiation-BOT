@@ -398,6 +398,168 @@
     }
    }
   },
+  "/api/handoff/{case_no}/documents": {
+   "post": {
+    "summary": "Ais Case Document",
+    "description": "A file of an AIS case (offer, SFO, comparison sheet). The same name for the same supplier replaces the earlier one.",
+    "operationId": "ais_case_document_api_handoff__case_no__documents_post",
+    "parameters": [
+     {
+      "name": "case_no",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Case No"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DocIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DocMeta"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/events/{event_id}/ais": {
+   "get": {
+    "summary": "Ais Event Info",
+    "description": "What AIS sent with the case: its details and its files.",
+    "operationId": "ais_event_info_api_events__event_id__ais_get",
+    "parameters": [
+     {
+      "name": "event_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Event Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AisInfoOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/documents/{doc_id}/download": {
+   "get": {
+    "summary": "Ais Document Download",
+    "operationId": "ais_document_download_api_documents__doc_id__download_get",
+    "parameters": [
+     {
+      "name": "doc_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Doc Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/handoff/{case_no}/result": {
+   "get": {
+    "summary": "Ais Case Result",
+    "description": "Where the negotiation of an AIS case stands, with the negotiated unit price per supplier and position.",
+    "operationId": "ais_case_result_api_handoff__case_no__result_get",
+    "parameters": [
+     {
+      "name": "case_no",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Case No"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HandoffResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/events/simulate": {
    "post": {
     "summary": "Simulate Event",
@@ -2043,6 +2205,33 @@
  },
  "components": {
   "schemas": {
+   "AisInfoOut": {
+    "properties": {
+     "details": {
+      "items": {
+       "additionalProperties": {
+        "type": "string"
+       },
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Details"
+     },
+     "documents": {
+      "items": {
+       "$ref": "#/components/schemas/DocMeta"
+      },
+      "type": "array",
+      "title": "Documents"
+     }
+    },
+    "type": "object",
+    "required": [
+     "details",
+     "documents"
+    ],
+    "title": "AisInfoOut"
+   },
    "ApproveDraftIn": {
     "properties": {
      "price": {
@@ -2345,6 +2534,14 @@
       "type": "string",
       "format": "date",
       "title": "Date"
+     },
+     "esign_id": {
+      "type": "string",
+      "title": "Esign Id"
+     },
+     "signed_at": {
+      "type": "string",
+      "title": "Signed At"
      }
     },
     "type": "object",
@@ -2352,9 +2549,29 @@
      "role",
      "name",
      "status",
-     "date"
+     "date",
+     "esign_id",
+     "signed_at"
     ],
     "title": "ContractApproval"
+   },
+   "ContractClause": {
+    "properties": {
+     "heading": {
+      "type": "string",
+      "title": "Heading"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "heading",
+     "text"
+    ],
+    "title": "ContractClause"
    },
    "ContractDoc": {
     "properties": {
@@ -2520,12 +2737,12 @@
       "type": "array",
       "title": "Approvals"
      },
-     "terms": {
+     "clauses": {
       "items": {
-       "type": "string"
+       "$ref": "#/components/schemas/ContractClause"
       },
       "type": "array",
-      "title": "Terms"
+      "title": "Clauses"
      },
      "distribution": {
       "items": {
@@ -2533,6 +2750,31 @@
       },
       "type": "array",
       "title": "Distribution"
+     },
+     "company_address": {
+      "type": "string",
+      "title": "Company Address"
+     },
+     "company_gstin": {
+      "type": "string",
+      "title": "Company Gstin"
+     },
+     "company_cin": {
+      "type": "string",
+      "title": "Company Cin"
+     },
+     "version": {
+      "type": "string",
+      "title": "Version"
+     },
+     "locked_at": {
+      "type": "string",
+      "format": "date",
+      "title": "Locked At"
+     },
+     "doc_hash": {
+      "type": "string",
+      "title": "Doc Hash"
      }
     },
     "type": "object",
@@ -2559,8 +2801,14 @@
      "original_value",
      "saved",
      "approvals",
-     "terms",
-     "distribution"
+     "clauses",
+     "distribution",
+     "company_address",
+     "company_gstin",
+     "company_cin",
+     "version",
+     "locked_at",
+     "doc_hash"
     ],
     "title": "ContractDoc",
     "description": "A sample contract for a closed deal: the document the deal produces (demo data)."
@@ -2712,6 +2960,153 @@
      "total"
     ],
     "title": "DeltaGenerated"
+   },
+   "Detail": {
+    "properties": {
+     "label": {
+      "type": "string",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Label"
+     },
+     "value": {
+      "type": "string",
+      "maxLength": 300,
+      "title": "Value"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "label",
+     "value"
+    ],
+    "title": "Detail"
+   },
+   "DocIn": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Name"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "offer",
+       "sfo",
+       "comparison",
+       "other"
+      ],
+      "title": "Kind",
+      "default": "other"
+     },
+     "supplier_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Id"
+     },
+     "mime": {
+      "type": "string",
+      "maxLength": 100,
+      "title": "Mime",
+      "default": "application/octet-stream"
+     },
+     "content_b64": {
+      "type": "string",
+      "maxLength": 9000000,
+      "minLength": 1,
+      "title": "Content B64"
+     },
+     "generated": {
+      "type": "boolean",
+      "title": "Generated",
+      "default": false
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "name",
+     "content_b64"
+    ],
+    "title": "DocIn"
+   },
+   "DocMeta": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "supplier_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Id"
+     },
+     "supplier_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Name"
+     },
+     "mime": {
+      "type": "string",
+      "title": "Mime"
+     },
+     "size": {
+      "type": "integer",
+      "title": "Size"
+     },
+     "uploaded_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Uploaded At"
+     },
+     "generated": {
+      "type": "boolean",
+      "title": "Generated"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "kind",
+     "supplier_id",
+     "supplier_name",
+     "mime",
+     "size",
+     "uploaded_at",
+     "generated"
+    ],
+    "title": "DocMeta"
    },
    "DraftView": {
     "properties": {
@@ -3117,6 +3512,30 @@
       "type": "string",
       "title": "Cost Centre",
       "default": "\u2014"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/Line"
+      },
+      "type": "array",
+      "maxItems": 200,
+      "title": "Items"
+     },
+     "offers": {
+      "items": {
+       "$ref": "#/components/schemas/LineOffer"
+      },
+      "type": "array",
+      "maxItems": 4000,
+      "title": "Offers"
+     },
+     "details": {
+      "items": {
+       "$ref": "#/components/schemas/Detail"
+      },
+      "type": "array",
+      "maxItems": 40,
+      "title": "Details"
      }
     },
     "additionalProperties": false,
@@ -3144,15 +3563,124 @@
      "session_id": {
       "type": "string",
       "title": "Session Id"
+     },
+     "sessions": {
+      "items": {
+       "$ref": "#/components/schemas/HandoffSession"
+      },
+      "type": "array",
+      "title": "Sessions"
      }
     },
     "type": "object",
     "required": [
      "event_id",
      "item_id",
-     "session_id"
+     "session_id",
+     "sessions"
     ],
     "title": "HandoffOut"
+   },
+   "HandoffResult": {
+    "properties": {
+     "case_no": {
+      "type": "string",
+      "title": "Case No"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "not_started",
+       "in_negotiation",
+       "agreed",
+       "partly_agreed",
+       "failed"
+      ],
+      "title": "Status"
+     },
+     "rounds": {
+      "type": "integer",
+      "title": "Rounds"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ResultItem"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "suppliers": {
+      "items": {
+       "$ref": "#/components/schemas/ResultSupplier"
+      },
+      "type": "array",
+      "title": "Suppliers"
+     },
+     "recommended_supplier": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recommended Supplier"
+     },
+     "handback_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Handback Reason"
+     },
+     "messages": {
+      "items": {
+       "$ref": "#/components/schemas/ResultMessage"
+      },
+      "type": "array",
+      "title": "Messages",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "case_no",
+     "status",
+     "rounds",
+     "items",
+     "suppliers",
+     "recommended_supplier",
+     "handback_reason"
+    ],
+    "title": "HandoffResult"
+   },
+   "HandoffSession": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "item_id": {
+      "type": "string",
+      "title": "Item Id"
+     },
+     "session_id": {
+      "type": "string",
+      "title": "Session Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "position",
+     "item_id",
+     "session_id"
+    ],
+    "title": "HandoffSession"
    },
    "Health": {
     "properties": {
@@ -4558,6 +5086,80 @@
     ],
     "title": "LanguageIn"
    },
+   "Line": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "maximum": 999.0,
+      "minimum": 1.0,
+      "title": "Position"
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Description"
+     },
+     "qty": {
+      "type": "number",
+      "maximum": 100000000.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Qty"
+     },
+     "unit": {
+      "type": "string",
+      "enum": [
+       "EA",
+       "AU",
+       "KG",
+       "TON",
+       "LOT"
+      ],
+      "title": "Unit",
+      "default": "EA"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "position",
+     "description",
+     "qty"
+    ],
+    "title": "Line",
+    "description": "One cart position."
+   },
+   "LineOffer": {
+    "properties": {
+     "sid": {
+      "type": "string",
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Sid"
+     },
+     "position": {
+      "type": "integer",
+      "maximum": 999.0,
+      "minimum": 1.0,
+      "title": "Position"
+     },
+     "unit_price": {
+      "type": "number",
+      "maximum": 100000000.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Unit Price"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "sid",
+     "position",
+     "unit_price"
+    ],
+    "title": "LineOffer",
+    "description": "One supplier's unit price for one cart position."
+   },
    "MessageIn": {
     "properties": {
      "price": {
@@ -5162,6 +5764,208 @@
      "events"
     ],
     "title": "ResetResult"
+   },
+   "ResultItem": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "item_id": {
+      "type": "string",
+      "title": "Item Id"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Id"
+     },
+     "session_status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Status"
+     },
+     "round": {
+      "type": "integer",
+      "title": "Round"
+     },
+     "handback_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Handback Reason"
+     },
+     "offers": {
+      "items": {
+       "$ref": "#/components/schemas/ResultOffer"
+      },
+      "type": "array",
+      "title": "Offers"
+     }
+    },
+    "type": "object",
+    "required": [
+     "position",
+     "item_id",
+     "description",
+     "qty",
+     "unit",
+     "session_id",
+     "session_status",
+     "round",
+     "handback_reason",
+     "offers"
+    ],
+    "title": "ResultItem"
+   },
+   "ResultMessage": {
+    "properties": {
+     "position": {
+      "type": "integer",
+      "title": "Position"
+     },
+     "seq": {
+      "type": "integer",
+      "title": "Seq"
+     },
+     "speaker": {
+      "type": "string",
+      "enum": [
+       "us",
+       "vendor"
+      ],
+      "title": "Speaker"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "position",
+     "seq",
+     "speaker",
+     "text",
+     "price",
+     "at"
+    ],
+    "title": "ResultMessage"
+   },
+   "ResultOffer": {
+    "properties": {
+     "sid": {
+      "type": "string",
+      "title": "Sid"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "initial_unit_price": {
+      "type": "number",
+      "title": "Initial Unit Price"
+     },
+     "negotiated_unit_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negotiated Unit Price"
+     }
+    },
+    "type": "object",
+    "required": [
+     "sid",
+     "name",
+     "initial_unit_price",
+     "negotiated_unit_price"
+    ],
+    "title": "ResultOffer"
+   },
+   "ResultSupplier": {
+    "properties": {
+     "sid": {
+      "type": "string",
+      "title": "Sid"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "initial_total": {
+      "type": "number",
+      "title": "Initial Total"
+     },
+     "negotiated_total": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negotiated Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "sid",
+     "name",
+     "initial_total",
+     "negotiated_total"
+    ],
+    "title": "ResultSupplier"
    },
    "SessionActions": {
     "properties": {
