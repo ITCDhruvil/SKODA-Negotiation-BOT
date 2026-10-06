@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComparisonView, Direction } from "@/lib/api";
 import { money, pct } from "@/lib/format";
-import { bestLabel, deltaLabel, leadLabel, limitLabel, quoteLabel } from "@/lib/labels";
+import { bestLabel, deltaLabel, leadLabel, limitLabel, quoteLabel, tenureLabel } from "@/lib/labels";
 import { Pill } from "@/components/ui/basics";
 
 const LANG: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi" };
@@ -98,6 +98,14 @@ export function ComparisonMatrix({ view, direction, unit }: { view: ComparisonVi
                 <td key={r.bid_id} className={cell}>{r.delivery_days} days</td>
               ))}
             </tr>
+            {rows.some((r) => r.tenure_months) && (
+              <tr>
+                <th className={label}>Contract term</th>
+                {rows.map((r) => (
+                  <td key={r.bid_id} className={cell}>{tenureLabel(r.tenure_months)}</td>
+                ))}
+              </tr>
+            )}
             <tr>
               <th className={label}>Warranty</th>
               {rows.map((r) => (

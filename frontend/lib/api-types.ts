@@ -763,6 +763,8 @@ export interface components {
              * @enum {string}
              */
             language: "en" | "hi" | "mr";
+            /** Tenure Months */
+            tenure_months?: number | null;
             /** Gap To Target */
             gap_to_target: number;
             /** Is Best Price */
@@ -864,6 +866,14 @@ export interface components {
             delivery_by: string;
             /** Valid Until */
             valid_until: string | null;
+            /** Tenure Months */
+            tenure_months?: number | null;
+            /** Term Starts */
+            term_starts?: string | null;
+            /** Term Ends */
+            term_ends?: string | null;
+            /** Renewal Reminder */
+            renewal_reminder?: string | null;
             /** Items */
             items: components["schemas"]["ContractItem"][];
             /** Total Value */
@@ -1431,6 +1441,14 @@ export interface components {
              */
             recommendation: "waiting" | "negotiate" | "accept" | "review" | "done";
             policy: components["schemas"]["PolicyView"];
+            /** Tenure Months */
+            tenure_months?: number | null;
+            /**
+             * Deal Status
+             * @default not_finalised
+             * @enum {string}
+             */
+            deal_status: "agreed" | "accepted_as_quoted" | "not_finalised" | "disagreed";
             /** Event Title */
             event_title: string;
             /**
@@ -1515,6 +1533,14 @@ export interface components {
              */
             recommendation: "waiting" | "negotiate" | "accept" | "review" | "done";
             policy: components["schemas"]["PolicyView"];
+            /** Tenure Months */
+            tenure_months?: number | null;
+            /**
+             * Deal Status
+             * @default not_finalised
+             * @enum {string}
+             */
+            deal_status: "agreed" | "accepted_as_quoted" | "not_finalised" | "disagreed";
         };
         /** Kpis */
         Kpis: {
@@ -1711,6 +1737,8 @@ export interface components {
             closed_date: string;
             /** Duration Minutes */
             duration_minutes: number;
+            /** Tenure Months */
+            tenure_months?: number | null;
         };
         /** PointsIn */
         PointsIn: {

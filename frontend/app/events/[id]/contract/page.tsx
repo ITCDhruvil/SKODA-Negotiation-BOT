@@ -8,7 +8,7 @@ import { ErrorBox, Loading, PageHeader } from "@/components/ui/State";
 import { api, type ContractDoc } from "@/lib/api";
 import { dateShort, money, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import { deltaLabel } from "@/lib/labels";
+import { deltaLabel, tenureLabel } from "@/lib/labels";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -107,6 +107,14 @@ function Sheet({ d }: { d: ContractDoc }) {
         <Field label="Incoterm">{d.incoterm}</Field>
         <Field label="Delivery by">{dateShort(d.delivery_by)}</Field>
         <Field label="Valid until">{d.valid_until ? dateShort(d.valid_until) : "—"}</Field>
+        {d.tenure_months ? (
+          <>
+            <Field label="Contract term">{tenureLabel(d.tenure_months)}</Field>
+            <Field label="Term starts">{d.term_starts ? dateShort(d.term_starts) : "—"}</Field>
+            <Field label="Term ends">{d.term_ends ? dateShort(d.term_ends) : "—"}</Field>
+            <Field label="Renewal reminder">{d.renewal_reminder ? dateShort(d.renewal_reminder) : "—"}</Field>
+          </>
+        ) : null}
       </dl>
 
       <Heading>Terms and conditions</Heading>

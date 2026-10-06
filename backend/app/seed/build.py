@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import random
+import zlib
 from datetime import timedelta
 from pathlib import Path
 
@@ -159,6 +160,12 @@ def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, 
         limit=float(limit) if pointed else None, incoterm=incoterm, delivery_days=delivery_days,
         state=_item_state(event.stage, idx),
     ))
+    if kind == "service":
+        # A service contract has a term, fixed at the request. It comes from a hash of the ids, so the random sequence of the sample data stays as it was.
+        req = (12, 24, 36)[zlib.crc32(item_id.encode("utf-8")) % 3]
+        acc.items[-1].tenure_months = req
+        for b in bids:
+            b.tenure_months = req  # the term is fixed by the request; vendors quote for it
     (acc.scripted if event.stage in ("draft", "awaiting_bids") else acc.bids).extend(bids)
     if event.stage == "closed":
         best_bid = bids[0]
@@ -175,7 +182,7 @@ def _add_item(rng, vendors, event: Event, idx: int, n_items: int, *, desc: str, 
         acc.outcomes.append(Outcome(
             item_id=item_id, vendor_id=best_bid.vendor_id, direction=d, qty=qty,
             original_price=best_bid.unit_price, final_price=float(final), negotiated=negotiated,
-            payment_code=best_bid.payment_code, incoterm=best_bid.incoterm,
+            payment_code=best_bid.payment_code, incoterm=best_bid.incoterm, tenure_months=best_bid.tenure_months,
             closed_date=event.approval_date + timedelta(days=8 + 3 * idx),
             duration_minutes=rng.randint(8, 35),
         ))

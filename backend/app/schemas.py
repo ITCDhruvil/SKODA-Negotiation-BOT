@@ -58,6 +58,8 @@ class ItemView(BaseModel):
     value: float
     recommendation: Recommendation
     policy: PolicyView
+    tenure_months: Optional[int] = None  # the contract term asked for
+    deal_status: Literal["agreed", "accepted_as_quoted", "not_finalised", "disagreed"] = "not_finalised"
 
 
 class EventView(BaseModel):
@@ -113,6 +115,7 @@ class ComparisonRow(BaseModel):
     warranty_months: int
     penalty_clause: str
     language: Language
+    tenure_months: Optional[int] = None
     gap_to_target: float
     is_best_price: bool
     is_best_effective: bool
@@ -188,6 +191,7 @@ class OutcomeView(BaseModel):
     incoterm: str
     closed_date: date
     duration_minutes: int
+    tenure_months: Optional[int] = None
 
 
 class Toughness(BaseModel):
@@ -370,6 +374,10 @@ class ContractDoc(BaseModel):
     incoterm: str
     delivery_by: date
     valid_until: Optional[date]
+    tenure_months: Optional[int] = None
+    term_starts: Optional[date] = None
+    term_ends: Optional[date] = None
+    renewal_reminder: Optional[date] = None
     items: list[ContractItem]
     total_value: float
     original_value: float

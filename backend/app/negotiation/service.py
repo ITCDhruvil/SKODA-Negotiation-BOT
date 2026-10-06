@@ -596,7 +596,8 @@ def approve_event(repo: Repo, event_id: str) -> list[Outcome]:
                     item_id=item.id, vendor_id=s.vendor_id, direction=event.direction, qty=item.qty,
                     original_price=s.original_price, final_price=s.agreed_price, negotiated=True,
                     payment_code=s.agreed_payment or s.vendor_payment, incoterm=bid.incoterm,
-                    closed_date=clock.today(), duration_minutes=minutes)
+                    closed_date=clock.today(), duration_minutes=minutes,
+                    tenure_months=bid.tenure_months or item.tenure_months)
             else:
                 if not bids:
                     raise Conflict(f"{item.id} has no quotes to accept")
@@ -605,7 +606,8 @@ def approve_event(repo: Repo, event_id: str) -> list[Outcome]:
                     item_id=item.id, vendor_id=best.vendor_id, direction=event.direction,
                     qty=item.qty, original_price=best.unit_price, final_price=best.unit_price,
                     negotiated=False, payment_code=best.payment_code, incoterm=best.incoterm,
-                    closed_date=clock.today(), duration_minutes=0)
+                    closed_date=clock.today(), duration_minutes=0,
+                    tenure_months=best.tenure_months or item.tenure_months)
             repo.put("outcome", item.id, outcome, parent=item.id)
             _move_item(repo, item, "closed")
             made.append(outcome)

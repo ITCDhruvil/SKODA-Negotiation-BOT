@@ -83,6 +83,7 @@ class Item(_Model):
     delivery_days: int
     state: ItemState
     objective: Optional[Objective] = None
+    tenure_months: Optional[int] = None  # the contract term asked for (services); None where a term does not apply
 
 
 class Bid(_Model):
@@ -97,6 +98,7 @@ class Bid(_Model):
     warranty_months: int
     penalty_clause: str = ""
     language: Language = "en"
+    tenure_months: Optional[int] = None  # the contract term this vendor offers (services)
 
 
 class Outcome(_Model):
@@ -111,6 +113,7 @@ class Outcome(_Model):
     incoterm: str
     closed_date: date
     duration_minutes: int
+    tenure_months: Optional[int] = None  # the agreed contract term (services)
 
 
 class HistoryRecord(_Model):

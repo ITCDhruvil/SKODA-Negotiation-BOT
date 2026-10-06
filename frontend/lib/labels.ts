@@ -143,6 +143,22 @@ export const SESSION_LABEL: Record<"active" | "agreed" | "handed_back", string> 
   handed_back: "Handed back",
 };
 
+/** Where a deal stands: agreed after talks, taken as quoted, not finished, or no deal. */
+export type DealStatus = "agreed" | "accepted_as_quoted" | "not_finalised" | "disagreed";
+export const DEAL_LABEL: Record<DealStatus, string> = {
+  agreed: "Agreed",
+  accepted_as_quoted: "Accepted as quoted",
+  not_finalised: "Not finalised",
+  disagreed: "Disagreed",
+};
+export const DEAL_TONE: Record<DealStatus, Tone> = { agreed: "ok", accepted_as_quoted: "info", not_finalised: "muted", disagreed: "red" };
+
+/** A contract term in months, as a plain phrase: "24 months" or "3 years". */
+export function tenureLabel(months?: number | null): string {
+  if (!months) return "—";
+  return months % 12 === 0 ? `${months / 12} ${months === 12 ? "year" : "years"}` : `${months} months`;
+}
+
 /** Who handles a deal of a given size (see the policy in the backend). */
 export const BAND_LABEL: Record<"auto" | "supervised" | "management", string> = {
   auto: "Handled by the bot",

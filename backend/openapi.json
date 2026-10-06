@@ -2172,6 +2172,17 @@
       ],
       "title": "Language"
      },
+     "tenure_months": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenure Months"
+     },
      "gap_to_target": {
       "type": "number",
       "title": "Gap To Target"
@@ -2435,6 +2446,53 @@
        }
       ],
       "title": "Valid Until"
+     },
+     "tenure_months": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenure Months"
+     },
+     "term_starts": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Term Starts"
+     },
+     "term_ends": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Term Ends"
+     },
+     "renewal_reminder": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Renewal Reminder"
      },
      "items": {
       "items": {
@@ -4061,6 +4119,28 @@
      "policy": {
       "$ref": "#/components/schemas/PolicyView"
      },
+     "tenure_months": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenure Months"
+     },
+     "deal_status": {
+      "type": "string",
+      "enum": [
+       "agreed",
+       "accepted_as_quoted",
+       "not_finalised",
+       "disagreed"
+      ],
+      "title": "Deal Status",
+      "default": "not_finalised"
+     },
      "event_title": {
       "type": "string",
       "title": "Event Title"
@@ -4330,6 +4410,28 @@
      },
      "policy": {
       "$ref": "#/components/schemas/PolicyView"
+     },
+     "tenure_months": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenure Months"
+     },
+     "deal_status": {
+      "type": "string",
+      "enum": [
+       "agreed",
+       "accepted_as_quoted",
+       "not_finalised",
+       "disagreed"
+      ],
+      "title": "Deal Status",
+      "default": "not_finalised"
      }
     },
     "type": "object",
@@ -4880,6 +4982,17 @@
      "duration_minutes": {
       "type": "integer",
       "title": "Duration Minutes"
+     },
+     "tenure_months": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenure Months"
      }
     },
     "type": "object",

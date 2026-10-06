@@ -9,7 +9,7 @@ document the deal produces.
 from __future__ import annotations
 
 import re
-from datetime import timedelta
+from datetime import date, timedelta
 
 from app import deal, ids
 from app import schemas as sch
@@ -34,6 +34,17 @@ TERMS_SCRAP = [
     "The buyer takes the material as seen. Mixed or contaminated material is deducted at the rates agreed in advance.",
     "This contract is governed by the laws of India. Disputes go to the courts at Pune.",
 ]
+
+
+def _add_months(d: date, months: int) -> date:
+    y, m = divmod(d.month - 1 + months, 12)
+    year, month = d.year + y, m + 1
+    day = d.day
+    while True:
+        try:
+            return date(year, month, day)
+        except ValueError:
+            day -= 1
 
 
 def _approvers(value_inr: float, scrap: bool) -> list[tuple[str, str]]:
@@ -72,6 +83,8 @@ def contract_docs(snap: Snapshot, event_id: str) -> list[sch.ContractDoc]:
         payment = rows[0][1].payment_code
         incoterm = rows[0][1].incoterm
         longest = max(i.delivery_days for i, _ in rows)
+        months = max((o.tenure_months or 0 for _, o in rows), default=0) or None
+        ends = _add_months(last, months) if months else None
         approvals = [sch.ContractApproval(
             role=role, name=name, status="Approved", date=last + timedelta(days=n))
             for n, (role, name) in enumerate(_approvers(total, scrap), start=1)]
@@ -84,7 +97,9 @@ def contract_docs(snap: Snapshot, event_id: str) -> list[sch.ContractDoc]:
             seller_detail=(f"SAP vendor no. {vendor.sap_no}" if vendor else "") if not scrap else f"{event.plant} · {event.purch_group}",
             requestor=event.requestor, cost_centre=event.cost_centre, cart_no=event.source_cart_no,
             payment_terms=payment, incoterm=incoterm, delivery_by=last + timedelta(days=longest),
-            valid_until=last + timedelta(days=365) if ctype.startswith("Frame") else None,
+            valid_until=ends if ends else (last + timedelta(days=365) if ctype.startswith("Frame") else None),
+            tenure_months=months, term_starts=last if months else None, term_ends=ends,
+            renewal_reminder=ends - timedelta(days=90) if ends else None,
             items=[sch.ContractItem(
                 position=i.position, description=i.description, qty=o.qty, unit=i.unit, unit_price=o.final_price,
                 value=deal.value(o.qty, o.final_price), original_price=o.original_price) for i, o in rows],

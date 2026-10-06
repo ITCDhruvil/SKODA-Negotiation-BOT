@@ -106,6 +106,15 @@ def policy_view(item: Item) -> sch.PolicyView:
         auto_limit_inr=policy.AUTO_LIMIT_INR, management_limit_inr=policy.MANAGEMENT_LIMIT_INR, message=policy.message(b))
 
 
+def _deal_status(item: Item, outcome: Optional[Outcome]) -> str:
+    """Where the deal stands: agreed after talks, accepted as quoted, not finalised yet, or disagreed."""
+    if item.state == "closed":
+        if outcome is None:
+            return "disagreed"
+        return "agreed" if outcome.negotiated else "accepted_as_quoted"
+    return "disagreed" if item.state == "handed_back" else "not_finalised"
+
+
 def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
     d = snap.event_by_id[item.event_id].direction
     bids = snap.bids_by_item.get(item.id, [])
@@ -155,6 +164,7 @@ def item_view(snap: Snapshot, item: Item) -> sch.ItemView:
         gap=gap, potential_delta=potential, within_limit=within,
         value=deal.value(item.qty, shown),
         recommendation=recommendation, policy=policy_view(item),
+        tenure_months=item.tenure_months, deal_status=_deal_status(item, outcome),
     )
 
 
@@ -165,7 +175,8 @@ def outcome_view(snap: Snapshot, o: Outcome) -> sch.OutcomeView:
         final_price=o.final_price,
         value_delta=deal.realised_delta(o.direction, o.original_price, o.final_price, o.qty),
         negotiated=o.negotiated, payment_code=o.payment_code, incoterm=o.incoterm,
-        closed_date=o.closed_date, duration_minutes=o.duration_minutes)
+        closed_date=o.closed_date, duration_minutes=o.duration_minutes,
+        tenure_months=o.tenure_months)
 
 
 def event_view(snap: Snapshot, event: Event,
@@ -226,7 +237,7 @@ def comparison(snap: Snapshot, item: Item) -> sch.ComparisonView:
             effective_price=eff[b.id], payment_code=b.payment_code, incoterm=b.incoterm,
             delivery_days=b.delivery_days, validity_days=b.validity_days,
             warranty_months=b.warranty_months, penalty_clause=b.penalty_clause,
-            language=b.language, gap_to_target=deal.gap_to_target(d, b.unit_price, target),
+            language=b.language, tenure_months=b.tenure_months, gap_to_target=deal.gap_to_target(d, b.unit_price, target),
             is_best_price=b.unit_price == best_price, is_best_effective=eff[b.id] == best_eff))
     closed = item.state == "closed"
     gap = deal.gap_to_target(d, best_price, target) if bids and not closed else 0.0
