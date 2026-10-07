@@ -19,7 +19,7 @@ export type RowMenuItem = {
 
 const MENU_W = 272;
 const ROW_H = 58;
-const HEAD_H = 118;
+const HEAD_H = 100;
 
 /** A bare three-dot button that opens a small list of links. It sits above the table, so it is never clipped by it. */
 export function RowMenu({ label, items, header }: { label: string; items: RowMenuItem[]; header?: ReactNode }) {

@@ -49,20 +49,23 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
   };
   const menuSummary = (e: EventView) => {
     const potential = e.status === "closed" ? e.realised_delta : e.potential_delta;
-    const stats: [string, React.ReactNode][] = [
-      ["Category", <span key="c" className="block truncate" title={e.category}>{e.category}</span>],
-      ["Items", e.item_count],
-      ["Vendors", e.vendor_count],
-      [e.status === "closed" ? deltaLabel(e.direction) : "Potential", potential > 0 ? <span key="p" className="text-ok">{money(potential)}</span> : "—"],
-    ];
+    const stat = (k: string, v: React.ReactNode) => (
+      <div key={k} className="min-w-0">
+        <dt className="text-xs text-muted">{k}</dt>
+        <dd className="text-sm font-semibold tabular-nums text-ink">{v}</dd>
+      </div>
+    );
     return (
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-        {stats.map(([k, v]) => (
-          <div key={k} className="min-w-0">
-            <dt className="text-xs text-muted">{k}</dt>
-            <dd className="text-sm font-semibold tabular-nums text-ink">{v}</dd>
-          </div>
-        ))}
+      <dl className="grid gap-3">
+        <div>
+          <dt className="text-xs text-muted">Category</dt>
+          <dd className="text-sm font-semibold text-ink">{e.category}</dd>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {stat("Items", e.item_count)}
+          {stat("Vendors", e.vendor_count)}
+          {stat(e.status === "closed" ? deltaLabel(e.direction) : "Potential", potential > 0 ? <span className="text-ok">{money(potential)}</span> : "—")}
+        </div>
       </dl>
     );
   };

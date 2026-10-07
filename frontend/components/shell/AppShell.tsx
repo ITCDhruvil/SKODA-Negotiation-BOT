@@ -29,47 +29,86 @@ function isActive(pathname: string, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-function Sidebar({ pathname, onNavigate }: { pathname: string; onNavigate: () => void }) {
+const GROUPS: { label: string; hrefs: string[] }[] = [
+  { label: "Main menu", hrefs: ["/", "/events", "/negotiations", "/vendors"] },
+  { label: "Others", hrefs: ["/history", "/reports", "/settings"] },
+];
+
+function Sidebar({
+  pathname,
+  onNavigate,
+  collapsed = false,
+  onToggle,
+}: {
+  pathname: string;
+  onNavigate: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
   return (
-    <div className="flex h-full flex-col bg-emerald px-3 pb-3 pt-[18px] text-side-t">
-      <div className="flex items-center gap-2.5 px-2 pb-5">
-        <span className="grid h-[34px] w-[34px] place-items-center rounded-[9px] bg-electric text-[13px] font-extrabold text-e-ink">
-          NB
-        </span>
-        <div>
-          <b className="block text-base text-white">Negotiation Desk</b>
-          <span className="block text-[11.5px] text-side-m">SKODA Auto VW India · POC</span>
-        </div>
-      </div>
-      <nav aria-label="Main" className="grid gap-0.5">
-        {NAV.map((n) => {
-          const active = isActive(pathname, n.href);
-          return (
-            <Link
-              key={n.href}
-              href={n.href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={`relative flex items-center gap-3 rounded-lg px-2.5 py-2.5 font-medium transition ${
-                active ? "bg-white/10 text-white" : "hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              {active && <span className="absolute -left-3 bottom-2 top-2 w-[3px] rounded-r bg-electric" />}
-              <Icon name={n.icon} />
-              {n.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="mt-auto border-t border-white/10 px-1 pt-3">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-white/10 text-xs font-bold text-white">
-            {initials(USER.name)}
-          </span>
+    <div className="flex h-full flex-col overflow-hidden rounded-[22px] bg-emerald px-3 pb-3 pt-4 text-side-t shadow-card">
+      <div className={`flex items-center gap-2.5 pb-4 ${collapsed ? "justify-center" : "px-1"}`}>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-electric text-[13px] font-extrabold text-e-ink">NB</span>
+        {!collapsed && (
           <div className="min-w-0">
-            <b className="block truncate text-[13px] text-white">{USER.name}</b>
-            <span className="text-[11.5px] text-side-m">{USER.role}</span>
+            <b className="block truncate text-base text-white">Negotiation Desk</b>
+            <span className="block truncate text-[11.5px] text-side-m">SKODA Auto VW India · POC</span>
           </div>
+        )}
+      </div>
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          title={collapsed ? "Expand navigation" : "Collapse navigation"}
+          className={`mb-3 flex items-center gap-2.5 rounded-full border border-white/10 py-1.5 text-xs font-medium text-side-m transition hover:bg-white/5 hover:text-white ${collapsed ? "mx-auto h-9 w-9 justify-center" : "px-3"}`}
+        >
+          <Icon name="chevron" size={14} className={collapsed ? "" : "rotate-180"} />
+          {!collapsed && "Collapse"}
+        </button>
+      )}
+      <nav aria-label="Main" className="grid gap-4">
+        {GROUPS.map((g) => (
+          <div key={g.label} className="grid gap-1">
+            {collapsed ? (
+              <span aria-hidden className="mx-auto mb-0.5 h-px w-4 bg-white/15" />
+            ) : (
+              <span className="px-3 pb-1 text-[10.5px] font-semibold uppercase tracking-wider text-side-m">{g.label}</span>
+            )}
+            {NAV.filter((n) => g.hrefs.includes(n.href)).map((n) => {
+              const active = isActive(pathname, n.href);
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  onClick={onNavigate}
+                  title={collapsed ? n.label : undefined}
+                  aria-label={collapsed ? n.label : undefined}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-full font-medium transition ${collapsed ? "mx-auto h-11 w-11 justify-center" : "py-1.5 pl-1.5 pr-3"} ${
+                    active ? "bg-white/15 text-white" : "hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition ${active ? "bg-electric text-e-ink" : "bg-white/10"}`}>
+                    <Icon name={n.icon} size={17} />
+                  </span>
+                  {!collapsed && n.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+      <div className="mt-auto border-t border-white/10 pt-3">
+        <div className={`flex items-center gap-2.5 ${collapsed ? "justify-center" : "px-1"}`} title={collapsed ? USER.name : undefined}>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">{initials(USER.name)}</span>
+          {!collapsed && (
+            <div className="min-w-0">
+              <b className="block truncate text-[13px] text-white">{USER.name}</b>
+              <span className="block truncate text-[11.5px] text-side-m">{USER.role}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -132,6 +171,23 @@ function Topbar({ onMenu, menuRef, pathname }: { onMenu: () => void; menuRef: Re
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem("navCollapsed") === "1");
+    } catch {
+      /* storage may be blocked */
+    }
+  }, []);
+  const toggleNav = () =>
+    setCollapsed((c) => {
+      try {
+        window.localStorage.setItem("navCollapsed", c ? "0" : "1");
+      } catch {
+        /* storage may be blocked */
+      }
+      return !c;
+    });
   const menuRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
@@ -169,14 +225,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
   return (
-    <div className="app-grid lg:grid lg:min-h-screen lg:grid-cols-[252px_minmax(0,1fr)]">
-      <aside className="app-aside sticky top-0 hidden h-screen lg:block">
-        <Sidebar pathname={pathname} onNavigate={() => {}} />
+    <div className={`app-grid transition-[grid-template-columns] lg:grid lg:min-h-screen ${collapsed ? "lg:grid-cols-[96px_minmax(0,1fr)]" : "lg:grid-cols-[268px_minmax(0,1fr)]"}`}>
+      <aside className="app-aside sticky top-0 hidden h-screen p-3 lg:block">
+        <Sidebar pathname={pathname} onNavigate={() => {}} collapsed={collapsed} onToggle={toggleNav} />
       </aside>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation" onKeyDown={onDrawerKey}>
           <button className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-label="Close navigation" />
-          <div ref={drawerRef} className="absolute inset-y-0 left-0 w-[268px]">
+          <div ref={drawerRef} className="absolute inset-y-0 left-0 w-[284px] p-3">
             <Sidebar pathname={pathname} onNavigate={() => setOpen(false)} />
           </div>
         </div>
