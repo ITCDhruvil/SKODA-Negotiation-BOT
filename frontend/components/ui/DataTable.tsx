@@ -39,6 +39,7 @@ export function DataTable<T>({
   defaultSort,
   paginate = false,
   noun,
+  noScroll = false,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -53,6 +54,8 @@ export function DataTable<T>({
   paginate?: boolean;
   /** Plural name for what the rows are, used in "Showing 1–10 of 85 events". */
   noun?: string;
+  /** Never scroll sideways: the table shrinks to its box instead. */
+  noScroll?: boolean;
 }) {
   const [page, setPage] = useState(1);
   // "auto" fits as many rows as the screen height allows; otherwise a fixed number. The choice is remembered.
@@ -119,7 +122,7 @@ export function DataTable<T>({
 
   return (
     <>
-    <div ref={wrap} className="overflow-x-auto">
+    <div ref={wrap} className={noScroll ? "" : "overflow-x-auto"}>
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-y border-line2 bg-raise text-xs font-semibold text-muted">

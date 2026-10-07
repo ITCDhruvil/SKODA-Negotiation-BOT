@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
 
 export type RowMenuItem = {
@@ -19,9 +19,10 @@ export type RowMenuItem = {
 
 const MENU_W = 272;
 const ROW_H = 58;
+const HEAD_H = 118;
 
 /** A bare three-dot button that opens a small list of links. It sits above the table, so it is never clipped by it. */
-export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] }) {
+export function RowMenu({ label, items, header }: { label: string; items: RowMenuItem[]; header?: ReactNode }) {
   const [at, setAt] = useState<{ left: number; top: number } | null>(null);
   const [asking, setAsking] = useState<RowMenuItem | null>(null);
   const [busy, setBusy] = useState(false);
@@ -88,7 +89,7 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
     if (at) return setAt(null);
     const r = btn.current?.getBoundingClientRect();
     if (!r) return;
-    const height = items.length * ROW_H + 12;
+    const height = items.length * ROW_H + 12 + (header ? HEAD_H : 0);
     const top = r.bottom + height > window.innerHeight - 8 ? Math.max(8, r.top - height - 4) : r.bottom + 4;
     setAt({ left: Math.max(8, Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8)), top });
   };
@@ -119,6 +120,7 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
           onClick={(e) => e.stopPropagation()}
           className="z-50 rounded-card border border-line bg-panel p-1.5 text-left shadow-card"
         >
+          {header && !asking && <div className="mb-1.5 border-b border-line2 px-2.5 pb-3 pt-2">{header}</div>}
           {asking ? (
             <div className="grid gap-3 p-2.5">
               <div>

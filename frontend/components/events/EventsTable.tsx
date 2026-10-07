@@ -47,6 +47,25 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
     });
     return list;
   };
+  const menuSummary = (e: EventView) => {
+    const potential = e.status === "closed" ? e.realised_delta : e.potential_delta;
+    const stats: [string, React.ReactNode][] = [
+      ["Category", <span key="c" className="block truncate" title={e.category}>{e.category}</span>],
+      ["Items", e.item_count],
+      ["Vendors", e.vendor_count],
+      [e.status === "closed" ? deltaLabel(e.direction) : "Potential", potential > 0 ? <span key="p" className="text-ok">{money(potential)}</span> : "—"],
+    ];
+    return (
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+        {stats.map(([k, v]) => (
+          <div key={k} className="min-w-0">
+            <dt className="text-xs text-muted">{k}</dt>
+            <dd className="text-sm font-semibold tabular-nums text-ink">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  };
   const lastKind = stat?.kind ?? "items";
   const opener = (e: EventView, kind: StatKind, text: React.ReactNode, label: string, className = "") => (
     <button
@@ -76,9 +95,10 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
     {
       key: "title",
       header: "Title",
+      className: "w-[34%] max-w-0",
       sort: (e) => e.title.toLowerCase(),
       cell: (e) => (
-        <div className="max-w-[260px]">
+        <div>
           <div className="truncate font-semibold text-ink" title={e.title}>
             {e.title}
           </div>
@@ -89,16 +109,17 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
     {
       key: "category",
       header: "Category",
+      className: "w-[18%] max-w-0",
       sort: (e) => e.category,
       hideBelowXl: true,
       cell: (e) => (
-        <span className="block max-w-[180px] truncate text-muted" title={e.category}>
+        <span className="block truncate text-muted" title={e.category}>
           {e.category}
         </span>
       ),
     },
     { key: "type", header: "Type", align: "center", className: "w-[1%]", sort: (e) => e.direction, cell: (e) => <DirectionBadge direction={e.direction} /> },
-    { key: "items", header: "Items", align: "center", className: "w-[1%]", sort: (e) => e.item_count, hideOnMobile: true, cell: (e) => opener(e, "items", e.item_count, "Show items") },
+    { key: "items", header: "Items", align: "center", className: "w-[1%]", sort: (e) => e.item_count, hideBelowXl: true, cell: (e) => opener(e, "items", e.item_count, "Show items") },
     { key: "vendors", header: "Vendors", align: "center", className: "w-[1%]", sort: (e) => e.vendor_count, hideBelowXl: true, cell: (e) => opener(e, "vendors", e.vendor_count, "Show vendors") },
     {
       key: "value",
@@ -114,7 +135,7 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
       align: "right",
       className: "w-[1%]",
       sort: (e) => (e.status === "closed" ? e.realised_delta : e.potential_delta),
-      hideOnMobile: true,
+      hideBelowXl: true,
       cell: (e) =>
         e.status === "closed" ? (
           opener(e, "potential", money(e.realised_delta), `${deltaLabel(e.direction)} achieved`, "whitespace-nowrap tabular-nums text-ok")
@@ -146,7 +167,7 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
       header: "",
       align: "right",
       className: "w-[1%]",
-      cell: (e) => <RowMenu label={`Actions for ${e.id}`} items={menuItems(e)} />,
+      cell: (e) => <RowMenu label={`Actions for ${e.id}`} items={menuItems(e)} header={menuSummary(e)} />,
     },
   ];
   return (
@@ -159,6 +180,7 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
         onRowClick={(e) => router.push(`/events/${e.id}`)}
         empty={empty ?? "No events match."}
         paginate={paginate}
+        noScroll
         noun="events"
       />
       <EventStatDialog event={stat?.event ?? null} kind={lastKind} onClose={() => setStat(null)} />
