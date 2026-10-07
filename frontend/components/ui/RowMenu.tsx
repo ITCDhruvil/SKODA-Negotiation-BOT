@@ -18,15 +18,31 @@ export type RowMenuItem = {
 };
 
 const MENU_W = 272;
+const MENU_W_WIDE = 380;
 const ROW_H = 58;
 const HEAD_H = 100;
 
+/** Label on the left, value on the right: the facts about a row, shown at the top of its menu. */
+export function MenuInfo({ rows }: { rows: [string, ReactNode][] }) {
+  return (
+    <dl className="grid gap-2.5 text-sm">
+      {rows.map(([k, v]) => (
+        <div key={k} className="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-3">
+          <dt className="text-muted">{k}</dt>
+          <dd className="min-w-0 font-semibold text-ink">{v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 /** A bare three-dot button that opens a small list of links. It sits above the table, so it is never clipped by it. */
-export function RowMenu({ label, items, header }: { label: string; items: RowMenuItem[]; header?: ReactNode }) {
+export function RowMenu({ label, items, header, headerHeight = HEAD_H }: { label: string; items: RowMenuItem[]; header?: ReactNode; headerHeight?: number }) {
   const [at, setAt] = useState<{ left: number; top: number } | null>(null);
   const [asking, setAsking] = useState<RowMenuItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const menuW = header ? MENU_W_WIDE : MENU_W;
   const btn = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
 
@@ -89,9 +105,9 @@ export function RowMenu({ label, items, header }: { label: string; items: RowMen
     if (at) return setAt(null);
     const r = btn.current?.getBoundingClientRect();
     if (!r) return;
-    const height = items.length * ROW_H + 12 + (header ? HEAD_H : 0);
+    const height = items.length * ROW_H + 12 + (header ? headerHeight : 0);
     const top = r.bottom + height > window.innerHeight - 8 ? Math.max(8, r.top - height - 4) : r.bottom + 4;
-    setAt({ left: Math.max(8, Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8)), top });
+    setAt({ left: Math.max(8, Math.min(r.right - menuW, window.innerWidth - menuW - 8)), top });
   };
 
   return (
@@ -116,7 +132,7 @@ export function RowMenu({ label, items, header }: { label: string; items: RowMen
           ref={menu}
           role="menu"
           aria-label={label}
-          style={{ position: "fixed", left: at.left, top: at.top, width: MENU_W }}
+          style={{ position: "fixed", left: at.left, top: at.top, width: menuW }}
           onClick={(e) => e.stopPropagation()}
           className="z-50 rounded-card border border-line bg-panel p-1.5 text-left shadow-card"
         >

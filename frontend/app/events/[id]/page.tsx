@@ -6,7 +6,7 @@ import { Button, ButtonLink, Delta, DirectionBadge, KpiCard, Panel, Pill } from 
 import { inAis, openCaseInAis } from "@/lib/ais";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { IconLink } from "@/components/ui/TableToolbar";
-import { RowMenu } from "@/components/ui/RowMenu";
+import { MenuInfo, RowMenu } from "@/components/ui/RowMenu";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
 import { api, type EventDetail, type ItemView } from "@/lib/api";
 import { dateShort, money, moneyCompact, num } from "@/lib/format";
@@ -113,33 +113,22 @@ function Body({ data }: { data: EventDetail }) {
       header: "Item",
       sort: (i) => i.description.toLowerCase(),
       cell: (i) => (
-        <Link href={`/items/${i.id}`} className="font-semibold text-brand hover:underline">
+        <Link href={`/items/${i.id}`} className="block min-w-[120px] font-semibold text-brand hover:underline">
           {i.description}
         </Link>
       ),
     },
-    { key: "qty", header: "Qty", align: "right", sort: (i) => i.qty, cell: (i) => `${num(i.qty)} ${i.unit}` },
-    { key: "bids", header: quotesLabel(e.direction), align: "right", hideOnMobile: true, sort: (i) => i.bid_count, cell: (i) => i.bid_count },
-    { key: "best", header: `Best ${quoteLabel(e.direction).toLowerCase()}`, align: "right", sort: (i) => i.best_bid, cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
-    { key: "target", header: "Target", align: "right", hideOnMobile: true, sort: (i) => i.target, cell: (i) => <span className="tabular-nums">{money(i.target)}</span> },
-    { key: "gap", header: "Gap / unit", align: "right", hideOnMobile: true, sort: (i) => i.gap, cell: (i) => <span className="tabular-nums">{i.gap == null ? "—" : money(i.gap)}</span> },
+    { key: "qty", header: "Qty", align: "right", className: "w-[1%] whitespace-nowrap", sort: (i) => i.qty, cell: (i) => `${num(i.qty)} ${i.unit}` },
+    { key: "best", header: `Best ${quoteLabel(e.direction).toLowerCase()}`, align: "right", className: "w-[1%] whitespace-nowrap", sort: (i) => i.best_bid, cell: (i) => <span className="tabular-nums">{money(i.best_bid)}</span> },
     {
       key: "potential",
       sort: (i) => i.potential_delta,
-      header: `Potential ${deltaLabel(e.direction).toLowerCase()}`,
+      header: "Potential",
       align: "right",
+      className: "w-[1%] whitespace-nowrap",
       cell: (i) => <Delta value={i.potential_delta} direction={e.direction} />,
     },
-    { key: "handling", header: "Handled by", sort: (i) => i.policy.band, cell: (i) => <Pill tone={BAND_TONE[i.policy.band]}>{BAND_LABEL[i.policy.band]}</Pill> },
-    { key: "tenure", header: "Term", hideOnMobile: true, sort: (i) => i.tenure_months, cell: (i) => tenureLabel(i.tenure_months) },
-    { key: "deal", header: "Deal", sort: (i) => i.deal_status, cell: (i) => <Pill tone={DEAL_TONE[i.deal_status]}>{DEAL_LABEL[i.deal_status]}</Pill> },
-    { key: "state", header: "Status", sort: (i) => i.state, cell: (i) => <Pill tone={STATE_TONE[i.state]}>{STATE_LABEL[i.state]}</Pill> },
-    {
-      key: "rec",
-      header: "Recommendation",
-      hideOnMobile: true,
-      cell: (i) => <Pill tone={RECOMMENDATION_TONE[i.recommendation]}>{RECOMMENDATION_LABEL[i.recommendation]}</Pill>,
-    },
+    { key: "deal", header: "Deal", align: "center", className: "w-[1%] whitespace-nowrap", sort: (i) => i.deal_status, cell: (i) => <Pill tone={DEAL_TONE[i.deal_status]}>{DEAL_LABEL[i.deal_status]}</Pill> },
     {
       key: "action",
       header: "",
@@ -147,6 +136,20 @@ function Body({ data }: { data: EventDetail }) {
       cell: (i) => (
         <RowMenu
           label={`More about ${i.description}`}
+          headerHeight={250}
+          header={
+            <MenuInfo
+              rows={[
+                ["Quotes", i.bid_count],
+                ["Target", money(i.target)],
+                ["Gap / unit", i.gap == null ? "—" : money(i.gap)],
+                ["Term", tenureLabel(i.tenure_months)],
+                ["Handled by", <Pill key="h" tone={BAND_TONE[i.policy.band]}>{BAND_LABEL[i.policy.band]}</Pill>],
+                ["Status", <Pill key="s" tone={STATE_TONE[i.state]}>{STATE_LABEL[i.state]}</Pill>],
+                ["Recommendation", <Pill key="r" tone={RECOMMENDATION_TONE[i.recommendation]}>{RECOMMENDATION_LABEL[i.recommendation]}</Pill>],
+              ]}
+            />
+          }
           items={[
             ...(i.state === "closed"
               ? [{ label: "Download contract", hint: "Print or save the contract as PDF", href: `/events/${e.id}/contract?print=1`, icon: "download" as const }]
@@ -241,7 +244,7 @@ function Body({ data }: { data: EventDetail }) {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Panel title="Items" flush>
-          <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} />
+          <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} noScroll />
         </Panel>
         <div className="grid content-start gap-5">
         {e.from_ais && <FromAis eventId={e.id} />}
