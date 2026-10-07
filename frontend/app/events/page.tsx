@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EventsPanel } from "@/components/events/EventsPanel";
 import { RangeNotice } from "@/components/ui/RangeNotice";
@@ -15,17 +15,28 @@ function EventsInner() {
   const [q, setQ] = useState(params.get("q") ?? "");
   useEffect(() => setQ(params.get("q") ?? ""), [params]);
 
+  // The box updates at once; the server is asked once typing pauses.
+  const [asked, setAsked] = useState(q);
+  useEffect(() => {
+    const t = setTimeout(() => setAsked(q), 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
   const { data, error, errorStatus, loading, reload } = useApi(
-    () => api.events({ q, from: range.from, to: range.to }),
-    [q, range.from, range.to],
+    () => api.events({ q: asked, from: range.from, to: range.to }),
+    [asked, range.from, range.to],
   );
+  // Keep showing the last list while a new search loads, so the search box is never torn down mid-typing.
+  const last = useRef(data);
+  if (data) last.current = data;
+  const list = data ?? last.current;
 
   return (
     <>
       <RangeNotice />
-      {loading && !data && <Loading label="Loading events" />}
+      {loading && !list && <Loading label="Loading events" />}
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}
-      {data && <EventsPanel events={data} title="All events" q={q} onQ={setQ} paginate />}
+      {list && <EventsPanel events={list} title="All events" q={q} onQ={setQ} paginate />}
     </>
   );
 }

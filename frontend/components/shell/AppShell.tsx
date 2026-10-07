@@ -159,7 +159,7 @@ function Topbar({ onMenu, menuRef, pathname }: { onMenu: () => void; menuRef: Re
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search event, item, category…"
-            aria-label="Search events"
+            aria-label="Search all events"
             className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
           />
         </form>
