@@ -33,6 +33,7 @@ export function DataTable<T>({
   rows,
   rowKey,
   onRowClick,
+  rowClassName,
   empty = "Nothing to show.",
   dense = false,
   defaultSort,
@@ -43,6 +44,7 @@ export function DataTable<T>({
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string;
   empty?: ReactNode;
   dense?: boolean;
   /** Column key and direction to start with; without it rows keep the order they arrive in. */
@@ -176,7 +178,7 @@ export function DataTable<T>({
                     }
                   : undefined
               }
-              className={`border-b border-line2 last:border-0 ${onRowClick ? "cursor-pointer hover:bg-raise" : ""}`}
+              className={`border-b border-line2 last:border-0 ${onRowClick ? "cursor-pointer hover:bg-raise" : ""} ${rowClassName?.(row) ?? ""}`}
             >
               {columns.map((c) => (
                 <td

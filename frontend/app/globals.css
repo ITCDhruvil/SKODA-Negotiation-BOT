@@ -114,3 +114,9 @@ html[data-embed="1"] main { padding-left: 0; padding-right: 0; padding-top: 0; }
   .contract-sheet tr, .contract-sheet li, .contract-sheet .keep { break-inside: avoid; }
   .contract-sheet:last-child { break-after: auto; }
 }
+
+
+/* A deleted row fades and slips aside before it is taken out of the table. */
+.row-leaving { animation: row-out 0.3s ease forwards; pointer-events: none; }
+@keyframes row-out { to { opacity: 0; transform: translateX(-14px); } }
+@media (prefers-reduced-motion: reduce) { .row-leaving { animation: none; opacity: 0; } }

@@ -9,11 +9,44 @@ import { dateShort, money } from "@/lib/format";
 import { STATUS_LABEL, STATUS_TONE, deltaLabel } from "@/lib/labels";
 import { DirectionBadge, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
-import { IconLink } from "@/components/ui/TableToolbar";
+import { RowMenu, type RowMenuItem } from "@/components/ui/RowMenu";
+import { api } from "@/lib/api";
+import { inAis, openCaseInAis } from "@/lib/ais";
 
 export function EventsTable({ events, empty, paginate = false }: { events: EventView[]; empty?: string; paginate?: boolean }) {
   const router = useRouter();
   const [stat, setStat] = useState<{ event: EventView; kind: StatKind } | null>(null);
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
+  const [leaving, setLeaving] = useState<Set<string>>(new Set());
+  const menuItems = (e: EventView): RowMenuItem[] => {
+    const list: RowMenuItem[] = [{ label: "View details", hint: "Items, quotes and negotiation", href: `/events/${e.id}`, icon: "eye" }];
+    if (e.from_ais && inAis()) list.push({ label: "Open case in AIS", hint: "Go to the request in AIS", icon: "external", onSelect: () => openCaseInAis(e.id) });
+    if (e.status === "closed") {
+      list.push({ label: "Contract document", hint: "View the contract", href: `/events/${e.id}/contract`, icon: "events" });
+      list.push({ label: "Download summary", hint: "The closed deal as a CSV file", icon: "download", onSelect: () => void window.open(api.exportUrl(e.id), "_blank") });
+    }
+    list.push({
+      label: "Delete event",
+      hint: "Remove it and its conversations",
+      icon: "trash",
+      danger: true,
+      onSelect: async () => {
+        setLeaving((prev) => new Set(prev).add(e.id));
+        try {
+          await Promise.all([api.deleteEvent(e.id), new Promise((r) => setTimeout(r, 320))]);
+          setRemoved((prev) => new Set(prev).add(e.id));
+        } catch (err) {
+          setLeaving((prev) => {
+            const n = new Set(prev);
+            n.delete(e.id);
+            return n;
+          });
+          throw err;
+        }
+      },
+    });
+    return list;
+  };
   const lastKind = stat?.kind ?? "items";
   const opener = (e: EventView, kind: StatKind, text: React.ReactNode, label: string, className = "") => (
     <button
@@ -113,14 +146,15 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
       header: "",
       align: "right",
       className: "w-[1%]",
-      cell: (e) => <IconLink href={`/events/${e.id}`} icon="eye" label="View event" />,
+      cell: (e) => <RowMenu label={`Actions for ${e.id}`} items={menuItems(e)} />,
     },
   ];
   return (
     <>
       <DataTable
         columns={columns}
-        rows={events}
+        rows={events.filter((e) => !removed.has(e.id))}
+        rowClassName={(e) => (leaving.has(e.id) ? "row-leaving" : "")}
         rowKey={(e) => e.id}
         onRowClick={(e) => router.push(`/events/${e.id}`)}
         empty={empty ?? "No events match."}

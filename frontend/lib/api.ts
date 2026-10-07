@@ -201,6 +201,7 @@ export const api = {
   acceptDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/accept-deal`),
   closeWithoutDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/close-without-deal`),
   approveEvent: (eventId: string) => post<EventDetail>(`/api/events/${eventId}/approve`),
+  deleteEvent: (id: string) => request<{ deleted: string }>(`/api/events/${id}`, { method: "DELETE" }),
   aisInfo: (eventId: string) => request<AisInfo>(`/api/events/${eventId}/ais`),
   documentUrl: (docId: string) => `${API_BASE}/api/documents/${docId}/download`,
   exportUrl: (eventId: string) => `${API_BASE}/api/events/${eventId}/export`,

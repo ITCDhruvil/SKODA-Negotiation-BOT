@@ -170,3 +170,16 @@ def test_a_supplier_the_desk_already_knows_keeps_its_own_record(repo, seed_datas
     assert c.post("/api/handoff", json=body).status_code == 200
     after = next(v for v in c.get("/api/vendors").json() if v["id"] == known["id"])
     assert after["name"] == known["name"] and after["rating"] == known["rating"] and after["sap_no"] == known["sap_no"]
+
+
+def test_an_event_can_be_deleted_with_everything_under_it(repo, seed_dataset):
+    c = _client(repo, seed_dataset)
+    out = c.post("/api/handoff", json=DETAIL).json()
+    c.post("/api/handoff/NB-E1-2026-00050/documents", json={"name": "a.pdf", "kind": "offer", "content_b64": "QUJD"})
+    res = c.delete("/api/events/NB-E1-2026-00050")
+    assert res.status_code == 200 and res.json()["items"] == 2 and res.json()["conversations"] == 2
+    assert c.get("/api/events/NB-E1-2026-00050").status_code == 404
+    assert c.get(f"/api/sessions/{out['session_id']}").status_code == 404
+    assert c.get("/api/handoff/NB-E1-2026-00050/result").status_code == 404
+    assert all(e["id"] != "NB-E1-2026-00050" for e in c.get("/api/events").json())
+    assert c.delete("/api/events/NB-E1-2026-00050").status_code == 404
