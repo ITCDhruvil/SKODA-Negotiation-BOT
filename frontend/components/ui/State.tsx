@@ -1,11 +1,19 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "./basics";
 
 export function Loading({ label = "Loading…" }: { label?: string }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 5000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div role="status" aria-live="polite" className="grid gap-3 p-2">
       <span className="sr-only">{label}</span>
+      {slow && <p className="text-sm text-muted">Still loading. The server may be waking up after a quiet spell, which can take up to a minute.</p>}
       {[70, 100, 85].map((w, i) => (
         <div key={i} className="h-4 animate-pulse rounded-chip bg-raise" style={{ width: `${w}%` }} />
       ))}
@@ -36,7 +44,7 @@ export function ErrorBox({
         </p>
       )}
       {status == null && (
-        <p className="mt-1 text-xs opacity-80">Is the API running? Start it with: python -m uvicorn app.main:app --port 8000</p>
+        <p className="mt-1 text-xs opacity-80">The server did not answer. On the hosted version it may still be waking up: wait a minute and try again. Running it yourself? Start it with: python -m uvicorn app.main:app --port 8000</p>
       )}
       {onRetry && !notFound && (
         <Button size="sm" className="mt-3" onClick={onRetry}>

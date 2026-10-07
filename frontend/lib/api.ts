@@ -98,8 +98,30 @@ function describe(detail: unknown, fallback: string): string {
   return fallback;
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** A sleeping free-plan server answers with a network error or 502/503/504 until it is up (up to about a minute). Reads wait for it. */
+async function fetchAwake(url: string, init: RequestInit): Promise<Response> {
+  const isRead = !init.method || init.method === "GET";
+  const tries = isRead ? 9 : 1;
+  for (let i = 1; ; i++) {
+    try {
+      const res = await fetch(url, init);
+      if (![502, 503, 504].includes(res.status) || i >= tries) return res;
+    } catch (e) {
+      if (i >= tries) throw e;
+    }
+    await sleep(Math.min(2000 + i * 1500, 8000));
+  }
+}
+
+/** Ask the API something cheap so a sleeping server starts waking while the page loads. */
+export function wakeApi(): void {
+  void fetch(`${API_BASE}/api/health`, { cache: "no-store" }).catch(() => undefined);
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetchAwake(`${API_BASE}${path}`, {
     ...init,
     headers: { ...(init?.body != null ? { "Content-Type": "application/json" } : {}), ...(init?.headers ?? {}) },
     cache: "no-store",

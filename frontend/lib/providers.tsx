@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { DateRange } from "./api";
+import { wakeApi, type DateRange } from "./api";
 
 type Theme = "light" | "dark";
 
@@ -55,14 +55,12 @@ export function Providers({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme | null>(null);
   const [range, setRangeState] = useState<DateRange>({ from: "", to: "" });
 
+  useEffect(() => wakeApi(), []);
+
   useEffect(() => {
     const stored = safeGet("theme");
     const initial: Theme =
-      stored === "dark" || stored === "light"
-        ? stored
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
+      stored === "dark" || stored === "light" ? stored : "light"; // light unless the user chose dark
     setTheme(initial);
     const saved = parseRange(safeGet("range"));
     if (saved) setRangeState(saved);
