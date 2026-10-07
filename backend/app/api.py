@@ -88,6 +88,8 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     app = FastAPI(title="Main Negotiation Bot API")
     app.add_middleware(
         CORSMiddleware, allow_origins=cors_origins or DEFAULT_ORIGINS,
+        # Anyone running the AIS prototype from their own machine, on whatever port their static server uses.
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
         allow_methods=["*"], allow_headers=["*"])
 
     @app.exception_handler(RequestValidationError)
