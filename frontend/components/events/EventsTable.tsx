@@ -98,7 +98,7 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
     {
       key: "title",
       header: "Title",
-      className: "w-[34%] max-w-0",
+      className: "w-[60%] max-w-0",
       sort: (e) => e.title.toLowerCase(),
       cell: (e) => (
         <div>
@@ -109,21 +109,7 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
         </div>
       ),
     },
-    {
-      key: "category",
-      header: "Category",
-      className: "w-[18%] max-w-0",
-      sort: (e) => e.category,
-      hideBelowXl: true,
-      cell: (e) => (
-        <span className="block truncate text-muted" title={e.category}>
-          {e.category}
-        </span>
-      ),
-    },
     { key: "type", header: "Type", align: "center", className: "w-[1%]", sort: (e) => e.direction, cell: (e) => <DirectionBadge direction={e.direction} /> },
-    { key: "items", header: "Items", align: "center", className: "w-[1%]", sort: (e) => e.item_count, hideBelowXl: true, cell: (e) => opener(e, "items", e.item_count, "Show items") },
-    { key: "vendors", header: "Vendors", align: "center", className: "w-[1%]", sort: (e) => e.vendor_count, hideBelowXl: true, cell: (e) => opener(e, "vendors", e.vendor_count, "Show vendors") },
     {
       key: "value",
       header: "Value",
@@ -131,22 +117,6 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
       className: "w-[1%]",
       sort: (e) => (e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value),
       cell: (e) => opener(e, "value", money(e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value), "Show value breakdown", "whitespace-nowrap tabular-nums font-normal"),
-    },
-    {
-      key: "delta",
-      header: "Potential",
-      align: "right",
-      className: "w-[1%]",
-      sort: (e) => (e.status === "closed" ? e.realised_delta : e.potential_delta),
-      hideBelowXl: true,
-      cell: (e) =>
-        e.status === "closed" ? (
-          opener(e, "potential", money(e.realised_delta), `${deltaLabel(e.direction)} achieved`, "whitespace-nowrap tabular-nums text-ok")
-        ) : e.potential_delta > 0 ? (
-          opener(e, "potential", money(e.potential_delta), "Show potential breakdown", "whitespace-nowrap tabular-nums text-ok")
-        ) : (
-          <span className="text-muted">—</span>
-        ),
     },
     {
       key: "status",
