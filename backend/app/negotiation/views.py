@@ -39,6 +39,8 @@ def _recommendation(s: Session, draft: Optional[Draft]) -> str:
                 "or keep negotiating.")
     if s.status == "handed_back":
         return s.handback_reason or "This negotiation was handed back to you."
+    if s.status == "on_hold":
+        return "On hold. Nothing is sent. Resume it when you want to carry on from here."
     if s.mode == "manual":
         return "You are writing the messages. Nothing is sent unless you send it."
     if s.mode == "auto":
@@ -47,7 +49,7 @@ def _recommendation(s: Session, draft: Optional[Draft]) -> str:
 
 
 def _phase(s: Session) -> str:
-    if s.status != "active":
+    if s.status not in ("active", "on_hold"):
         return "done"
     r = s.round
     return "opening" if r < 1 else "probing" if r < 3 else "trading" if r < 6 else "pressing" if r < 9 else "closing"
@@ -93,10 +95,12 @@ def session_view(repo: Repo, session_id: str) -> sch.SessionView:
     base = summary(repo, s).model_dump()
     active = s.status == "active"
     awaiting_result = s.status == "agreed" and item.state == "result_pending"
+    others_running = any(x.status == "active" for x in service.sessions_for_item(repo, s.item_id) if x.id != s.id)
     actions = sch.SessionActions(
         can_advance=active and s.mode != "manual", can_send=active,
         can_accept_offer=active and inside, can_hand_back=active,
-        can_continue=awaiting_result, can_accept_deal=awaiting_result)
+        can_continue=awaiting_result, can_accept_deal=awaiting_result,
+        can_hold=active, can_resume=s.status == "on_hold" and not others_running)
     return sch.SessionView(
         **base, event_id=item.event_id, actions=actions, item_description=item.description, direction=d, language=s.language, unit=item.unit,
         qty=item.qty, original_price=s.original_price, our_offer=s.our_offer,

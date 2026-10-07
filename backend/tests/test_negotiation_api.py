@@ -224,3 +224,26 @@ def test_session_view_carries_the_values_for_the_approval_page(client):
     while (s := client.post(f"/api/sessions/{sid}/advance").json())["status"] == "active":
         pass
     assert s["original_value"] == 285 * 600 and s["agreed_value"] == 270 * 600
+
+
+def test_a_negotiation_can_be_put_on_hold_and_another_vendor_tried(client):
+    analyzed(client, BUY, 250, 270)
+    first = start(client, BUY, "approve")
+    sid = first["id"]
+    assert first["actions"]["can_hold"] and not first["actions"]["can_resume"]
+
+    held = client.post(f"/api/sessions/{sid}/hold").json()
+    assert held["status"] == "on_hold"
+    assert held["actions"]["can_resume"] and not held["actions"]["can_hold"] and not held["actions"]["can_send"]
+
+    # another vendor can be started while the first one waits
+    other = next(v["vendor_id"] for v in client.get(f"/api/items/{BUY}").json()["invitees"] if v["responded"] and v["vendor_id"] != first["vendor_id"])
+    second = start(client, BUY, "approve", vendor_id=other)
+    assert second["status"] == "active" and second["vendor_id"] == other
+
+    # the held one cannot resume while the second runs, and cannot be restarted as a new session
+    assert client.post(f"/api/sessions/{sid}/resume").status_code == 409
+    assert client.post(f"/api/items/{BUY}/negotiations", json={"mode": "approve", "vendor_id": first["vendor_id"]}).status_code == 409
+
+    assert client.post(f"/api/sessions/{second['id']}/hold").json()["status"] == "on_hold"
+    assert client.post(f"/api/sessions/{sid}/resume").json()["status"] == "active"

@@ -177,7 +177,7 @@ class Dataset(_Model):
 # --- negotiation ---------------------------------------------------------------------------
 
 Mode = Literal["auto", "approve", "manual"]
-SessionStatus = Literal["active", "agreed", "handed_back"]
+SessionStatus = Literal["active", "on_hold", "agreed", "handed_back"]
 DraftKind = Literal["offer", "accept", "handback"]
 
 

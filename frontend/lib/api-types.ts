@@ -215,7 +215,11 @@ export interface paths {
         get: operations["event_api_events__event_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Event
+         * @description Remove an event and everything under it (items, quotes, conversations, outcomes, files from AIS).
+         */
+        delete: operations["delete_event_api_events__event_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -674,6 +678,40 @@ export interface paths {
         put?: never;
         /** Hand Back */
         post: operations["hand_back_api_sessions__session_id__hand_back_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hold Negotiation */
+        post: operations["hold_negotiation_api_sessions__session_id__hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Negotiation */
+        post: operations["resume_negotiation_api_sessions__session_id__resume_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2112,6 +2150,16 @@ export interface components {
             can_hand_back: boolean;
             /** Can Continue */
             can_continue: boolean;
+            /**
+             * Can Hold
+             * @default false
+             */
+            can_hold: boolean;
+            /**
+             * Can Resume
+             * @default false
+             */
+            can_resume: boolean;
             /** Can Accept Deal */
             can_accept_deal: boolean;
         };
@@ -2137,7 +2185,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "active" | "agreed" | "handed_back";
+            status: "active" | "on_hold" | "agreed" | "handed_back";
             /** Round */
             round: number;
             /**
@@ -2188,7 +2236,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "active" | "agreed" | "handed_back";
+            status: "active" | "on_hold" | "agreed" | "handed_back";
             /** Round */
             round: number;
             /**
@@ -2218,7 +2266,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "active" | "agreed" | "handed_back";
+            status: "active" | "on_hold" | "agreed" | "handed_back";
             /** Round */
             round: number;
             /**
@@ -2382,6 +2430,69 @@ export interface components {
             average_concession_pct: number | null;
             /** Note */
             note: string;
+            /**
+             * Total Deals
+             * @default 0
+             */
+            total_deals: number;
+            /** Average Rounds */
+            average_rounds?: number | null;
+            /** Average Minutes */
+            average_minutes?: number | null;
+            /** Average Reply Minutes */
+            average_reply_minutes?: number | null;
+            /**
+             * Held Firm Deals
+             * @default 0
+             */
+            held_firm_deals: number;
+            /** Best Concession Pct */
+            best_concession_pct?: number | null;
+            /** Worst Concession Pct */
+            worst_concession_pct?: number | null;
+            /**
+             * Hard Below Pct
+             * @default 2.5
+             */
+            hard_below_pct: number;
+            /**
+             * Firm Below Pct
+             * @default 4.5
+             */
+            firm_below_pct: number;
+            /**
+             * Min Deals
+             * @default 3
+             */
+            min_deals: number;
+            /**
+             * Recent
+             * @default []
+             */
+            recent: components["schemas"]["ToughnessDeal"][];
+        };
+        /**
+         * ToughnessDeal
+         * @description One past negotiated deal behind a vendor's rating.
+         */
+        ToughnessDeal: {
+            /** Description */
+            description: string;
+            /**
+             * Closed
+             * Format: date
+             */
+            closed: string;
+            /** Original Price */
+            original_price: number;
+            /** Final Price */
+            final_price: number;
+            /** Moved Pct */
+            moved_pct: number;
+            /** Rounds */
+            rounds: number;
+            /** Minutes */
+            minutes: number;
         };
         /** TurnView */
         TurnView: {
@@ -2893,6 +3004,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_event_api_events__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -3737,6 +3879,68 @@ export interface operations {
                 "application/json": components["schemas"]["HandBackIn"] | null;
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hold_negotiation_api_sessions__session_id__hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_negotiation_api_sessions__session_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ToughnessBadge } from "@/components/negotiation/ToughnessBadge";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/negotiation/ChatLog";
 import { Pill } from "@/components/ui/basics";
@@ -61,7 +62,7 @@ function VendorProfile({ s }: { s: SessionView }) {
         extra={
           <>
             <Pill tone="muted">{v.rating.toFixed(1)} / 5 rating</Pill>
-            {v.toughness.level !== "unknown" && <Pill tone={TOUGH_TONE[v.toughness.level]}>{TOUGH_LABEL[v.toughness.level]}</Pill>}
+            <ToughnessBadge vendorName={v.name} toughness={v.toughness} />
           </>
         }
       />

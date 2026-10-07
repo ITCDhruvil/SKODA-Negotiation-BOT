@@ -136,9 +136,10 @@ export const MODE_HINT: Record<"auto" | "approve" | "manual", string> = {
   manual: "You write every message yourself.",
 };
 
-export const SESSION_TONE: Record<"active" | "agreed" | "handed_back", Tone> = { active: "amber", agreed: "ok", handed_back: "red" };
-export const SESSION_LABEL: Record<"active" | "agreed" | "handed_back", string> = {
+export const SESSION_TONE: Record<"active" | "on_hold" | "agreed" | "handed_back", Tone> = { active: "amber", on_hold: "info", agreed: "ok", handed_back: "red" };
+export const SESSION_LABEL: Record<"active" | "on_hold" | "agreed" | "handed_back", string> = {
   active: "In progress",
+  on_hold: "On hold",
   agreed: "Agreed",
   handed_back: "Handed back",
 };

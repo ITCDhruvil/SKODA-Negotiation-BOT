@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ToughnessBadge } from "@/components/negotiation/ToughnessBadge";
 import { useState } from "react";
 import { Button, Pill } from "@/components/ui/basics";
 import { ErrorBox, Loading, Notice } from "@/components/ui/State";
@@ -44,7 +45,7 @@ export function NextBestVendors({ itemId, vendors, mode = "approve", unit }: { i
             <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink">
               {v.vendor_name}
               {i === 0 && <Pill tone="ok">Next best</Pill>}
-              {v.toughness.level !== "unknown" && <Pill tone={TOUGH_TONE[v.toughness.level]}>{TOUGH_LABEL[v.toughness.level]}</Pill>}
+              <ToughnessBadge vendorName={v.vendor_name} toughness={v.toughness} />
             </p>
             <p className="mt-0.5 text-xs text-muted">
               Quote <b className="tabular-nums text-ink">{money(v.unit_price)}</b> per {unit} · {v.payment_code} · after terms{" "}

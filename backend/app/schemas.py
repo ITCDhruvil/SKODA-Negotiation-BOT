@@ -194,12 +194,35 @@ class OutcomeView(BaseModel):
     tenure_months: Optional[int] = None
 
 
+class ToughnessDeal(BaseModel):
+    """One past negotiated deal behind a vendor's rating."""
+    description: str
+    closed: date
+    original_price: float
+    final_price: float
+    moved_pct: float  # how far the price moved in our favour, in %
+    rounds: int
+    minutes: int
+
+
 class Toughness(BaseModel):
     """How hard a vendor has been to move, judged from its past negotiated deals."""
     level: Literal["unknown", "flexible", "firm", "hard"]
     negotiated_deals: int
     average_concession_pct: Optional[float]  # average share of the original price the negotiation moved, in %
     note: str
+    # The evidence behind the level, for the information panel.
+    total_deals: int = 0  # every past deal with this vendor, negotiated or taken as quoted
+    average_rounds: Optional[float] = None
+    average_minutes: Optional[int] = None  # how long a negotiation took
+    average_reply_minutes: Optional[int] = None  # how fast the vendor answers
+    held_firm_deals: int = 0  # negotiated deals where the price moved less than 2%
+    best_concession_pct: Optional[float] = None
+    worst_concession_pct: Optional[float] = None
+    hard_below_pct: float = 2.5  # the rule: average movement under this is "hard to crack"
+    firm_below_pct: float = 4.5
+    min_deals: int = 3
+    recent: list[ToughnessDeal] = []
 
 
 class Invitee(BaseModel):
@@ -532,6 +555,8 @@ class SessionActions(BaseModel):
     can_accept_offer: bool
     can_hand_back: bool
     can_continue: bool
+    can_hold: bool = False
+    can_resume: bool = False
     can_accept_deal: bool
 
 

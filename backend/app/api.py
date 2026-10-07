@@ -370,6 +370,16 @@ def create_app(repo: Repo, seed_dataset: Dataset,
         neg.hand_back(repo, session_id, (body.reason if body else None))
         return negviews.session_view(repo, session_id)
 
+    @app.post("/api/sessions/{session_id}/hold", response_model=sch.SessionView)
+    def hold_negotiation(session_id: str):
+        neg.hold(repo, session_id)
+        return negviews.session_view(repo, session_id)
+
+    @app.post("/api/sessions/{session_id}/resume", response_model=sch.SessionView)
+    def resume_negotiation(session_id: str):
+        neg.resume(repo, session_id)
+        return negviews.session_view(repo, session_id)
+
     @app.post("/api/items/{item_id}/continue", response_model=sch.SessionView)
     def continue_negotiation(item_id: str):
         s = neg.continue_negotiation(repo, item_id)

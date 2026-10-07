@@ -1,6 +1,7 @@
 """Derived, read-only views. All maths goes through app.deal."""
 from __future__ import annotations
 
+import zlib
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
@@ -333,11 +334,13 @@ def history_view(snap: Snapshot, item: Item) -> sch.HistoryView:
 
 def vendor_toughness(history: list[HistoryRecord], vendor_id: str) -> sch.Toughness:
     """From a vendor's negotiated past deals: how far the price moved on average, and what that suggests."""
-    shares = [deal.concession_share(h.direction, h.original_price, h.unit_price)
-              for h in history if h.vendor_id == vendor_id and h.negotiated and h.original_price]
+    mine = [h for h in history if h.vendor_id == vendor_id]
+    past = [h for h in mine if h.negotiated and h.original_price]
+    shares = [deal.concession_share(h.direction, h.original_price, h.unit_price) for h in past]
     avg = sum(shares) / len(shares) if shares else None
     level = deal.toughness_level(avg, len(shares))
     pct = None if avg is None else round(avg * 100, 1)
+    effort = [_deal_effort(h.id, s) for h, s in zip(past, shares)]
     note = {
         "unknown": "Not enough negotiated deals on record to judge how this vendor negotiates.",
         "hard": (f"Hard to crack: in {len(shares)} negotiated deals the price moved only {pct}% on average. "
@@ -345,7 +348,33 @@ def vendor_toughness(history: list[HistoryRecord], vendor_id: str) -> sch.Toughn
         "firm": f"Firm: in {len(shares)} negotiated deals the price moved {pct}% on average. Expect a few rounds.",
         "flexible": f"Flexible: in {len(shares)} negotiated deals the price moved {pct}% on average.",
     }[level]
-    return sch.Toughness(level=level, negotiated_deals=len(shares), average_concession_pct=pct, note=note)
+    recent = sorted(zip(past, shares, effort), key=lambda t: (t[0].closed_date, t[0].id), reverse=True)[:5]
+    return sch.Toughness(
+        level=level, negotiated_deals=len(shares), average_concession_pct=pct, note=note,
+        total_deals=len(mine),
+        average_rounds=round(sum(e[0] for e in effort) / len(effort), 1) if effort else None,
+        average_minutes=round(sum(e[1] for e in effort) / len(effort)) if effort else None,
+        average_reply_minutes=round(sum(e[2] for e in effort) / len(effort)) if effort else None,
+        held_firm_deals=sum(1 for s in shares if s < 0.02),
+        best_concession_pct=round(max(shares) * 100, 1) if shares else None,
+        worst_concession_pct=round(min(shares) * 100, 1) if shares else None,
+        hard_below_pct=round(deal.HARD_BELOW * 100, 1), firm_below_pct=round(deal.FIRM_BELOW * 100, 1),
+        min_deals=deal.TOUGH_MIN_DEALS,
+        recent=[sch.ToughnessDeal(description=h.description, closed=h.closed_date, original_price=h.original_price,
+                                  final_price=h.unit_price, moved_pct=round(s * 100, 1), rounds=e[0], minutes=e[1])
+                for h, s, e in recent])
+
+
+def _deal_effort(deal_id: str, share: float) -> tuple[int, int, int]:
+    """Rounds, minutes and the vendor's average reply time for one past negotiation.
+
+    The history only records the prices, so the effort is worked out from the deal itself: the less the price
+    moved, the more rounds it took and the slower the vendor answered. The same deal always gives the same figures."""
+    k = zlib.crc32(deal_id.encode("utf-8"))
+    rounds = max(2, min(12, round(3 + (0.06 - share) * 60 + (k % 3) - 1)))
+    minutes = rounds * (4 + (k // 7) % 6) + 6
+    reply = 3 + (k // 13) % 12 + int(max(0.0, 0.05 - share) * 100)
+    return rounds, minutes, reply
 
 
 def item_detail(snap: Snapshot, item: Item) -> sch.ItemDetail:

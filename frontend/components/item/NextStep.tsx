@@ -83,6 +83,13 @@ export function NextStep({
       action = <Button variant="primary" onClick={onOpenOpportunity}>Choose vendor and start</Button>;
       break;
     case "negotiating":
+      if (last && last.status === "on_hold") {
+        headline = "A conversation is on hold";
+        text = `${last.vendor_name} is waiting. Start with another vendor below, or resume this one.`;
+        then = "when a vendor agrees you review the deal.";
+        action = <Link href={`/negotiate/${last.id}`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">Open conversation</Link>;
+        break;
+      }
       headline = "A conversation is in progress";
       text = last ? `Negotiating with ${last.vendor_name}.` : "A negotiation is in progress.";
       then = "when the vendor agrees you review the deal.";

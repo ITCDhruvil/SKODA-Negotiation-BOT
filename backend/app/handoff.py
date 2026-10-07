@@ -274,7 +274,7 @@ def case_result(repo: Repo, case_no: str) -> HandoffResult:
     statuses = [r.session_status for r in rows]
     if not any(statuses):
         status = "not_started"
-    elif "active" in statuses:
+    elif "active" in statuses or "on_hold" in statuses:
         status = "in_negotiation"
     elif recommended is not None:
         status = "agreed"

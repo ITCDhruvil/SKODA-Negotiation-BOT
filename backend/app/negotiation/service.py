@@ -201,7 +201,7 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
         if item.state == "analyzed":
             item = _move_item(repo, item, "negotiating")
         elif item.state == "negotiating" and not any(x.status in ("active", "agreed") for x in existing):
-            pass  # a seeded item that is already marked as negotiating but has no conversation yet
+            pass  # a seeded item with no conversation yet, or one whose other conversations are on hold
         else:
             raise Conflict("a negotiation can only start after the quotes are analysed")
         bids = repo.fetch("bid", parent=item_id)
@@ -211,6 +211,8 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
             chosen = next((b for b in bids if b.vendor_id == vendor_id), None)
             if chosen is None:
                 raise Conflict(f"{vendor_id} has not quoted on this item")
+            if any(x.vendor_id == vendor_id and x.status == "on_hold" for x in existing):
+                raise Conflict("That vendor's negotiation is on hold. Resume it instead of starting a new one.")
         else:
             # The best quote is the best raw unit price (what the item view shows); ties go to the
             # lower bid id.
@@ -514,6 +516,28 @@ def accept_offer(repo: Repo, session_id: str) -> Session:
         s = _session(repo, session_id)
         _require_active(s)
         return _accept(repo, s, None, "human")
+
+
+def hold(repo: Repo, session_id: str) -> Session:
+    """Put a running negotiation aside without accepting or ending it, so the buyer can try another vendor."""
+    with repo.transaction():
+        s = _session(repo, session_id)
+        _require_active(s)
+        for d in repo.fetch("draft", parent=s.id):
+            if d.status == "pending":
+                repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=s.id)
+        return _save_session(repo, s.model_copy(update={"status": "on_hold"}))
+
+
+def resume(repo: Repo, session_id: str) -> Session:
+    """Pick a held negotiation up again, exactly where it stopped."""
+    with repo.transaction():
+        s = _session(repo, session_id)
+        if s.status != "on_hold":
+            raise Conflict(f"this negotiation is {s.status.replace('_', ' ')}, not on hold")
+        if any(x.status == "active" for x in sessions_for_item(repo, s.item_id) if x.id != s.id):
+            raise Conflict("Another negotiation on this item is running. Put it on hold first.")
+        return _save_session(repo, s.model_copy(update={"status": "active"}))
 
 
 def hand_back(repo: Repo, session_id: str, reason: Optional[str] = None) -> Session:

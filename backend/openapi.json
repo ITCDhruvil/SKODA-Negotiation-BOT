@@ -635,6 +635,42 @@
       }
      }
     }
+   },
+   "delete": {
+    "summary": "Delete Event",
+    "description": "Remove an event and everything under it (items, quotes, conversations, outcomes, files from AIS).",
+    "operationId": "delete_event_api_events__event_id__delete",
+    "parameters": [
+     {
+      "name": "event_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Event Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
    }
   },
   "/api/items": {
@@ -1943,6 +1979,84 @@
       }
      }
     },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/hold": {
+   "post": {
+    "summary": "Hold Negotiation",
+    "operationId": "hold_negotiation_api_sessions__session_id__hold_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/sessions/{session_id}/resume": {
+   "post": {
+    "summary": "Resume Negotiation",
+    "operationId": "resume_negotiation_api_sessions__session_id__resume_post",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     }
+    ],
     "responses": {
      "200": {
       "description": "Successful Response",
@@ -5989,6 +6103,16 @@
       "type": "boolean",
       "title": "Can Continue"
      },
+     "can_hold": {
+      "type": "boolean",
+      "title": "Can Hold",
+      "default": false
+     },
+     "can_resume": {
+      "type": "boolean",
+      "title": "Can Resume",
+      "default": false
+     },
      "can_accept_deal": {
       "type": "boolean",
       "title": "Can Accept Deal"
@@ -6036,6 +6160,7 @@
       "type": "string",
       "enum": [
        "active",
+       "on_hold",
        "agreed",
        "handed_back"
       ],
@@ -6165,6 +6290,7 @@
       "type": "string",
       "enum": [
        "active",
+       "on_hold",
        "agreed",
        "handed_back"
       ],
@@ -6236,6 +6362,7 @@
       "type": "string",
       "enum": [
        "active",
+       "on_hold",
        "agreed",
        "handed_back"
       ],
@@ -6685,6 +6812,94 @@
      "note": {
       "type": "string",
       "title": "Note"
+     },
+     "total_deals": {
+      "type": "integer",
+      "title": "Total Deals",
+      "default": 0
+     },
+     "average_rounds": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Average Rounds"
+     },
+     "average_minutes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Average Minutes"
+     },
+     "average_reply_minutes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Average Reply Minutes"
+     },
+     "held_firm_deals": {
+      "type": "integer",
+      "title": "Held Firm Deals",
+      "default": 0
+     },
+     "best_concession_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Best Concession Pct"
+     },
+     "worst_concession_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Worst Concession Pct"
+     },
+     "hard_below_pct": {
+      "type": "number",
+      "title": "Hard Below Pct",
+      "default": 2.5
+     },
+     "firm_below_pct": {
+      "type": "number",
+      "title": "Firm Below Pct",
+      "default": 4.5
+     },
+     "min_deals": {
+      "type": "integer",
+      "title": "Min Deals",
+      "default": 3
+     },
+     "recent": {
+      "items": {
+       "$ref": "#/components/schemas/ToughnessDeal"
+      },
+      "type": "array",
+      "title": "Recent",
+      "default": []
      }
     },
     "type": "object",
@@ -6696,6 +6911,51 @@
     ],
     "title": "Toughness",
     "description": "How hard a vendor has been to move, judged from its past negotiated deals."
+   },
+   "ToughnessDeal": {
+    "properties": {
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "closed": {
+      "type": "string",
+      "format": "date",
+      "title": "Closed"
+     },
+     "original_price": {
+      "type": "number",
+      "title": "Original Price"
+     },
+     "final_price": {
+      "type": "number",
+      "title": "Final Price"
+     },
+     "moved_pct": {
+      "type": "number",
+      "title": "Moved Pct"
+     },
+     "rounds": {
+      "type": "integer",
+      "title": "Rounds"
+     },
+     "minutes": {
+      "type": "integer",
+      "title": "Minutes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "description",
+     "closed",
+     "original_price",
+     "final_price",
+     "moved_pct",
+     "rounds",
+     "minutes"
+    ],
+    "title": "ToughnessDeal",
+    "description": "One past negotiated deal behind a vendor's rating."
    },
    "TurnView": {
     "properties": {

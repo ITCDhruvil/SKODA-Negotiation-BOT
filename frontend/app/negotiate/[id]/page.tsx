@@ -327,8 +327,8 @@ function Workspace({ initial }: { initial: SessionView }) {
           <span className="flex flex-wrap items-center gap-3">
             {s.vendor_name}
             <DirectionBadge direction={d} />
-            <Pill tone={shownStatus === "agreed" ? "ok" : shownStatus === "handed_back" ? "red" : "amber"}>
-              {shownStatus === "agreed" ? "Agreed" : shownStatus === "handed_back" ? (s.vendor_ended ? "Vendor left" : "Handed back") : `Round ${s.round}`}
+            <Pill tone={shownStatus === "agreed" ? "ok" : shownStatus === "handed_back" ? "red" : shownStatus === "on_hold" ? "info" : "amber"}>
+              {shownStatus === "agreed" ? "Agreed" : shownStatus === "handed_back" ? (s.vendor_ended ? "Vendor left" : "Handed back") : shownStatus === "on_hold" ? "On hold" : `Round ${s.round}`}
             </Pill>
           </span>
         }
@@ -341,7 +341,7 @@ function Workspace({ initial }: { initial: SessionView }) {
           <header className="shrink-0 border-b border-line2 px-4 py-3">
             <ChatHeader
               name={s.vendor_name}
-              subtitle={shownStatus === "active" ? "online" : shownStatus === "agreed" ? "Deal agreed" : s.vendor_ended ? "Left the conversation" : "Conversation ended"}
+              subtitle={shownStatus === "active" ? "online" : shownStatus === "on_hold" ? "On hold" : shownStatus === "agreed" ? "Deal agreed" : s.vendor_ended ? "Left the conversation" : "Conversation ended"}
               typing={typing?.side === "vendor"}
               live={shownStatus === "active"}
               onProfile={() => setProfile("vendor")}
@@ -551,6 +551,41 @@ function Workspace({ initial }: { initial: SessionView }) {
             </dl>
             <p className="mt-3 rounded-m bg-raise p-3 text-sm text-text">{i.recommendation}</p>
           </CollapsiblePanel>
+          {(s.actions.can_hold || s.status === "on_hold") && (
+            <Panel title="Another vendor">
+              <p className="mb-3 text-sm text-muted">
+                {s.status === "on_hold"
+                  ? "This negotiation is on hold. Nothing is sent and nothing is accepted. Carry on from the same point whenever you like."
+                  : "Put this negotiation on hold, with its messages and prices kept, and talk to a different vendor. Nothing is accepted or ended."}
+              </p>
+              <div className="grid gap-2">
+                {s.status === "on_hold" && (
+                  <Button variant="primary" disabled={busy || !s.actions.can_resume} onClick={() => act(() => api.resumeSession(s.id))}>
+                    Resume this negotiation
+                  </Button>
+                )}
+                {s.status === "on_hold" && !s.actions.can_resume && (
+                  <p className="text-xs text-muted">Another negotiation on this item is running. Put it on hold first.</p>
+                )}
+                {s.actions.can_hold && (
+                  <Button
+                    disabled={busy}
+                    onClick={async () => {
+                      await act(() => api.holdSession(s.id));
+                      router.push(`/items/${s.item_id}?tab=negotiation`);
+                    }}
+                  >
+                    Hold and choose another vendor
+                  </Button>
+                )}
+                {s.status === "on_hold" && (
+                  <Button disabled={busy} onClick={() => router.push(`/items/${s.item_id}?tab=negotiation`)}>
+                    Choose another vendor
+                  </Button>
+                )}
+              </div>
+            </Panel>
+          )}
           {s.status === "active" && (s.actions.can_accept_offer || s.actions.can_hand_back) && (
             <Panel title="Actions">
               <div className="grid gap-2">

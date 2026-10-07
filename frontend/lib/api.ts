@@ -218,6 +218,8 @@ export const api = {
   sendMessage: (id: string, body: { price: number; payment_code?: string | null; text?: string | null }) =>
     post<SessionView>(`/api/sessions/${id}/messages`, body),
   acceptOffer: (id: string) => post<SessionView>(`/api/sessions/${id}/accept-offer`),
+  holdSession: (id: string) => post<SessionView>(`/api/sessions/${id}/hold`),
+  resumeSession: (id: string) => post<SessionView>(`/api/sessions/${id}/resume`),
   handBack: (id: string, reason?: string) => post<SessionView>(`/api/sessions/${id}/hand-back`, { reason: reason ?? null }),
   continueNegotiation: (itemId: string) => post<SessionView>(`/api/items/${itemId}/continue`),
   acceptDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/accept-deal`),

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ToughnessBadge } from "@/components/negotiation/ToughnessBadge";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
@@ -91,9 +92,7 @@ function QuotesTab({
       className: "w-[1%]",
       sort: (r) => ["hard", "firm", "unknown", "flexible"].indexOf(r.invitee.toughness.level),
       cell: (r) => (
-        <span title={r.invitee.toughness.note}>
-          <Pill tone={TOUGH_TONE[r.invitee.toughness.level]}>{TOUGH_LABEL[r.invitee.toughness.level]}</Pill>
-        </span>
+        <ToughnessBadge vendorName={r.invitee.vendor_name} toughness={r.invitee.toughness} showUnknown />
       ),
     },
     { key: "lang", header: "Language", align: "center", className: "w-[1%]", sort: (r) => r.invitee.language, cell: (r) => LANG[r.invitee.language] ?? r.invitee.language },
