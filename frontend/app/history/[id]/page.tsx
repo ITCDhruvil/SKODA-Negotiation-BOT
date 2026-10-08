@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { KpiGrid } from "@/components/ui/KpiGrid";
 import { useParams, useRouter } from "next/navigation";
 import { DecisionPill, ResultCell, pastDealColumns } from "@/components/history/PastDeals";
 import { Button, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
@@ -57,7 +58,7 @@ export default function PastDealPage() {
         }
       />
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiGrid className="mb-4">
         <KpiCard icon="coin" tone="amber" label="Value of the deal" value={money(d.value)} facts={[`${num(d.qty)} ${d.unit} at ${money(d.unit_price)}`]} />
         <KpiCard
           icon="trend"
@@ -68,7 +69,7 @@ export default function PastDealPage() {
         />
         <KpiCard icon="check" tone="info" label="Benchmark" value={d.benchmark ? money(d.benchmark) : "—"} facts={d.benchmark ? [`per ${d.unit}`] : []} />
         <KpiCard icon="chat" tone="brand" label="Similar deals" value={similar.length} facts={data.average_similar ? [`average ${money(data.average_similar)}`] : []} />
-      </div>
+      </KpiGrid>
 
       <Notice tone={tone === "red" ? "red" : tone === "ok" ? "ok" : "info"}>{data.explanation}</Notice>
 

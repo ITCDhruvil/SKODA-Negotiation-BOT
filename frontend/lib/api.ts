@@ -203,7 +203,7 @@ export const api = {
   negotiations: () => request<SessionRow[]>("/api/negotiations"),
   sessionsForEvent: (eventId: string) => request<SessionSummary[]>(`/api/events/${eventId}/sessions`),
   sessionsForItem: (itemId: string) => request<SessionSummary[]>(`/api/items/${itemId}/sessions`),
-  startNegotiation: (itemId: string, body: { vendor_id?: string | null; mode: Mode }) =>
+  startNegotiation: (itemId: string, body: { vendor_id?: string | null; mode: Mode; hold_active?: boolean }) =>
     post<SessionView>(`/api/items/${itemId}/negotiations`, body),
   session: (id: string) => request<SessionView>(`/api/sessions/${id}`),
   setMode: (id: string, mode: Mode) =>
@@ -222,6 +222,7 @@ export const api = {
   resumeSession: (id: string) => post<SessionView>(`/api/sessions/${id}/resume`),
   handBack: (id: string, reason?: string) => post<SessionView>(`/api/sessions/${id}/hand-back`, { reason: reason ?? null }),
   continueNegotiation: (itemId: string) => post<SessionView>(`/api/items/${itemId}/continue`),
+  chooseDeal: (itemId: string, sessionId: string) => post<SessionView>(`/api/items/${itemId}/choose`, { session_id: sessionId }),
   acceptDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/accept-deal`),
   closeWithoutDeal: (itemId: string) => post<ItemDetail>(`/api/items/${itemId}/close-without-deal`),
   approveEvent: (eventId: string) => post<EventDetail>(`/api/events/${eventId}/approve`),

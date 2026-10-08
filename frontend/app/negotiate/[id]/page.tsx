@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Tabs, panelId, tabId } from "@/components/ui/Tabs";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
 import { NextVendorsLoader } from "@/components/negotiation/NextBestVendors";
@@ -178,6 +179,7 @@ function Workspace({ initial }: { initial: SessionView }) {
       return !on;
     });
   const [handBackOpen, setHandBackOpen] = useState(false);
+  const [view, setView] = useState<ViewKey>("chat");
   const [reason, setReason] = useState("");
   const router = useRouter();
   const [accepted, setAccepted] = useState(false);
@@ -335,9 +337,24 @@ function Workspace({ initial }: { initial: SessionView }) {
         subtitle={`${s.item_description} · ${num(s.qty)} ${s.unit}`}
       />
 
-      <div ref={layout} className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]" style={fit ? { height: fit } : undefined}>
+      <div className="mb-4">
+        <Tabs
+          idPrefix="ws"
+          value={view}
+          onChange={setView}
+          tabs={[
+            { key: "chat", label: "Conversation" },
+            { key: "overview", label: "Overview" },
+            { key: "live", label: "Live intelligence" },
+            { key: "strategy", label: "Strategy" },
+            { key: "settings", label: "Settings" },
+          ]}
+        />
+      </div>
+
+      <div ref={layout} className="grid gap-5" style={fit && view === "chat" ? { height: fit } : undefined}>
         {/* The chat fills the height of the window: messages scroll in the middle, the answer bar stays at the bottom. */}
-        <section className="flex min-h-[32rem] flex-col rounded-card border border-line bg-panel shadow-card xl:h-full xl:min-h-0">
+        <section id={panelId("ws", "chat")} role="tabpanel" aria-labelledby={tabId("ws", "chat")} className={`${view === "chat" ? "flex" : "hidden"} min-h-[32rem] flex-col rounded-card border border-line bg-panel shadow-card xl:h-full xl:min-h-0`}>
           <header className="shrink-0 border-b border-line2 px-4 py-3">
             <ChatHeader
               name={s.vendor_name}
@@ -435,7 +452,16 @@ function Workspace({ initial }: { initial: SessionView }) {
                     ))}
                   </dl>
                   <div className="ml-auto flex flex-wrap items-center gap-2">
-                    {s.from_ais ? (
+                    {s.actions.others_open > 0 ? (
+                      <>
+                        <span className="text-sm text-muted">
+                          Waiting for {s.actions.others_open} other {s.actions.others_open === 1 ? "negotiation" : "negotiations"} to finish.
+                        </span>
+                        <ButtonLink href={`/items/${s.item_id}?tab=compare`} variant="primary" size="md">
+                          Compare vendors
+                        </ButtonLink>
+                      </>
+                    ) : s.from_ais ? (
                       sent ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-sm font-semibold text-ok ring-1 ring-line2">
                           <Icon name="check" size={15} />
@@ -512,97 +538,17 @@ function Workspace({ initial }: { initial: SessionView }) {
         </section>
 
         <ProfileDialog who={profile} session={s} onClose={() => setProfile(null)} />
-        <div className="grid content-start gap-5 xl:min-h-0 xl:overflow-y-auto">
-          <HandlingCard policy={s.policy} compact />
-          <CollapsiblePanel title="Chat settings" storageKey="chat-settings" defaultOpen={false} summary={`${MODE_LABEL[s.mode]} · ${LANGUAGE_LABEL[s.language].split(" ")[0]}`}>
-            <div className="grid gap-4">
-              <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Who sends the messages</p>
-                <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} allowAuto={s.policy.auto_allowed} />
-              </div>
-              <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Language</p>
-                <Select<"en" | "hi" | "mr">
-                  id="ws-language"
-                  ariaLabel="Conversation language"
-                  value={s.language}
-                  disabled={busy || s.status !== "active"}
-                  onChange={(l) => act(() => api.setLanguage(s.id, l))}
-                  options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
-                />
-              </div>
-            </div>
-          </CollapsiblePanel>
-          <StrategyPanel strategy={s.strategy} />
-          <CollapsiblePanel
-            title="Live intelligence"
-            storageKey="live-intelligence"
-            summary={shownStatus === "active" ? <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-ok" aria-hidden />Live</span> : undefined}
-          >
-            <dl>
-              <Row label="Original quote">{money(i.current_bid)}</Row>
-              <Row label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
-              <Row label="Our last offer">{money(i.our_offer)}</Row>
-              <Row label="Movement / unit">{money(i.movement)}</Row>
-              <Row label="Target">{money(i.target)}</Row>
-              <Row label={limitLabel(d)}>{money(i.limit)}</Row>
-              <Row label={`${deltaLabel(d)} if accepted`}>{i.delta_if_accepted == null ? "Outside limit" : money(i.delta_if_accepted)}</Row>
-              <Row label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
-            </dl>
-            <p className="mt-3 rounded-m bg-raise p-3 text-sm text-text">{i.recommendation}</p>
-          </CollapsiblePanel>
-          {(s.actions.can_hold || s.status === "on_hold") && (
-            <Panel title="Another vendor">
-              <p className="mb-3 text-sm text-muted">
-                {s.status === "on_hold"
-                  ? "This negotiation is on hold. Nothing is sent and nothing is accepted. Carry on from the same point whenever you like."
-                  : "Put this negotiation on hold, with its messages and prices kept, and talk to a different vendor. Nothing is accepted or ended."}
-              </p>
-              <div className="grid gap-2">
-                {s.status === "on_hold" && (
-                  <Button variant="primary" disabled={busy || !s.actions.can_resume} onClick={() => act(() => api.resumeSession(s.id))}>
-                    Resume this negotiation
-                  </Button>
-                )}
-                {s.status === "on_hold" && !s.actions.can_resume && (
-                  <p className="text-xs text-muted">Another negotiation on this item is running. Put it on hold first.</p>
-                )}
-                {s.actions.can_hold && (
-                  <Button
-                    disabled={busy}
-                    onClick={async () => {
-                      await act(() => api.holdSession(s.id));
-                      router.push(`/items/${s.item_id}?tab=negotiation`);
-                    }}
-                  >
-                    Hold and choose another vendor
-                  </Button>
-                )}
-                {s.status === "on_hold" && (
-                  <Button disabled={busy} onClick={() => router.push(`/items/${s.item_id}?tab=negotiation`)}>
-                    Choose another vendor
-                  </Button>
-                )}
-              </div>
-            </Panel>
-          )}
-          {s.status === "active" && (s.actions.can_accept_offer || s.actions.can_hand_back) && (
-            <Panel title="Actions">
-              <div className="grid gap-2">
-                {s.actions.can_accept_offer && (
-                  <Button variant="primary" disabled={busy} onClick={() => act(() => api.acceptOffer(s.id))}>
-                    Accept vendor&rsquo;s offer
-                  </Button>
-                )}
-                {s.actions.can_hand_back && (
-                  <Button disabled={busy} onClick={() => setHandBackOpen(true)}>
-                    Hand back to me
-                  </Button>
-                )}
-              </div>
-            </Panel>
-          )}
-        </div>
+        <SidePanel
+          tab={view === "chat" ? null : view}
+          s={s}
+          i={i}
+          d={d}
+          busy={busy}
+          shownStatus={shownStatus}
+          act={act}
+          changeMode={changeMode}
+          onHandBack={() => setHandBackOpen(true)}
+        />
       </div>
 
       <Dialog
@@ -631,6 +577,138 @@ function Workspace({ initial }: { initial: SessionView }) {
         </Field>
       </Dialog>
     </>
+  );
+}
+
+type SideKey = "overview" | "settings" | "strategy" | "live";
+type ViewKey = "chat" | SideKey;
+
+/** Everything about this conversation except the messages, in tabs instead of one long column. */
+function SidePanel({
+  tab,
+  s,
+  i,
+  d,
+  busy,
+  shownStatus,
+  act,
+  changeMode,
+  onHandBack,
+}: {
+  tab: SideKey | null;
+  s: SessionView;
+  i: SessionView["intelligence"];
+  d: SessionView["direction"];
+  busy: boolean;
+  shownStatus: string;
+  act: (fn: () => Promise<SessionView>) => Promise<void>;
+  changeMode: (m: Mode) => void;
+  onHandBack: () => void;
+}) {
+  const router = useRouter();
+  if (!tab) return null;
+  return (
+    <section className="min-w-0 rounded-card border border-line bg-panel shadow-card" aria-label="Negotiation details">
+      <div role="tabpanel" id={panelId("ws", tab)} aria-labelledby={tabId("ws", tab)} className="max-w-3xl p-5">
+        {tab === "overview" && (
+          <div className="grid gap-4">
+            <HandlingCard policy={s.policy} compact />
+            {(s.actions.can_hold || s.status === "on_hold") && (
+              <div className="rounded-card border border-line2 p-3.5">
+                <h3 className="text-sm font-bold text-ink">Another vendor</h3>
+                <p className="mb-3 mt-1 text-[13px] leading-snug text-muted">
+                  {s.status === "on_hold"
+                    ? "This negotiation is on hold. Nothing is sent and nothing is accepted. Carry on from the same point whenever you like."
+                    : "Put this negotiation on hold, with its messages and prices kept, and talk to a different vendor. Nothing is accepted or ended."}
+                </p>
+                <div className="grid gap-2">
+                  {s.status === "on_hold" && (
+                    <Button variant="primary" disabled={busy || !s.actions.can_resume} onClick={() => act(() => api.resumeSession(s.id))}>
+                      Resume this negotiation
+                    </Button>
+                  )}
+                  {s.actions.can_hold && (
+                    <Button
+                      disabled={busy}
+                      onClick={async () => {
+                        await act(() => api.holdSession(s.id));
+                        router.push(`/items/${s.item_id}?tab=start`);
+                      }}
+                    >
+                      Hold and choose another vendor
+                    </Button>
+                  )}
+                  {s.status === "on_hold" && (
+                    <Button disabled={busy} onClick={() => router.push(`/items/${s.item_id}?tab=start`)}>
+                      Choose another vendor
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+            {s.status === "active" && (s.actions.can_accept_offer || s.actions.can_hand_back) && (
+              <div className="rounded-card border border-line2 p-3.5">
+                <h3 className="mb-3 text-sm font-bold text-ink">Decide</h3>
+                <div className="grid gap-2">
+                  {s.actions.can_accept_offer && (
+                    <Button variant="primary" disabled={busy} onClick={() => act(() => api.acceptOffer(s.id))}>
+                      Accept vendor&rsquo;s offer
+                    </Button>
+                  )}
+                  {s.actions.can_hand_back && (
+                    <Button disabled={busy} onClick={onHandBack}>
+                      Hand back to me
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "live" && (
+          <div>
+            <p className="mb-2 flex items-center gap-1.5 text-xs text-muted">
+              {shownStatus === "active" && <span className="h-1.5 w-1.5 rounded-full bg-ok" aria-hidden />}
+              {shownStatus === "active" ? "Updating as the conversation moves" : "As the conversation stands"}
+            </p>
+            <dl>
+              <Row label="Original quote">{money(i.current_bid)}</Row>
+              <Row label="Latest vendor offer">{money(i.latest_vendor_offer)}</Row>
+              <Row label="Our last offer">{money(i.our_offer)}</Row>
+              <Row label="Movement / unit">{money(i.movement)}</Row>
+              <Row label="Target">{money(i.target)}</Row>
+              <Row label={limitLabel(d)}>{money(i.limit)}</Row>
+              <Row label={`${deltaLabel(d)} if accepted`}>{i.delta_if_accepted == null ? "Outside limit" : money(i.delta_if_accepted)}</Row>
+              <Row label={`Potential ${deltaLabel(d).toLowerCase()}`}>{money(i.potential_delta)}</Row>
+            </dl>
+            <p className="mt-3 rounded-m bg-raise p-3 text-sm text-text">{i.recommendation}</p>
+          </div>
+        )}
+
+        {tab === "strategy" && <StrategyPanel strategy={s.strategy} bare />}
+
+        {tab === "settings" && (
+          <div className="grid gap-4">
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Who sends the messages</p>
+              <ModeSelect id="ws-mode" value={s.mode} onChange={changeMode} disabled={busy || s.status !== "active"} allowAuto={s.policy.auto_allowed} />
+            </div>
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Language</p>
+              <Select<"en" | "hi" | "mr">
+                id="ws-language"
+                ariaLabel="Conversation language"
+                value={s.language}
+                disabled={busy || s.status !== "active"}
+                onChange={(l) => act(() => api.setLanguage(s.id, l))}
+                options={(["en", "hi", "mr"] as const).map((l) => ({ value: l, label: LANGUAGE_LABEL[l] }))}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

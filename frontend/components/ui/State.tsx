@@ -84,7 +84,7 @@ export function PageHeader({
     return actions ? <div className="mb-4 flex flex-wrap items-center justify-end gap-2">{actions}</div> : null;
   }
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0">
         {crumbs && <div className="mb-1 text-xs text-muted">{crumbs}</div>}
         <h1 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h1>

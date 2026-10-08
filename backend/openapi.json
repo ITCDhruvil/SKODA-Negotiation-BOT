@@ -2120,6 +2120,55 @@
     }
    }
   },
+  "/api/items/{item_id}/choose": {
+   "post": {
+    "summary": "Choose Vendor",
+    "operationId": "choose_vendor_api_items__item_id__choose_post",
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChooseIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/items/{item_id}/accept-deal": {
    "post": {
     "summary": "Accept Deal",
@@ -2415,6 +2464,19 @@
      "share"
     ],
     "title": "CategoryValue"
+   },
+   "ChooseIn": {
+    "properties": {
+     "session_id": {
+      "type": "string",
+      "title": "Session Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "session_id"
+    ],
+    "title": "ChooseIn"
    },
    "ComparisonRow": {
     "properties": {
@@ -5623,6 +5685,16 @@
      "potential_delta": {
       "type": "number",
       "title": "Potential Delta"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty",
+      "default": 0.0
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit",
+      "default": ""
      }
     },
     "type": "object",
@@ -6116,6 +6188,11 @@
      "can_accept_deal": {
       "type": "boolean",
       "title": "Can Accept Deal"
+     },
+     "others_open": {
+      "type": "integer",
+      "title": "Others Open",
+      "default": 0
      }
     },
     "type": "object",
@@ -6631,6 +6708,11 @@
       ],
       "title": "Mode",
       "default": "approve"
+     },
+     "hold_active": {
+      "type": "boolean",
+      "title": "Hold Active",
+      "default": false
      }
     },
     "type": "object",

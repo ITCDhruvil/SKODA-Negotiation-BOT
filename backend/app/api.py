@@ -37,6 +37,11 @@ class SimulateIn(BaseModel):
 class StartIn(BaseModel):
     vendor_id: Optional[str] = None
     mode: Mode = "approve"
+    hold_active: bool = False  # put the running negotiations on hold first
+
+
+class ChooseIn(BaseModel):
+    session_id: str
 
 
 class QuestionIn(BaseModel):
@@ -317,7 +322,7 @@ def create_app(repo: Repo, seed_dataset: Dataset,
 
     @app.post("/api/items/{item_id}/negotiations", response_model=sch.SessionView)
     def start_negotiation(item_id: str, body: StartIn):
-        s = neg.start(repo, item_id, vendor_id=body.vendor_id, mode=body.mode)
+        s = neg.start(repo, item_id, vendor_id=body.vendor_id, mode=body.mode, hold_active=body.hold_active)
         return negviews.session_view(repo, s.id)
 
     @app.get("/api/sessions/{session_id}", response_model=sch.SessionView)
@@ -385,6 +390,11 @@ def create_app(repo: Repo, seed_dataset: Dataset,
     @app.post("/api/items/{item_id}/continue", response_model=sch.SessionView)
     def continue_negotiation(item_id: str):
         s = neg.continue_negotiation(repo, item_id)
+        return negviews.session_view(repo, s.id)
+
+    @app.post("/api/items/{item_id}/choose", response_model=sch.SessionView)
+    def choose_vendor(item_id: str, body: ChooseIn):
+        s = neg.choose_deal(repo, item_id, body.session_id)
         return negviews.session_view(repo, s.id)
 
     @app.post("/api/items/{item_id}/accept-deal", response_model=sch.ItemDetail)

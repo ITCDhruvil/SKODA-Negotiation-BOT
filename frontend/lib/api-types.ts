@@ -735,6 +735,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/items/{item_id}/choose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Choose Vendor */
+        post: operations["choose_vendor_api_items__item_id__choose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/items/{item_id}/accept-deal": {
         parameters: {
             query?: never;
@@ -855,6 +872,11 @@ export interface components {
             value: number;
             /** Share */
             share: number;
+        };
+        /** ChooseIn */
+        ChooseIn: {
+            /** Session Id */
+            session_id: string;
         };
         /** ComparisonRow */
         ComparisonRow: {
@@ -1980,6 +2002,16 @@ export interface components {
             gap: number;
             /** Potential Delta */
             potential_delta: number;
+            /**
+             * Qty
+             * @default 0
+             */
+            qty: number;
+            /**
+             * Unit
+             * @default
+             */
+            unit: string;
         };
         /** OutcomeView */
         OutcomeView: {
@@ -2162,6 +2194,11 @@ export interface components {
             can_resume: boolean;
             /** Can Accept Deal */
             can_accept_deal: boolean;
+            /**
+             * Others Open
+             * @default 0
+             */
+            others_open: number;
         };
         /**
          * SessionRow
@@ -2352,6 +2389,11 @@ export interface components {
              * @enum {string}
              */
             mode: "auto" | "approve" | "manual";
+            /**
+             * Hold Active
+             * @default false
+             */
+            hold_active: boolean;
         };
         /**
          * Strategy
@@ -3972,6 +4014,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    choose_vendor_api_items__item_id__choose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChooseIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

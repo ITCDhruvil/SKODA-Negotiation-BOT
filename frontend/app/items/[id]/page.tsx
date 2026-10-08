@@ -8,9 +8,12 @@ import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { HistoryTab } from "@/components/item/HistoryTab";
 import { NegotiationTab } from "@/components/item/NegotiationTab";
 import { NextStep } from "@/components/item/NextStep";
-import { OpportunityPanel } from "@/components/item/OpportunityPanel";
+import { OpportunityTab } from "@/components/item/OpportunityTab";
+import { StartNegotiationTab } from "@/components/item/StartNegotiationTab";
+import { LiveConversationsTab } from "@/components/item/LiveConversationsTab";
+import { CompareResultsTab } from "@/components/item/CompareResultsTab";
+import { useLiveSessions } from "@/components/item/useLiveSessions";
 import { SupplierDialog } from "@/components/item/SupplierDialog";
-import { PointsPanel } from "@/components/item/PointsPanel";
 import { HandlingCard } from "@/components/item/HandlingCard";
 import { Stepper } from "@/components/item/Stepper";
 import { Button, DirectionBadge, Panel, Pill } from "@/components/ui/basics";
@@ -323,34 +326,38 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
   const list = sessions ?? [];
   // The row menu on the event page links here with ?tab=quotes|negotiation|history to land on that tab.
   const asked = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("tab");
-  const requested = asked === "quotes" || asked === "negotiation" || asked === "history" ? asked : null;
-  const [tab, setTab] = useState<"quotes" | "negotiation" | "history">(requested ?? (list.length > 0 ? "negotiation" : "quotes"));
+  type TabKey = "quotes" | "opportunity" | "start" | "negotiation" | "compare" | "history";
+  const requested: TabKey | null = asked === "quotes" || asked === "opportunity" || asked === "start" || asked === "negotiation" || asked === "compare" || asked === "history" ? asked : null;
+  const [tab, setTab] = useState<TabKey>(requested ?? (list.length > 0 ? "negotiation" : "quotes"));
   const [chosen, setChosen] = useState(requested !== null);
   // Land on the conversation once there is one, unless the user already picked a tab.
   useEffect(() => {
     if (!chosen && list.length > 0) setTab("negotiation");
   }, [chosen, list.length]);
-  const pick = (t: "quotes" | "negotiation" | "history") => {
+  const live = useLiveSessions(list, tab === "negotiation" || tab === "compare", () => {
+    void reload();
+    void reloadSessions();
+  });
+  const pick = (t: TabKey) => {
     setChosen(true);
     setTab(t);
   };
   // After the quotes are analysed nothing in the main area changes, so point at the card where the next step happens.
-  const [glow, setGlow] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const focusOpportunity = useCallback(() => {
-    document.getElementById("opportunity-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    setGlow(true);
-    setTimeout(() => setGlow(false), 2600);
+  const goStart = useCallback(() => {
+    pick("start");
+    setTimeout(() => document.getElementById("item-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const previous = useRef(item.state);
   useEffect(() => {
     if (previous.current === "bids_in" && item.state === "analyzed") {
-      setNote("Quotes analysed. Next: choose the vendor and start the negotiation in the highlighted card on the right.");
-      setTimeout(focusOpportunity, 150);
+      setNote("Quotes analysed. Next: open the Start negotiation tab, choose the vendors and begin.");
+      setTimeout(goStart, 150);
       setTimeout(() => setNote(null), 9000);
     }
     previous.current = item.state;
-  }, [item.state, focusOpportunity]);
+  }, [item.state, goStart]);
   return (
     <>
       <PageHeader
@@ -385,7 +392,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
               panel?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
             }, 50);
           }}
-          onOpenOpportunity={focusOpportunity}
+          onOpenOpportunity={goStart}
           onChanged={async () => {
             await reload();
             await reloadSessions();
@@ -404,8 +411,11 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
           <Notice tone="amber">Not eligible for negotiation: {event.eligibility.reason}.</Notice>
         </div>
       )}
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid items-start gap-5">
+        <ItemActions detail={detail} onChanged={reload} />
+        <OutcomePanel detail={detail} />
         <Panel flush className="min-w-0">
+          <span id="item-tabs" className="block scroll-mt-4" />
           <div className="px-5">
             <Tabs
               idPrefix="item"
@@ -413,7 +423,10 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
               onChange={pick}
               tabs={[
                 { key: "quotes", label: `Vendors & ${quotesLabel(event.direction).toLowerCase()}` },
-                { key: "negotiation", label: `Negotiation${list.length ? ` (${list.length})` : ""}` },
+                { key: "opportunity", label: "Opportunity" },
+                { key: "start", label: "Start negotiation" },
+                { key: "negotiation", label: `Conversations${list.length ? ` (${list.length})` : ""}` },
+                { key: "compare", label: "Compare results" },
                 { key: "history", label: "Price history" },
               ]}
             />
@@ -421,21 +434,36 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
           <div className="p-5" role="tabpanel" id={panelId("item", tab)} aria-labelledby={tabId("item", tab)}>
             {tab === "quotes" ? (
               <QuotesTab detail={detail} sessions={list} onChanged={reload} onShowNegotiation={() => pick("negotiation")} />
+            ) : tab === "opportunity" ? (
+              <OpportunityTab detail={detail} onStart={goStart} />
+            ) : tab === "start" ? (
+              <StartNegotiationTab
+                detail={detail}
+                sessions={list}
+                onChanged={async () => {
+                  await reload();
+                  await reloadSessions();
+                }}
+                onStarted={() => pick("negotiation")}
+              />
             ) : tab === "negotiation" ? (
-              <NegotiationTab sessions={list} />
+              <LiveConversationsTab sessions={list} views={live} onStartMore={() => pick("start")} onChanged={() => void reload()} />
+            ) : tab === "compare" ? (
+              <CompareResultsTab
+                detail={detail}
+                sessions={list}
+                views={live}
+                onChanged={async () => {
+                  await reload();
+                  await reloadSessions();
+                }}
+                onStart={() => pick("start")}
+              />
             ) : (
               <HistoryTab detail={detail} />
             )}
           </div>
         </Panel>
-        <div className="grid content-start gap-5">
-          <div id="opportunity-panel" className={`scroll-mt-4 rounded-card transition-shadow duration-500 ${glow ? "ring-2 ring-brand ring-offset-2 ring-offset-bg" : ""}`}>
-            <OpportunityPanel detail={detail} />
-          </div>
-          <PointsPanel detail={detail} eventDirection={event.direction} onChanged={reload} />
-          <ItemActions detail={detail} onChanged={reload} />
-          <OutcomePanel detail={detail} />
-        </div>
       </div>
     </>
   );

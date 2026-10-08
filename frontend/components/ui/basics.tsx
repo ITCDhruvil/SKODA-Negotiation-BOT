@@ -137,8 +137,8 @@ const KPI_ICON_TONE: Record<Tone, string> = {
 };
 
 /**
- * Summary tile: a large icon on the left, then the label, the value and a line of smaller facts.
- * With `href` the whole tile is a link to the data behind it.
+ * One cell of a KPI band (see KpiGrid): a small round icon beside the label, the figure under it, and one or two
+ * lines of detail. Long detail is clipped to two lines and shown in full as a tooltip.
  */
 export function KpiCard({
   icon,
@@ -159,36 +159,32 @@ export function KpiCard({
   sub?: ReactNode;
   href?: string;
 }) {
+  const detail = facts && facts.length > 0 ? facts.join("  ·  ") : typeof sub === "string" ? sub : null;
   const body = (
-    <div className="flex h-full min-w-0 items-center gap-3.5 p-4">
-      <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-m ${KPI_ICON_TONE[tone]}`}>
-        <Icon name={icon} size={26} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-xs font-semibold text-muted">{label}</div>
-        <div className="truncate text-2xl font-extrabold leading-tight tracking-tight text-ink tabular-nums">{value}</div>
-        {sub && !facts && <div className="mt-1 text-[11px] leading-snug text-muted">{sub}</div>}
-        {facts && facts.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted">
-            {facts.map((f, i) => (
-              <span key={i} className="whitespace-nowrap">
-                {i > 0 && <span aria-hidden="true" className="mr-2">·</span>}
-                {f}
-              </span>
-            ))}
-          </div>
-        )}
+    <div className="flex h-full min-w-0 flex-col justify-center gap-1 px-4 py-3.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${KPI_ICON_TONE[tone]}`}>
+          <Icon name={icon} size={14} />
+        </span>
+        <span className="truncate text-xs font-semibold text-muted">{label}</span>
+        {href && <Icon name="chevron" size={14} className="ml-auto shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand" />}
       </div>
-      {href && <Icon name="chevron" size={16} className="shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand" />}
+      <div className="truncate text-2xl font-extrabold leading-none tracking-tight text-ink tabular-nums">{value}</div>
+      {detail ? (
+        <div className="line-clamp-2 text-xs leading-snug text-muted" title={detail}>
+          {detail}
+        </div>
+      ) : sub ? (
+        <div className="text-xs leading-snug text-muted">{sub}</div>
+      ) : null}
     </div>
   );
-  const shell = "min-w-0 overflow-hidden rounded-card border border-line bg-panel shadow-card";
   return href ? (
-    <Link href={href} className={`group block ${shell} transition hover:border-brand`}>
+    <Link href={href} className="group block min-w-0 bg-panel transition hover:bg-raise focus-visible:bg-raise focus-visible:outline-none">
       {body}
     </Link>
   ) : (
-    <div className={shell}>{body}</div>
+    <div className="min-w-0 bg-panel">{body}</div>
   );
 }
 

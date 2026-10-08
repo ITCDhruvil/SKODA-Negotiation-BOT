@@ -241,9 +241,65 @@ def test_a_negotiation_can_be_put_on_hold_and_another_vendor_tried(client):
     second = start(client, BUY, "approve", vendor_id=other)
     assert second["status"] == "active" and second["vendor_id"] == other
 
-    # the held one cannot resume while the second runs, and cannot be restarted as a new session
-    assert client.post(f"/api/sessions/{sid}/resume").status_code == 409
+    # the held one cannot be restarted as a new session, but it can be resumed next to the running one
     assert client.post(f"/api/items/{BUY}/negotiations", json={"mode": "approve", "vendor_id": first["vendor_id"]}).status_code == 409
-
-    assert client.post(f"/api/sessions/{second['id']}/hold").json()["status"] == "on_hold"
     assert client.post(f"/api/sessions/{sid}/resume").json()["status"] == "active"
+    assert client.get(f"/api/sessions/{second['id']}").json()["status"] == "active"
+
+
+def test_several_vendors_at_once_and_one_agreeing_holds_the_rest(client):
+    analyzed(client, BUY, 250, 270)
+    first = start(client, BUY, "approve")
+    invitees = [v["vendor_id"] for v in client.get(f"/api/items/{BUY}").json()["invitees"] if v["responded"] and v["vendor_id"] != first["vendor_id"]]
+    second = start(client, BUY, "approve", vendor_id=invitees[0])
+    assert {first["status"], second["status"]} == {"active"}
+    # the same vendor twice is refused
+    assert client.post(f"/api/items/{BUY}/negotiations", json={"mode": "approve", "vendor_id": invitees[0]}).status_code == 409
+    # starting a third with hold_active puts the two running ones on hold
+    third = start(client, BUY, "approve", vendor_id=invitees[1], hold_active=True)
+    states = {s["id"]: s["status"] for s in client.get(f"/api/items/{BUY}/sessions").json()}
+    assert states[first["id"]] == "on_hold" and states[second["id"]] == "on_hold" and states[third["id"]] == "active"
+    # one of them handing back does not end the item while the others are still in the running
+    client.post(f"/api/sessions/{third['id']}/hand-back")
+    assert client.get(f"/api/items/{BUY}").json()["item"]["state"] == "negotiating"
+
+
+def _run_to_end(client, sid, rounds=40):
+    s = client.get(f"/api/sessions/{sid}").json()
+    for _ in range(rounds):
+        if s["status"] != "active":
+            break
+        s = client.post(f"/api/sessions/{sid}/advance").json()
+    return s
+
+
+def test_parallel_negotiations_wait_for_each_other_and_the_buyer_chooses(client):
+    analyzed(client, BUY, 250, 270)
+    first = start(client, BUY, "auto")
+    other = next(v["vendor_id"] for v in client.get(f"/api/items/{BUY}").json()["invitees"] if v["responded"] and v["vendor_id"] != first["vendor_id"])
+    second = start(client, BUY, "auto", vendor_id=other)
+
+    done_first = _run_to_end(client, first["id"])
+    state_mid = client.get(f"/api/items/{BUY}").json()["item"]["state"]
+    if done_first["status"] != "active":
+        # the second vendor is still running, so the item is still being negotiated and nothing is held
+        assert state_mid == "negotiating"
+        assert client.get(f"/api/sessions/{second['id']}").json()["status"] == "active"
+        assert done_first["actions"]["others_open"] == 1
+    done_second = _run_to_end(client, second["id"])
+
+    results = [done_first, done_second]
+    agreed = [s for s in results if s["status"] == "agreed"]
+    item = client.get(f"/api/items/{BUY}").json()["item"]
+    if not agreed:
+        assert item["state"] == "handed_back"
+        return
+    assert item["state"] == "result_pending"
+    best = min(agreed, key=lambda s: s["agreed_price"])
+    won = client.post(f"/api/items/{BUY}/choose", json={"session_id": best["id"]})
+    assert won.status_code == 200 and won.json()["status"] == "agreed"
+    for s in results:
+        if s["id"] != best["id"]:
+            assert client.get(f"/api/sessions/{s['id']}").json()["status"] == "handed_back"
+    # a vendor who did not agree cannot be chosen
+    assert client.post(f"/api/items/{BUY}/choose", json={"session_id": "S-unknown"}).status_code in (404, 409)

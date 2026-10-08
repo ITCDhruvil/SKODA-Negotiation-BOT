@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EventStatDialog, type StatKind } from "@/components/events/EventStatDialog";
 import type { EventView } from "@/lib/api";
-import { dateShort, money } from "@/lib/format";
+import { dateShort, money, pct } from "@/lib/format";
 import { STATUS_LABEL, STATUS_TONE, deltaLabel } from "@/lib/labels";
 import { DirectionBadge, Pill } from "@/components/ui/basics";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -81,48 +82,118 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
       header: "Event #",
       sort: (e) => e.id,
       cell: (e) => (
-        <Link href={`/events/${e.id}`} className="whitespace-nowrap font-semibold text-brand hover:underline" onClick={(ev) => ev.stopPropagation()}>
-          {e.id}
+        <Link href={`/events/${e.id}`} className="group/id flex items-center gap-3" onClick={(ev) => ev.stopPropagation()}>
+          <span
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${e.direction === "buy" ? "bg-info-soft text-info" : "bg-amber-soft text-amber"}`}
+            title={e.direction === "buy" ? "Purchase event" : "Scrap sale"}
+          >
+            <Icon name={e.direction === "buy" ? "cart" : "tag"} size={18} />
+          </span>
+          <span className="whitespace-nowrap text-[13px] font-semibold tabular-nums text-ink group-hover/id:text-brand group-hover/id:underline">{e.id}</span>
         </Link>
       ),
     },
     {
       key: "title",
       header: "Title",
-      className: "w-[60%] max-w-0",
+      className: "w-[38%] min-w-[150px] max-w-0",
       sort: (e) => e.title.toLowerCase(),
       cell: (e) => (
-        <div>
+        <div className="min-w-0">
           <div className="truncate font-semibold text-ink" title={e.title}>
             {e.title}
           </div>
-          <div className="text-xs text-muted">{dateShort(e.created)}</div>
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
+            <Icon name="cube" size={13} />
+            {e.item_count} {e.item_count === 1 ? "item" : "items"}
+            <span aria-hidden>•</span>
+            {e.vendor_count} {e.vendor_count === 1 ? "vendor" : "vendors"}
+          </div>
         </div>
       ),
     },
-    { key: "type", header: "Type", align: "center", className: "w-[1%]", sort: (e) => e.direction, cell: (e) => <DirectionBadge direction={e.direction} /> },
+    {
+      key: "type",
+      header: "Type",
+      className: "w-[1%] min-w-[104px] whitespace-nowrap",
+      hideBelowXl: true,
+      sort: (e) => e.direction,
+      cell: (e) => (
+        <Pill tone={e.direction === "buy" ? "info" : "amber"}>
+          <Icon name={e.direction === "buy" ? "cart" : "tag"} size={13} />
+          {e.direction === "buy" ? "BUY" : "SELL"}
+        </Pill>
+      ),
+    },
     {
       key: "value",
       header: "Value",
-      align: "right",
-      className: "w-[1%]",
+      className: "w-[1%] min-w-[150px] whitespace-nowrap",
       sort: (e) => (e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value),
-      cell: (e) => opener(e, "value", money(e.status === "closed" ? (e.final_value ?? e.quoted_value) : e.quoted_value), "Show value breakdown", "whitespace-nowrap tabular-nums font-normal"),
+      cell: (e) => {
+        const closed = e.status === "closed";
+        const delta = closed ? e.realised_delta : e.potential_delta;
+        const basis = (closed ? e.original_value : e.reference_value) ?? 0;
+        const share = basis > 0 ? delta / basis : 0;
+        return (
+          <div className="grid gap-0.5">
+            <button
+              type="button"
+              title="Show value breakdown"
+              aria-label={`Show value breakdown: ${e.id}`}
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setStat({ event: e, kind: "value" });
+              }}
+              className="w-fit rounded-chip text-left font-bold tabular-nums text-ink hover:text-brand focus-visible:text-brand"
+            >
+              {money(Math.round(closed ? (e.final_value ?? e.quoted_value) : e.quoted_value))}
+            </button>
+            {delta > 0 && share > 0 ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-ok" title={`${deltaLabel(e.direction)} ${closed ? "achieved" : "possible"}: ${money(Math.round(delta))}`}>
+                <span aria-hidden className="text-[9px]">▲</span>
+                {pct(share, 1)}
+                <span className="font-normal text-muted">{closed ? "saved" : "possible"}</span>
+              </span>
+            ) : (
+              <span className="text-xs text-muted">{closed ? "final" : "quoted"}</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "status",
       header: "Status",
-      align: "center",
-      className: "w-[1%]",
+      className: "w-[1%] min-w-[130px] whitespace-nowrap",
       sort: (e) => e.status,
       cell: (e) => (
-        <div className="flex flex-col items-center gap-1">
-          <Pill tone={STATUS_TONE[e.status]}>{STATUS_LABEL[e.status]}</Pill>
+        <div className="flex flex-col items-start gap-1">
+          <Pill tone={STATUS_TONE[e.status]}>
+            <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+            {STATUS_LABEL[e.status]}
+          </Pill>
           {!e.eligibility.eligible && (
             <span title={e.eligibility.reason}>
               <Pill tone="red">Not eligible</Pill>
             </span>
           )}
+        </div>
+      ),
+    },
+    {
+      key: "date",
+      header: "Date",
+      className: "w-[1%] min-w-[150px] whitespace-nowrap",
+      hideBelowXl: true,
+      sort: (e) => e.created,
+      cell: (e) => (
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <Icon name="calendar" size={15} className="text-muted" />
+          <div>
+            <div className="text-[13px] text-ink">{dateShort(e.created)}</div>
+            <div className="text-xs text-muted">{new Date(`${e.created}T00:00:00`).toLocaleDateString("en-GB", { weekday: "long" })}</div>
+          </div>
         </div>
       ),
     },
@@ -145,6 +216,7 @@ export function EventsTable({ events, empty, paginate = false }: { events: Event
         empty={empty ?? "No events match."}
         paginate={paginate}
         noScroll
+        sortHints
         noun="events"
       />
       <EventStatDialog event={stat?.event ?? null} kind={lastKind} onClose={() => setStat(null)} />

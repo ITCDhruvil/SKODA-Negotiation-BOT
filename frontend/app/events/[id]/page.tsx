@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { KpiGrid } from "@/components/ui/KpiGrid";
+import { Icon } from "@/components/ui/Icon";
 import { useParams } from "next/navigation";
 import { Button, ButtonLink, Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { inAis, openCaseInAis } from "@/lib/ais";
@@ -32,9 +34,9 @@ import {
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="font-medium text-ink">{value}</dd>
+    <div className="grid grid-cols-[minmax(96px,128px)_minmax(0,1fr)] items-baseline gap-3 border-b border-line2 py-2.5 first:pt-0 last:border-b-0 last:pb-0">
+      <dt className="text-[13px] text-muted">{label}</dt>
+      <dd className="min-w-0 break-words text-sm font-semibold text-ink">{value}</dd>
     </div>
   );
 }
@@ -48,7 +50,7 @@ function FromAis({ eventId }: { eventId: string }) {
   return (
     <Panel title="From the AIS request">
       {data.details.length > 0 && (
-        <dl className="grid gap-3 text-sm">
+        <dl className="grid gap-x-10 2xl:grid-cols-2">
           {data.details.map((d) => (
             <Meta key={d.label} label={d.label} value={d.value || "—"} />
           ))}
@@ -166,18 +168,12 @@ function Body({ data }: { data: EventDetail }) {
 
   const actionsFor = (
           closed ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <ButtonLink href={`/events/${e.id}/contract`} variant="primary" size="md">
-                View contract document
-              </ButtonLink>
-              <a
-                href={api.exportUrl(e.id)}
-                download
-                className="rounded-m border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink hover:border-brand"
-              >
-                {e.direction === "buy" ? "Download Shopping Cart template (CSV)" : "Download deal summary (CSV)"}
-              </a>
-            </div>
+            <ButtonLink href={`/events/${e.id}/contract?print=1`} variant="primary" size="md">
+              <span className="inline-flex items-center gap-2">
+                <Icon name="download" size={16} />
+                Contract
+              </span>
+            </ButtonLink>
           ) : data.items.some((i) => i.state === "awaiting_approval") ? (
             <Link href={`/events/${e.id}/approve`} className="rounded-m border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-on-brand">
               Review &amp; approve
@@ -202,7 +198,14 @@ function Body({ data }: { data: EventDetail }) {
         subtitle={e.category}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            {e.from_ais && inAis() && <Button onClick={() => openCaseInAis(e.id)}>Open case in AIS</Button>}
+            {e.from_ais && inAis() && (
+              <Button onClick={() => openCaseInAis(e.id)} aria-label="Open case in AIS" title="Open case in AIS">
+                <span className="inline-flex items-center gap-2">
+                  <Icon name="external" size={15} />
+                  AIS
+                </span>
+              </Button>
+            )}
             {actionsFor}
           </div>
         }
@@ -216,8 +219,8 @@ function Body({ data }: { data: EventDetail }) {
         </div>
       )}
 
-      <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon="cube" tone="brand" label="Items" value={e.item_count} />
+      <KpiGrid className="mb-5">
+        <KpiCard icon="cube" tone="brand" label="Items" value={e.item_count} sub="Lots in this event" />
         <KpiCard icon="vendors" tone="info" label="Vendors" value={e.vendor_count} sub="Invited or responded" />
         <KpiCard icon="coin" tone="amber" label={closed ? "Final value" : "Quoted value"} value={moneyCompact(closed ? (e.final_value ?? e.quoted_value) : e.quoted_value)} sub={closed ? `Original ${moneyCompact(e.original_value)}` : `Reference ${moneyCompact(e.reference_value)}`} />
         <KpiCard
@@ -225,43 +228,34 @@ function Body({ data }: { data: EventDetail }) {
           tone="ok"
           label={closed ? `${deltaLabel(e.direction)} achieved` : `Potential ${deltaLabel(e.direction).toLowerCase()}`}
           value={moneyCompact(closed ? e.realised_delta : e.potential_delta)}
+          sub={closed ? `${deltaLabel(e.direction)} against the original quote` : "If it closes at target"}
         />
-      </div>
+        {closed && <KpiCard icon="check" tone="ok" label="Items negotiated" value={`${e.items_negotiated} / ${e.item_count}`} sub="Closed with a deal" />}
+        {closed && <KpiCard icon="history" tone="info" label="Negotiation time" value={`${e.duration_minutes} min`} sub={`${e.vendors_participated} vendors took part`} />}
+      </KpiGrid>
 
-      {closed && (
-        <div className="mb-5">
-          <Panel title="Closed summary">
-            <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
-              <Meta label="Original value" value={money(e.original_value)} />
-              <Meta label="Final value" value={money(e.final_value)} />
-              <Meta label={`${deltaLabel(e.direction)} achieved`} value={money(e.realised_delta)} />
-              <Meta label="Items negotiated" value={`${e.items_negotiated} / ${e.item_count}`} />
-              <Meta label="Negotiation time" value={`${e.duration_minutes} min · ${e.vendors_participated} vendors`} />
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid min-w-0 content-start gap-5">
+          <Panel title="Items" flush>
+            <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} noScroll />
+          </Panel>
+          {e.from_ais && <FromAis eventId={e.id} />}
+        </div>
+        <div className="grid min-w-0 content-start gap-5">
+          <EventNegotiations eventId={e.id} />
+          <Panel title="Details">
+            <dl>
+              <Meta label="Reference value" value={money(e.reference_value)} />
+              <Meta label="Plant / company" value={`${e.plant} · ${e.company}`} />
+              <Meta label="Purchasing" value={`${e.purch_org} · ${e.purch_group}`} />
+              <Meta label="Requestor" value={e.requestor} />
+              <Meta label="Cost centre" value={e.cost_centre} />
+              <Meta label="Created" value={dateShort(e.created)} />
+              <Meta label="Approved" value={dateShort(e.approval_date)} />
+              <Meta label="Due" value={dateShort(e.due)} />
+              <Meta label="Source cart" value={e.source_cart_no ?? "Scrap sale (no cart)"} />
             </dl>
           </Panel>
-        </div>
-      )}
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Panel title="Items" flush>
-          <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} noScroll />
-        </Panel>
-        <div className="grid content-start gap-5">
-        {e.from_ais && <FromAis eventId={e.id} />}
-        <EventNegotiations eventId={e.id} />
-        <Panel title="Details">
-          <dl className="grid gap-3 text-sm">
-            <Meta label="Reference value" value={money(e.reference_value)} />
-            <Meta label="Plant / company" value={`${e.plant} · ${e.company}`} />
-            <Meta label="Purchasing" value={`${e.purch_org} · ${e.purch_group}`} />
-            <Meta label="Requestor" value={e.requestor} />
-            <Meta label="Cost centre" value={e.cost_centre} />
-            <Meta label="Created" value={dateShort(e.created)} />
-            <Meta label="Approved" value={dateShort(e.approval_date)} />
-            <Meta label="Due" value={dateShort(e.due)} />
-            <Meta label="Source cart" value={e.source_cart_no ?? "Scrap sale (no cart)"} />
-          </dl>
-        </Panel>
         </div>
       </div>
     </>

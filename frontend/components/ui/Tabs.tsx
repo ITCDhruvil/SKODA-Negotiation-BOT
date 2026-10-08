@@ -14,7 +14,9 @@ export function Tabs<K extends string>({
   value,
   onChange,
   idPrefix,
+  variant = "line",
 }: {
+  variant?: "line" | "pill" | "chips";
   tabs: { key: K; label: ReactNode }[];
   value: K;
   onChange: (key: K) => void;
@@ -34,7 +36,7 @@ export function Tabs<K extends string>({
     document.getElementById(tabId(idPrefix, tabs[target].key))?.focus();
   };
   return (
-    <div role="tablist" className="flex gap-1 border-b border-line">
+    <div role="tablist" className={variant === "pill" ? "inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-raise p-1" : variant === "chips" ? "flex flex-wrap gap-2" : "flex gap-1 border-b border-line"}>
       {tabs.map((t, i) => {
         const active = t.key === value;
         return (
@@ -48,9 +50,19 @@ export function Tabs<K extends string>({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(t.key)}
             onKeyDown={(e) => move(e, i)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold transition ${
-              active ? "border-brand text-brand" : "border-transparent text-muted hover:text-ink"
-            }`}
+            className={
+              variant === "chips"
+                ? `inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    active ? "border-brand bg-brand text-on-brand shadow-card" : "border-line bg-panel text-text hover:border-brand hover:text-brand"
+                  }`
+                : variant === "pill"
+                ? `inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                    active ? "bg-panel text-ink shadow-card" : "text-muted hover:text-ink"
+                  }`
+                : `-mb-px border-b-2 px-4 py-2 text-sm font-semibold transition ${
+                    active ? "border-brand text-brand" : "border-transparent text-muted hover:text-ink"
+                  }`
+            }
           >
             {t.label}
           </button>

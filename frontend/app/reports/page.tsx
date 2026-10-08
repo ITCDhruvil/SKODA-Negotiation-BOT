@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { KpiGrid } from "@/components/ui/KpiGrid";
 import { EventsTable } from "@/components/events/EventsTable";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { KpiCard, Panel } from "@/components/ui/basics";
@@ -30,12 +31,12 @@ export default function ReportsPage() {
       {error && <ErrorBox message={error} status={errorStatus} onRetry={reload} />}
       {data && (
         <div className="grid gap-5">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiGrid>
             <KpiCard icon="coin" tone="ok" label="Savings generated" value={moneyCompact(data.delta_generated.savings)} sub="Buy events" />
             <KpiCard icon="trend" tone="ok" label="Uplift generated" value={moneyCompact(data.delta_generated.uplift)} sub="Scrap sales" />
             <KpiCard icon="check" tone="brand" label="Completed negotiations" value={data.kpis.completed_negotiations} />
             <KpiCard icon="chat" tone="amber" label="Still on the table" value={moneyCompact(data.kpis.potential_total)} sub="Potential across open items" />
-          </div>
+          </KpiGrid>
           <Panel title="Closed events" flush>
             <EventsTable events={data.events.filter((e) => e.status === "closed")} empty="No closed events created in this period." />
           </Panel>

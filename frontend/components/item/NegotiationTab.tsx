@@ -75,7 +75,7 @@ export function NegotiationTab({ sessions }: { sessions: SessionSummary[] }) {
   if (sessions.length === 0) {
     return (
       <Notice tone="info">
-        No negotiation on this item yet. Once the quotes are analyzed, start one from the &ldquo;Negotiation opportunity&rdquo; card on the right.
+        No negotiation on this item yet. Once the quotes are analysed, open the &ldquo;Start negotiation&rdquo; tab to choose the vendors and begin.
       </Notice>
     );
   }

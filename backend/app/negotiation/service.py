@@ -188,8 +188,12 @@ def _check_text(repo: Repo, s: Session, item: Item, text: str, *, price: float,
 
 # --- start -----------------------------------------------------------------------------------
 
-def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mode = "approve") -> Session:
-    """The buyer starts a negotiation. It never starts on its own."""
+def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mode = "approve",
+          hold_active: bool = False) -> Session:
+    """The buyer starts a negotiation. It never starts on its own.
+
+    Several vendors can be negotiated with at the same time. With `hold_active` the conversations that are
+    running are put on hold first, so only the new one runs."""
     with repo.transaction():
         item = _item(repo, item_id)
         event = _event(repo, item)
@@ -200,8 +204,8 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
             item = _move_item(repo, item, "analyzed")
         if item.state == "analyzed":
             item = _move_item(repo, item, "negotiating")
-        elif item.state == "negotiating" and not any(x.status in ("active", "agreed") for x in existing):
-            pass  # a seeded item with no conversation yet, or one whose other conversations are on hold
+        elif item.state == "negotiating" and not any(x.status == "agreed" for x in existing):
+            pass  # a seeded item with no conversation yet, or one whose other conversations are running or on hold
         else:
             raise Conflict("a negotiation can only start after the quotes are analysed")
         bids = repo.fetch("bid", parent=item_id)
@@ -211,13 +215,23 @@ def start(repo: Repo, item_id: str, *, vendor_id: Optional[str] = None, mode: Mo
             chosen = next((b for b in bids if b.vendor_id == vendor_id), None)
             if chosen is None:
                 raise Conflict(f"{vendor_id} has not quoted on this item")
-            if any(x.vendor_id == vendor_id and x.status == "on_hold" for x in existing):
-                raise Conflict("That vendor's negotiation is on hold. Resume it instead of starting a new one.")
+
         else:
             # The best quote is the best raw unit price (what the item view shows); ties go to the
             # lower bid id.
             chosen = deal.best_first(event.direction, sorted(bids, key=lambda b: b.id),
                                      key=lambda b: b.unit_price)[0]
+        if any(x.vendor_id == chosen.vendor_id and x.status == "on_hold" for x in existing):
+            raise Conflict("That vendor's negotiation is on hold. Resume it instead of starting a new one.")
+        if any(x.vendor_id == chosen.vendor_id and x.status == "active" for x in existing):
+            raise Conflict("You are already negotiating with that vendor.")
+        if hold_active:
+            for x in existing:
+                if x.status == "active":
+                    for d in repo.fetch("draft", parent=x.id):
+                        if d.status == "pending":
+                            repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=x.id)
+                    _save_session(repo, x.model_copy(update={"status": "on_hold"}))
         s = Session(
             id=f"S-{item_id}-{len(existing) + 1}", item_id=item_id, vendor_id=chosen.vendor_id,
             bid_id=chosen.id, mode=mode, status="active", language=chosen.language, round=0,
@@ -240,7 +254,15 @@ def _finish(repo: Repo, s: Session, item: Item, *, agreed: bool, price: Optional
         "status": "agreed" if agreed else "handed_back", "agreed_price": price if agreed else None,
         "agreed_payment": payment if agreed else None, "handback_reason": reason,
         "vendor_ended": vendor_ended, "ended_at": clock.now()})
-    _move_item(repo, item, "result_pending" if agreed else "handed_back")
+    others = [x for x in sessions_for_item(repo, s.item_id) if x.id != s.id]
+    still_open = any(x.status in ("active", "on_hold") for x in others)
+    if not still_open:
+        # Every conversation on this item is over: there is a result to review, or nobody agreed.
+        if agreed or any(x.status == "agreed" for x in others):
+            _move_item(repo, item, "result_pending")
+        else:
+            _move_item(repo, item, "handed_back")
+    # Otherwise the item stays in negotiation until the other vendors finish; the buyer then compares and chooses.
     for d in repo.fetch("draft", parent=s.id):
         if d.status == "pending":
             repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=s.id)
@@ -535,8 +557,6 @@ def resume(repo: Repo, session_id: str) -> Session:
         s = _session(repo, session_id)
         if s.status != "on_hold":
             raise Conflict(f"this negotiation is {s.status.replace('_', ' ')}, not on hold")
-        if any(x.status == "active" for x in sessions_for_item(repo, s.item_id) if x.id != s.id):
-            raise Conflict("Another negotiation on this item is running. Put it on hold first.")
         return _save_session(repo, s.model_copy(update={"status": "active"}))
 
 
@@ -563,7 +583,8 @@ def set_mode(repo: Repo, session_id: str, mode: Mode) -> Session:
 
 def _latest_session(repo: Repo, item_id: str) -> Optional[Session]:
     all_ = sessions_for_item(repo, item_id)
-    return all_[-1] if all_ else None
+    agreed = [x for x in all_ if x.status == "agreed"]
+    return agreed[-1] if agreed else (all_[-1] if all_ else None)
 
 
 def continue_negotiation(repo: Repo, item_id: str) -> Session:
@@ -577,6 +598,29 @@ def continue_negotiation(repo: Repo, item_id: str) -> Session:
         return _save_session(repo, s.model_copy(update={
             "status": "active", "agreed_price": None, "agreed_payment": None, "ended_at": None,
             "continuing": True}))
+
+
+def choose_deal(repo: Repo, item_id: str, session_id: str) -> Session:
+    """With several vendors negotiated, the buyer picks the one to go ahead with. The others are closed."""
+    with repo.transaction():
+        item = _item(repo, item_id)
+        chosen = _session(repo, session_id)
+        if chosen.item_id != item_id or chosen.status != "agreed":
+            raise Conflict("only a vendor who agreed can be chosen")
+        if item.state not in ("negotiating", "result_pending"):
+            raise Conflict(f"this item is {item.state.replace('_', ' ')}")
+        for x in sessions_for_item(repo, item_id):
+            if x.id == chosen.id or x.status == "handed_back":
+                continue
+            for d in repo.fetch("draft", parent=x.id):
+                if d.status == "pending":
+                    repo.put("draft", d.id, d.model_copy(update={"status": "discarded"}), parent=x.id)
+            _save_session(repo, x.model_copy(update={
+                "status": "handed_back", "agreed_price": None, "agreed_payment": None,
+                "handback_reason": "Another vendor was chosen.", "ended_at": clock.now()}))
+        if item.state == "negotiating":
+            _move_item(repo, item, "result_pending")
+        return _session(repo, chosen.id)
 
 
 def accept_deal(repo: Repo, item_id: str) -> Item:

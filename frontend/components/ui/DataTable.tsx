@@ -40,6 +40,7 @@ export function DataTable<T>({
   paginate = false,
   noun,
   noScroll = false,
+  sortHints = false,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -56,6 +57,8 @@ export function DataTable<T>({
   noun?: string;
   /** Never scroll sideways: the table shrinks to its box instead. */
   noScroll?: boolean;
+  /** Show the sort arrows on every sortable header, not only on hover. */
+  sortHints?: boolean;
 }) {
   const [page, setPage] = useState(1);
   // "auto" fits as many rows as the screen height allows; otherwise a fixed number. The choice is remembered.
@@ -145,7 +148,7 @@ export function DataTable<T>({
                       <Icon
                         name={active ? (sort!.dir === "asc" ? "up" : "down") : "sort"}
                         size={13}
-                        className={active ? "text-brand" : "opacity-0 transition group-hover:opacity-60 group-focus-visible:opacity-60"}
+                        className={active ? "text-brand" : sortHints ? "opacity-50 transition group-hover:opacity-100" : "opacity-0 transition group-hover:opacity-60 group-focus-visible:opacity-60"}
                       />
                     </button>
                   ) : (

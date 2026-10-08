@@ -300,6 +300,8 @@ class Opportunity(BaseModel):
     target: float
     gap: float
     potential_delta: float
+    qty: float = 0.0
+    unit: str = ""
 
 
 class Insight(BaseModel):
@@ -558,6 +560,7 @@ class SessionActions(BaseModel):
     can_hold: bool = False
     can_resume: bool = False
     can_accept_deal: bool
+    others_open: int = 0  # other conversations on this item that are still running or on hold
 
 
 class SessionView(SessionSummary):

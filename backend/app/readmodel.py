@@ -455,7 +455,8 @@ def dashboard(snap: Snapshot, date_from: Optional[date] = None,
         (sch.Opportunity(
             event_id=iv.event_id, item_id=iv.id, title=titles[iv.event_id],
             description=iv.description, direction=direction[iv.event_id], state=iv.state,
-            best_bid=iv.best_bid, target=iv.target, gap=iv.gap, potential_delta=iv.potential_delta)
+            best_bid=iv.best_bid, target=iv.target, gap=iv.gap, potential_delta=iv.potential_delta,
+            qty=iv.qty, unit=iv.unit)
          for iv in ivs.values()
          if iv.recommendation == "negotiate" and iv.state in
          ("points_reviewed", "awaiting_bids", "bids_in", "analyzed") and iv.bid_count > 0),

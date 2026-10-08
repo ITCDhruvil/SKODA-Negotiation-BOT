@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { KpiGrid } from "@/components/ui/KpiGrid";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ItemReview, type ReviewEntry } from "@/components/approval/ItemReview";
@@ -91,11 +92,11 @@ export default function ApprovePage() {
         <Notice tone="info">Nothing is waiting for approval on this event.</Notice>
       ) : (
         <div className="grid gap-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <KpiGrid>
             <KpiCard icon="cube" tone="brand" label="Items to approve" value={entries.length} sub={`${negotiated} negotiated · ${entries.length - negotiated} accepted as they stand`} />
             <KpiCard icon="vendors" tone="info" label={d === "buy" ? "Suppliers" : "Scrap buyers"} value={vendorCount} sub="Receiving the order" />
             <KpiCard icon="coin" tone="ok" label="Cost centre" value={event.cost_centre} sub={`${event.purch_org} · ${event.purch_group}`} />
-          </div>
+          </KpiGrid>
 
           <Panel title="Items awaiting approval" flush>
             <div className="overflow-x-auto">

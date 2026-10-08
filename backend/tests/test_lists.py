@@ -69,8 +69,11 @@ def test_cors_origins_are_configurable(repo: Repo, seed_dataset: Dataset):
     c = TestClient(app)
     ok = c.get("/api/health", headers={"Origin": "http://localhost:3100"})
     assert ok.headers["access-control-allow-origin"] == "http://localhost:3100"
-    other = c.get("/api/health", headers={"Origin": "http://localhost:3000"})
+    other = c.get("/api/health", headers={"Origin": "https://other.example"})
     assert "access-control-allow-origin" not in other.headers
+    # a page served from the developer's own machine is always allowed, on any port
+    local = c.get("/api/health", headers={"Origin": "http://localhost:5500"})
+    assert local.headers["access-control-allow-origin"] == "http://localhost:5500"
 
 
 def test_items_date_range_covering_everything_equals_unfiltered(client, seed_dataset: Dataset):

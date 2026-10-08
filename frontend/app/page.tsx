@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { DashboardKpis } from "@/components/dashboard/DashboardKpis";
+import { OpportunitiesInsights } from "@/components/dashboard/OpportunitiesInsights";
 import { EventsPanel } from "@/components/events/EventsPanel";
-import { Delta, DirectionBadge, KpiCard, Panel } from "@/components/ui/basics";
+import { Panel } from "@/components/ui/basics";
 import { Avatar, DonutChart, SERIES, StackBar } from "@/components/ui/charts";
-import { Icon } from "@/components/ui/Icon";
 import { RangeNotice } from "@/components/ui/RangeNotice";
 import { ErrorBox, Loading } from "@/components/ui/State";
 import { api, type Dashboard } from "@/lib/api";
@@ -33,18 +34,13 @@ function DashboardBody({ data }: { data: Dashboard }) {
 
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        <KpiCard icon="events" tone="info" label="Total events" value={k.total_events} href="/events" facts={[`${k.open_events} open`, `${k.total_events - k.open_events} closed`]} />
-        <KpiCard icon="cube" tone="brand" label="Items & lots" value={k.items} href="/comparison" facts={[`${k.vendors} vendors`]} />
-        <KpiCard icon="coin" tone="amber" label="Total value" value={moneyCompact(k.total_value)} href="/reports" facts={["Quoted or final"]} />
-        <KpiCard icon="trend" tone="ok" label="Potential" value={moneyCompact(k.potential_total)} href="/comparison" facts={[`${moneyCompact(k.potential_savings)} savings`, `${moneyCompact(k.potential_uplift)} uplift`]} />
-        <KpiCard icon="chat" tone="amber" label="In negotiation" value={k.negotiations_in_progress} href="/negotiations" facts={["Negotiating or awaiting approval"]} />
-        <KpiCard icon="check" tone="ok" label="Completed" value={k.completed_negotiations} href="/history" facts={[`${moneyCompact(k.realised_total)} generated`]} />
-      </div>
+      <DashboardKpis k={k} events={data.events} opportunities={data.opportunities} />
 
       <EventsPanel events={data.events} paginate />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <OpportunitiesInsights data={data} />
+
+      <div className="grid items-start gap-4 md:grid-cols-2">
         <Panel title="Value by category">
           <DonutChart
             label="Value by category"
@@ -68,7 +64,7 @@ function DashboardBody({ data }: { data: Dashboard }) {
         </Panel>
 
         <div className="grid content-start gap-4">
-          <Panel title="Top vendors">
+        <Panel title="Top vendors">
             <ol className="grid gap-2.5">
               {data.top_vendors.map((v, i) => (
                 <li key={v.vendor_id} className="flex items-center gap-3">
@@ -83,9 +79,9 @@ function DashboardBody({ data }: { data: Dashboard }) {
                 </li>
               ))}
             </ol>
-          </Panel>
+        </Panel>
 
-          <Panel title="Pipeline & results">
+        <Panel title="Pipeline & results">
             <StackBar
               label="Events by status"
               segments={[
@@ -104,51 +100,7 @@ function DashboardBody({ data }: { data: Dashboard }) {
                 <div className="font-bold text-ok tabular-nums">{money(data.delta_generated.uplift)}</div>
               </div>
             </div>
-          </Panel>
-        </div>
-
-        <div className="grid content-start gap-4 md:col-span-2 xl:col-span-1">
-          <Panel title="Negotiation opportunities">
-            {data.opportunities.length === 0 ? (
-              <p className="text-sm text-muted">None yet. Analyze quotes on an event to see them here.</p>
-            ) : (
-              <ul className="grid gap-2.5">
-                {data.opportunities.slice(0, 5).map((o) => (
-                  <li key={o.item_id}>
-                    <Link href={`/items/${o.item_id}`} className="block rounded-m border border-line2 px-3 py-2.5 hover:border-brand">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-semibold text-ink">{o.description}</span>
-                        <DirectionBadge direction={o.direction} />
-                      </div>
-                      <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted">
-                        <span className="truncate">{o.title}</span>
-                        <Delta value={o.potential_delta} direction={o.direction} label />
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-
-          {data.insight && (
-            <div className="rounded-card border border-line bg-brand-soft p-4">
-              <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-m bg-panel text-brand">
-                  <Icon name="bulb" />
-                </span>
-                <div className="min-w-0 text-sm">
-                  <b className="block text-ink">Insight</b>
-                  <p className="mt-1 text-text">
-                    {data.insight.description} has the widest gap between vendor bids ({pct(data.insight.spread)}).
-                  </p>
-                  <Link href={`/items/${data.insight.item_id}`} className="mt-2 inline-block text-xs font-semibold text-brand hover:underline">
-                    Open item
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
+        </Panel>
         </div>
       </div>
     </div>

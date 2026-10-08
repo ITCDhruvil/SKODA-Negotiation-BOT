@@ -22,12 +22,11 @@ function Block({ title, pills, children }: { title: string; pills?: ReactNode; c
 const explanation = (note: string) => note.replace(/^[A-Za-z ]+: /, "");
 
 /** Where the conversation stands: progress, how the vendor is behaving, what history says and what has been tried. */
-export function StrategyPanel({ strategy }: { strategy: Strategy }) {
+export function StrategyPanel({ strategy, bare = false }: { strategy: Strategy; bare?: boolean }) {
   const { round, max_rounds: max, phase, stance, stance_note: note, history, alternative } = strategy;
   const used = Array.from(new Set(strategy.tactics_used)).filter((t) => TACTIC_LABEL[t]);
   const share = Math.min(100, Math.round((round / max) * 100));
-  return (
-    <CollapsiblePanel title="Strategy" storageKey="strategy">
+  const body = (
       <div className="grid gap-3">
         <div>
           <div className="flex items-baseline justify-between gap-2">
@@ -81,6 +80,6 @@ export function StrategyPanel({ strategy }: { strategy: Strategy }) {
           </div>
         )}
       </div>
-    </CollapsiblePanel>
   );
+  return bare ? body : <CollapsiblePanel title="Strategy" storageKey="strategy">{body}</CollapsiblePanel>;
 }
