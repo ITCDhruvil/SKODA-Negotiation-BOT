@@ -38,7 +38,7 @@ def test_dates_are_ordered_and_in_the_past():
 def test_exactly_four_carts_are_ineligible():
     carts = _carts(make_cart_positions(random.Random(SEED)))
     bad = [c for c, ps in carts.items()
-           if not eligibility.check_value(sum(p.qty * p.inr_unit_price for p in ps), eligibility.PHASE_2).eligible]
+           if not eligibility.check_value(sum(p.qty * p.inr_unit_price for p in ps), eligibility.AUTO_BAND).eligible]
     assert len(bad) == 4
 
 
@@ -49,7 +49,7 @@ def test_hero_buy_cart():
     assert lunch.description == "Delegation Lunch Buffet"
     assert lunch.qty == 600 and lunch.inr_unit_price == 280
     total = sum(p.qty * p.inr_unit_price for p in ps)
-    assert eligibility.check_value(total, eligibility.PHASE_1).eligible
+    assert eligibility.check_value(total, eligibility.AUTO_BAND).eligible
 
 
 def test_hero_buy_numbers():

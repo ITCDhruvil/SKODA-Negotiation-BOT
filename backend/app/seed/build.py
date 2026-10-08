@@ -221,7 +221,7 @@ def _build_buy(rng, vendors, positions, free_ids, acc) -> None:
     for p in positions:
         carts.setdefault(p.cart_no, []).append(p)
     procedural = [ps for cart, ps in carts.items() if cart != heroes.HERO_BUY_CART]
-    ok = [eligibility.check_value(_cart_value(ps), eligibility.PHASE_2).eligible for ps in procedural]
+    ok = [eligibility.check_value(_cart_value(ps), eligibility.AUTO_BAND).eligible for ps in procedural]
     plan = iter(_stage_plan(rng, sum(ok), BUY_COUNTS))
     for ps, eligible in zip(procedural, ok):
         add_buy_event(rng, vendors, free_ids.pop(0), ps, next(plan) if eligible else "draft", acc)
@@ -256,7 +256,7 @@ def add_sell_event(rng, vendors, event_id: str, *, i: int, material, qty: int, r
 
 def _build_sell(rng, vendors, free_ids, acc) -> None:
     lots = make_lots(rng)
-    ok = [eligibility.check_value(l.qty * l.ref, eligibility.PHASE_2).eligible for l in lots]
+    ok = [eligibility.check_value(l.qty * l.ref, eligibility.AUTO_BAND).eligible for l in lots]
     plan = iter(_stage_plan(rng, sum(ok), SELL_COUNTS))
     for i, (lot, eligible) in enumerate(zip(lots, ok)):
         add_sell_event(rng, vendors, free_ids.pop(0), i=i, material=lot.material, qty=lot.qty,

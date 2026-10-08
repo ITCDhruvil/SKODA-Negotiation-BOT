@@ -204,7 +204,7 @@ def test_items_seed_no_objective(ds):
 
 def test_eligibility_split(ds):
     ev = _events(ds)
-    bad = {e.id for e in ds.events if not eligibility.check_value(ds.event_value(e.id), eligibility.PHASE_2).eligible}
+    bad = {e.id for e in ds.events if not eligibility.check_value(ds.event_value(e.id), eligibility.AUTO_BAND).eligible}
     assert len([b for b in bad if ev[b].direction == "buy"]) == 4
     assert len([b for b in bad if ev[b].direction == "sell"]) == 3
     assert all(ev[b].stage == "draft" for b in bad)

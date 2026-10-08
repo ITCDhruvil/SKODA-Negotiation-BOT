@@ -12,7 +12,7 @@ Band = Literal["auto", "supervised", "management"]
 
 EUR_INR = 100.0  # assumed exchange rate, rupees per euro; change here when the real rate is known
 AUTO_LIMIT_INR = 1_000_000.0  # below ten lakh rupees the bot may run on its own
-PHASE_1_LIMIT_INR = 350_000.0  # up to here the bot needs two offers; above it, three
+MIN_OFFERS = 3  # offers the bot needs before it can start, whatever the deal size
 MANAGEMENT_LIMIT_EUR = 50_000.0  # above this, higher management handles the deal
 MANAGEMENT_LIMIT_INR = MANAGEMENT_LIMIT_EUR * EUR_INR
 
@@ -39,8 +39,8 @@ def headline(b: Band) -> str:
 
 
 def min_offers(value_inr: float) -> int:
-    """Offers the bot needs to start (blueprint, Negotiation Bot phases): 2 up to INR 3.5 lakh, 3 above."""
-    return 2 if value_inr <= PHASE_1_LIMIT_INR else 3
+    """Offers the bot needs to start: three."""
+    return MIN_OFFERS
 
 
 def message(b: Band) -> str:

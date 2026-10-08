@@ -22,28 +22,21 @@ def test_value_above_max_is_ineligible_with_reason():
     r = el.check_value(5_000_001)
     assert not r.eligible
     assert "higher management" in r.reason
-    assert not el.check_value(1_100_000, el.PHASE_2).eligible
+    assert not el.check_value(1_100_000, el.AUTO_BAND).eligible
 
 
-def test_phase_1_upper_limit_is_3_5_lakh():
-    assert el.check_value(350_000, el.PHASE_1).eligible
-    assert not el.check_value(350_001, el.PHASE_1).eligible
-
-
-def test_min_bids_per_phase():
-    assert not el.check_bids(1, el.PHASE_1).eligible
-    assert el.check_bids(2, el.PHASE_1).eligible
-    assert not el.check_bids(2, el.PHASE_2).eligible
-    assert el.check_bids(3, el.PHASE_2).eligible
+def test_min_bids_is_three():
+    assert not el.check_bids(2, el.AUTO_BAND).eligible
+    assert el.check_bids(3, el.AUTO_BAND).eligible
 
 
 def test_bids_reason_names_the_minimum():
     assert "3" in el.check_bids(2).reason
 
 
-def test_default_band_is_phase_2():
-    assert el.DEFAULT_BAND is el.LIVE_BAND  # the sample data was generated with PHASE_2; live use goes up to EUR 50,000
-    assert el.PHASE_2.max_value == 1_000_000
+def test_default_band_is_the_live_band():
+    assert el.DEFAULT_BAND is el.LIVE_BAND  # the sample data uses AUTO_BAND; live use goes up to EUR 50,000
+    assert el.AUTO_BAND.max_value == 1_000_000
 
 
 def test_indian_digit_grouping():
@@ -57,6 +50,5 @@ def test_indian_digit_grouping():
 
 def test_reasons_use_indian_grouping():
     assert el.check_value(999).reason == "value 999 is below the minimum 2,000"
-    assert el.check_value(1_234_567, el.PHASE_2).reason == "value 12,34,567 is above the maximum 10,00,000"
+    assert el.check_value(1_234_567, el.AUTO_BAND).reason == "value 12,34,567 is above the maximum 10,00,000"
     assert el.check_value(6_000_000).reason == "value 60,00,000 is above EUR 50,000, so higher management handles it"
-    assert el.check_value(400_000, el.PHASE_1).reason == "value 4,00,000 is above the maximum 3,50,000"

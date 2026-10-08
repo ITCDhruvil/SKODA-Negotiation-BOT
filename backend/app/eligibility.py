@@ -20,10 +20,10 @@ class Eligibility:
     reason: str = ""
 
 
-PHASE_1 = Band("phase1", 2_000, 350_000, 2)
-PHASE_2 = Band("phase2", 2_000, 1_000_000, 3)  # the band the sample data was generated with
+# Deals the bot negotiates on its own (below ten lakh); the sample data was generated with this band.
+AUTO_BAND = Band("auto", 2_000, policy.AUTO_LIMIT_INR, policy.MIN_OFFERS)
 # Live band: anything up to EUR 50,000 can be negotiated (a person joins above ten lakh); above that, higher management handles it.
-LIVE_BAND = Band("live", 2_000, policy.MANAGEMENT_LIMIT_INR, 3)
+LIVE_BAND = Band("live", 2_000, policy.MANAGEMENT_LIMIT_INR, policy.MIN_OFFERS)
 DEFAULT_BAND = LIVE_BAND
 
 

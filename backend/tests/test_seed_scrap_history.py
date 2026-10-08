@@ -12,7 +12,7 @@ from app.seed.vendors import build_vendors
 def test_lot_count_and_bands():
     lots = make_lots(random.Random(SEED))
     assert len(lots) == 24
-    bad = [i for i, l in enumerate(lots) if not eligibility.check_value(l.qty * l.ref, eligibility.PHASE_2).eligible]
+    bad = [i for i, l in enumerate(lots) if not eligibility.check_value(l.qty * l.ref, eligibility.AUTO_BAND).eligible]
     assert bad == [1, 7, 14]
 
 
