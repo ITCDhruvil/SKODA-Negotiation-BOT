@@ -212,7 +212,7 @@ function longDate(iso: string): string {
  * Interactive price chart: smooth line with a soft fill, a crosshair and a tooltip that follow the pointer
  * (or the arrow keys), range buttons, the latest price on the right axis, and dashed reference lines.
  */
-export function TrendChart({ points, refLines = [], label }: { points: TrendPoint[]; refLines?: RefLine[]; label: string }) {
+export function TrendChart({ points, refLines = [], label, goodWhen }: { points: TrendPoint[]; refLines?: RefLine[]; label: string; goodWhen?: "down" | "up" }) {
   const uid = useId().replace(/:/g, "");
   const box = useRef<SVGSVGElement>(null);
   const [range, setRange] = useState<(typeof RANGES)[number]["key"]>("all");
@@ -229,8 +229,8 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
     setW(Math.max(320, Math.round(el.clientWidth)));
     return () => ro.disconnect();
   }, []);
-  const H = 240;
-  const m = { l: 8, r: 52, t: 16, b: 26 };
+  const H = 280;
+  const m = { l: 28, r: 56, t: 18, b: 30 };
 
   const all = useMemo(
     () => points.map((p) => ({ ...p, t: new Date(`${p.date}T00:00:00`).getTime() })).sort((a, b) => a.t - b.t),
@@ -260,11 +260,14 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
   const line = smoothPath(xy);
   const baseY = H - m.b;
   const area = `${line} L${xy[xy.length - 1].x.toFixed(1)},${baseY} L${xy[0].x.toFixed(1)},${baseY} Z`;
-  const ticks = [0, 1, 2, 3].map((i) => yMin + ((yMax - yMin) * i) / 3);
+  const ticks = [0, 1, 2, 3, 4].map((i) => yMin + ((yMax - yMin) * i) / 4);
   const last = view[view.length - 1];
-  const hiPt = view.reduce((a, b) => (b.price > a.price ? b : a));
-  const loPt = view.reduce((a, b) => (b.price < a.price ? b : a));
+  const first = view[0];
   const shown = hover != null ? view[hover] : last;
+  const change = shown.price - first.price;
+  const changePct = first.price ? (change / first.price) * 100 : 0;
+  const changeGood = goodWhen == null || change === 0 ? null : (goodWhen === "down") === (change < 0);
+  const dateTicks = view.length < 2 || t1 === t0 ? [] : [0, 0.25, 0.5, 0.75, 1].map((f) => t0 + (t1 - t0) * f);
 
   const nearest = (clientX: number) => {
     const rect = box.current!.getBoundingClientRect();
@@ -285,6 +288,12 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
             <span className="text-3xl font-extrabold tracking-tight text-ink tabular-nums">{money(shown.price)}</span>
             {shown.negotiated ? <span className="rounded-full bg-ok-soft px-2 py-0.5 text-xs font-semibold text-ok">Negotiated</span> : null}
           </div>
+          {view.length > 1 && shown !== first && (
+            <div className={`mt-1 text-xs font-semibold tabular-nums ${changeGood == null ? "text-muted" : changeGood ? "text-ok" : "text-red"}`}>
+              {change === 0 ? "No change" : `${change < 0 ? "▼" : "▲"} ${money(Math.abs(Math.round(change)))} (${Math.abs(changePct).toFixed(1)}%)`}
+              <span className="font-normal text-muted"> since {shortDate(first.date)}</span>
+            </div>
+          )}
         </div>
         <div className="inline-flex rounded-m border border-line bg-raise p-0.5" role="group" aria-label="Time range">
           {RANGES.map((r) => (
@@ -303,6 +312,19 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
           ))}
         </div>
       </div>
+
+      {refLines.length > 0 && (
+        <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="Reference prices">
+          {refLines.map((r, i) => (
+            <li key={i} className="inline-flex items-center gap-1.5">
+              <svg width="18" height="6" aria-hidden>
+                <line x1="0" x2="18" y1="3" y2="3" stroke={r.color} strokeWidth="2" strokeDasharray="4 3" />
+              </svg>
+              {r.label} <b className="text-ink tabular-nums">{money(r.value)}</b>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div ref={wrap} className="relative">
         <svg
@@ -332,7 +354,7 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
 
           {ticks.map((tk, i) => (
             <g key={i}>
-              <line x1={m.l} x2={W - m.r} y1={y(tk)} y2={y(tk)} stroke="var(--line2)" />
+              <line x1={m.l} x2={W - m.r} y1={y(tk)} y2={y(tk)} stroke="var(--line2)" opacity={0.7} />
               <text x={W - m.r + 8} y={y(tk) + 4} className="fill-muted" style={{ fontSize: 11 }}>
                 {num(Math.round(tk))}
               </text>
@@ -342,9 +364,6 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
           {refLines.map((r, i) => (
             <g key={i}>
               <line x1={m.l} x2={W - m.r} y1={y(r.value)} y2={y(r.value)} stroke={r.color} strokeDasharray="5 4" strokeWidth={1.4} opacity={0.9} />
-              <text x={m.l + 4} y={y(r.value) - 5} style={{ fontSize: 11, fill: r.color, fontWeight: 700 }}>
-                {r.label} {num(r.value)}
-              </text>
             </g>
           ))}
 
@@ -356,15 +375,6 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
               <circle key={i} cx={xy[i].x} cy={xy[i].y} r={p.negotiated ? 3.6 : 2.6} fill={p.negotiated ? "var(--c1)" : "var(--panel)"} stroke={p.negotiated ? "var(--c1)" : "var(--c2)"} strokeWidth={1.6} />
             ))}
 
-          {[hiPt, loPt].map((p, i) => {
-            const idx = view.indexOf(p);
-            if (idx < 0 || (i === 1 && hiPt === loPt)) return null;
-            return (
-              <text key={i} x={xy[idx].x} y={xy[idx].y + (i === 0 ? -9 : 17)} textAnchor="middle" className="fill-ink" style={{ fontSize: 11, fontWeight: 700 }}>
-                {num(p.price)}
-              </text>
-            );
-          })}
 
 
           {hover != null && (
@@ -375,12 +385,18 @@ export function TrendChart({ points, refLines = [], label }: { points: TrendPoin
             </g>
           )}
 
-          <text x={m.l} y={H - 8} className="fill-muted" style={{ fontSize: 11 }}>
-            {shortDate(view[0].date)}
-          </text>
-          <text x={W - m.r} y={H - 8} textAnchor="end" className="fill-muted" style={{ fontSize: 11 }}>
-            {shortDate(last.date)}
-          </text>
+          {hover == null && (
+            <g pointerEvents="none">
+              <circle cx={xy[xy.length - 1].x} cy={xy[xy.length - 1].y} r={9} fill="var(--c2)" opacity={0.16} />
+              <circle cx={xy[xy.length - 1].x} cy={xy[xy.length - 1].y} r={4.5} fill="var(--panel)" stroke="var(--c2)" strokeWidth={2.4} />
+            </g>
+          )}
+
+          {dateTicks.map((t, i) => (
+            <text key={i} x={x(t)} y={H - 9} textAnchor={i === 0 ? "start" : i === dateTicks.length - 1 ? "end" : "middle"} className="fill-muted" style={{ fontSize: 11 }}>
+              {new Date(t).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+            </text>
+          ))}
         </svg>
 
         {hover != null && (
