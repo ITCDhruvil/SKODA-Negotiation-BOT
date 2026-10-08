@@ -185,7 +185,7 @@ def suggest_vendors(repo: Repo, direction: str, category_key: str, descriptions:
 
 
 def _next_number(repo: Repo) -> int:
-    return max(ids.event_number(e.id) for e in repo.fetch("event")) + 1
+    return ids.last_number(e.id for e in repo.fetch("event")) + 1
 
 
 def create_event(repo: Repo, body: NewEvent) -> str:

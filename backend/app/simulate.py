@@ -14,7 +14,7 @@ from app.store import Repo
 
 
 def _next_number(repo: Repo) -> int:
-    return max(ids.event_number(e.id) for e in repo.fetch("event")) + 1
+    return ids.last_number(e.id for e in repo.fetch("event")) + 1
 
 
 def _buy(rng: random.Random, vendors, event_id: str, n: int, acc: Accumulator) -> None:

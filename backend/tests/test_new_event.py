@@ -130,3 +130,9 @@ def test_options_offer_the_prototype_users_as_requestors(client):
     assert not any(u["entity"] == "E2" and u["role"] == "FSK_COORD" for u in users)
     assert len({u["emp_no"] for u in users}) == len(users) - 0 or True
     assert any(u["full_name"] == "Buyer 2 Persona E1" for u in users)
+
+
+def test_a_case_opened_from_ais_does_not_break_numbering_of_new_events(repo, seed_dataset):
+    from app import ids
+    assert ids.last_number(["AIS-E1-2026-00104-NEG"]) == 0
+    assert ids.last_number(["AIS-E1-2026-00040", "AIS-E1-2026-00104-NEG"]) == 4

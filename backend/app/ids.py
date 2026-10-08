@@ -20,6 +20,15 @@ def event_number(event_id_: str) -> int:
     return int(event_id_.rsplit("-", 1)[1]) - OFFSET
 
 
+_PLAIN = re.compile(r"AIS-E1-2026-\d{5}")
+
+
+def last_number(event_ids) -> int:
+    """The highest running number among ids of the plain form. Cases opened from AIS (AIS-E1-2026-00104-NEG) carry
+    a suffix and their own request number, so they do not take part."""
+    return max((event_number(i) for i in event_ids if _PLAIN.fullmatch(i)), default=0)
+
+
 
 _REQUEST = re.compile(r"AIS-E1-2026-(\d{5})")
 
