@@ -8,7 +8,6 @@ import { ComparisonMatrix } from "@/components/item/ComparisonMatrix";
 import { HistoryTab } from "@/components/item/HistoryTab";
 import { NegotiationTab } from "@/components/item/NegotiationTab";
 import { NextStep } from "@/components/item/NextStep";
-import { OpportunityTab } from "@/components/item/OpportunityTab";
 import { StartNegotiationTab } from "@/components/item/StartNegotiationTab";
 import { LiveConversationsTab } from "@/components/item/LiveConversationsTab";
 import { CompareResultsTab } from "@/components/item/CompareResultsTab";
@@ -216,7 +215,29 @@ function QuotesTab({
         )}
         {showFooter && (
           <div className="grid gap-3 border-t border-line2 px-5 py-4">
-            {item.state === "draft" && <Notice tone="info">Confirm your negotiation points first. Vendors are invited once the points are confirmed.</Notice>}
+            {item.state === "draft" && (
+              <>
+                <Notice tone="info">Confirm your negotiation points first. Vendors are invited once the points are confirmed.</Notice>
+                {invitees.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="primary"
+                      disabled={busy}
+                      onClick={() =>
+                        act(async () => {
+                          if (item.target != null && item.limit != null) await api.setPoints(item.id, { target: item.target, limit: item.limit });
+                          await api.confirmPoints(item.id);
+                          await api.releaseBids(item.id);
+                        })
+                      }
+                    >
+                      Confirm points and get all quotes
+                    </Button>
+                    <span className="text-xs text-muted">Demo shortcut: uses the suggested points ({money(item.target)} target, {money(item.limit)} limit) and makes every invited vendor reply.</span>
+                  </div>
+                )}
+              </>
+            )}
             {noneAvailable && (
               <Notice tone="amber">
                 Every invited vendor has responded and there are no more vendors available to invite for this item
@@ -326,20 +347,15 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
   const list = sessions ?? [];
   // The row menu on the event page links here with ?tab=quotes|negotiation|history to land on that tab.
   const asked = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("tab");
-  type TabKey = "quotes" | "opportunity" | "start" | "negotiation" | "compare" | "history";
-  const requested: TabKey | null = asked === "quotes" || asked === "opportunity" || asked === "start" || asked === "negotiation" || asked === "compare" || asked === "history" ? asked : null;
-  const [tab, setTab] = useState<TabKey>(requested ?? (list.length > 0 ? "negotiation" : "quotes"));
-  const [chosen, setChosen] = useState(requested !== null);
-  // Land on the conversation once there is one, unless the user already picked a tab.
-  useEffect(() => {
-    if (!chosen && list.length > 0) setTab("negotiation");
-  }, [chosen, list.length]);
-  const live = useLiveSessions(list, tab === "negotiation" || tab === "compare", () => {
+  type TabKey = "quotes" | "start" | "negotiation" | "compare" | "history";
+  const requested: TabKey | null = asked === "quotes" || asked === "start" || asked === "negotiation" || asked === "compare" || asked === "history" ? asked : null;
+  // An item opens on its vendors and quotes, the first step of the flow; the next steps are the tabs to its right.
+  const [tab, setTab] = useState<TabKey>(requested ?? "quotes");
+  const { views: live, update: updateLive, watch: watchLive } = useLiveSessions(list, tab === "negotiation" || tab === "compare", () => {
     void reload();
     void reloadSessions();
   });
   const pick = (t: TabKey) => {
-    setChosen(true);
     setTab(t);
   };
   // After the quotes are analysed nothing in the main area changes, so point at the card where the next step happens.
@@ -423,7 +439,6 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
               onChange={pick}
               tabs={[
                 { key: "quotes", label: `Vendors & ${quotesLabel(event.direction).toLowerCase()}` },
-                { key: "opportunity", label: "Opportunity" },
                 { key: "start", label: "Start negotiation" },
                 { key: "negotiation", label: `Conversations${list.length ? ` (${list.length})` : ""}` },
                 { key: "compare", label: "Compare results" },
@@ -434,8 +449,6 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
           <div className="p-5" role="tabpanel" id={panelId("item", tab)} aria-labelledby={tabId("item", tab)}>
             {tab === "quotes" ? (
               <QuotesTab detail={detail} sessions={list} onChanged={reload} onShowNegotiation={() => pick("negotiation")} />
-            ) : tab === "opportunity" ? (
-              <OpportunityTab detail={detail} onStart={goStart} />
             ) : tab === "start" ? (
               <StartNegotiationTab
                 detail={detail}
@@ -447,7 +460,7 @@ function Body({ detail, reload }: { detail: ItemDetail; reload: () => Promise<vo
                 onStarted={() => pick("negotiation")}
               />
             ) : tab === "negotiation" ? (
-              <LiveConversationsTab sessions={list} views={live} onStartMore={() => pick("start")} onChanged={() => void reload()} />
+              <LiveConversationsTab sessions={list} views={live} onUpdate={updateLive} onWatch={watchLive} onStartMore={() => pick("start")} onChanged={() => void reload()} />
             ) : tab === "compare" ? (
               <CompareResultsTab
                 detail={detail}

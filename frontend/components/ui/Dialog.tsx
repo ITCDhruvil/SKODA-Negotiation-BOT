@@ -58,13 +58,13 @@ export function Dialog({
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-50 grid place-items-center p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
         ref={box}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`max-h-[90vh] w-full ${size === "lg" ? "max-w-3xl" : "max-w-lg"} overflow-auto rounded-card border border-line bg-panel shadow-card`}
+        className={`max-h-[90vh] w-full ${size === "lg" ? "max-w-3xl" : "max-w-lg"} overflow-auto rounded-card border border-line bg-panel shadow-[0_24px_64px_-16px_rgba(0,0,0,0.35)]`}
       >
         <header className="flex items-center justify-between gap-3 border-b border-line2 px-5 py-4">
           <h2 className="text-base font-bold text-ink">{title}</h2>

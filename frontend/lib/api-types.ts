@@ -1310,6 +1310,17 @@ export interface components {
             case_no: string;
             /** Supplier Id */
             supplier_id: string;
+            /**
+             * Auto Start
+             * @default false
+             */
+            auto_start: boolean;
+            /**
+             * Direction
+             * @default buy
+             * @enum {string}
+             */
+            direction: "buy" | "sell";
             /** Topic */
             topic: string;
             /** Suppliers */
@@ -1349,7 +1360,7 @@ export interface components {
             /** Item Id */
             item_id: string;
             /** Session Id */
-            session_id: string;
+            session_id?: string | null;
             /** Sessions */
             sessions: components["schemas"]["HandoffSession"][];
         };

@@ -58,7 +58,9 @@ class Detail(BaseModel):
 class HandoffIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     case_no: str = Field(min_length=3, max_length=40)
-    supplier_id: str  # the supplier to negotiate with first
+    supplier_id: str  # the supplier (or, for scrap, the buyer of the scrap) to negotiate with first
+    auto_start: bool = False  # true: also start the conversation with `supplier_id` at once (the Buyer normally starts it from the Desk)
+    direction: Literal["buy", "sell"] = "buy"  # sell: a scrap sale, where the bidders offer to buy and higher is better
     topic: str = Field(min_length=2, max_length=160)
     suppliers: list[Supplier] = Field(min_length=1, max_length=20)
     target: float = Field(gt=0)  # the Buyer's minimum: the price to aim for
@@ -83,7 +85,7 @@ class HandoffSession(BaseModel):
 class HandoffOut(BaseModel):
     event_id: str
     item_id: str  # the first item
-    session_id: str  # the first conversation
+    session_id: Optional[str] = None  # the first conversation, when one was started
     sessions: list[HandoffSession]
 
 
@@ -91,6 +93,12 @@ def _reserve(total: float, target: float, sid: str) -> float:
     """The supplier's hidden floor: it can come down 55% to 110% of the way from its offer to the Buyer's target."""
     share = 0.55 + (zlib.crc32(f"reserve:{sid}".encode("utf-8")) % 56) / 100
     return deal.round_price(max(1.0, total - max(0.0, total - target) * share))
+
+
+def _reserve_sell(total: float, target: float, sid: str) -> float:
+    """A scrap buyer's hidden ceiling: it can rise 55% to 110% of the way from its offer to the Seller's target."""
+    share = 0.55 + (zlib.crc32(f"reserve:{sid}".encode("utf-8")) % 56) / 100
+    return deal.round_price(total + max(0.0, target - total) * share)
 
 
 def _check_detail(body: HandoffIn) -> dict[tuple[str, int], float]:
@@ -124,8 +132,9 @@ def open_case(repo: Repo, body: HandoffIn) -> HandoffOut:
     chosen = next((s for s in body.suppliers if s.sid == body.supplier_id), None)
     if chosen is None:
         raise Conflict("the supplier to negotiate with is not among the offers")
-    if not deal.points_valid("buy", body.target, body.limit):
-        raise Conflict("the Buyer's minimum must not be above the maximum")
+    sell = body.direction == "sell"
+    if not deal.points_valid(body.direction, body.target, body.limit):
+        raise Conflict("the lowest price must not be above the target" if sell else "the Buyer's minimum must not be above the maximum")
     if body.offers and not body.items:
         raise Conflict("offers need the cart positions they price")
     if body.items and not body.offers:
@@ -142,9 +151,9 @@ def open_case(repo: Repo, body: HandoffIn) -> HandoffOut:
         if repo.get("event", event_id) is None:
             today = clock.today()
             repo.put("event", event_id, Event(
-                id=event_id, type="shopping_cart", direction="buy", title=body.topic, company_id=body.entity,
+                id=event_id, type="scrap_sale" if sell else "shopping_cart", direction=body.direction, title=body.topic, company_id=body.entity,
                 company="SKODA Auto VW India", plant="Plant Pune", purch_org="LPOS (SAVWIPL)", purch_group="A05",
-                category="Shopping cart negotiation", category_key="negbot", requestor=body.requestor,
+                category="Scrap sale negotiation" if sell else "Shopping cart negotiation", category_key="negbot", requestor=body.requestor,
                 cost_centre=body.cost_centre, created=today, approval_date=today, due=today + timedelta(days=14),
                 source_cart_no=body.cart_no, hero=False, acceptable=False, no_deal=False, stage="analyzed",
                 origin="AIS"))
@@ -152,7 +161,7 @@ def open_case(repo: Repo, body: HandoffIn) -> HandoffOut:
                 if repo.get("vendor", sup.sid) is not None:
                     continue  # a vendor the Desk already knows keeps its own record (name, rating, history)
                 repo.put("vendor", sup.sid, Vendor(
-                    id=sup.sid, name=sup.name, sap_no=sup.sid, type="supplier", categories=[], rating=sup.rating,
+                    id=sup.sid, name=sup.name, sap_no=sup.sid, type="scrap_buyer" if sell else "supplier", categories=[], rating=sup.rating,
                     payment_pref=sup.payment_code, past_deals=0))
             # The Buyer's points are for the whole cart; each item gets the same share of them as of the chosen offer.
             t_share, l_share = body.target / chosen_total, body.limit / chosen_total
@@ -161,7 +170,7 @@ def open_case(repo: Repo, body: HandoffIn) -> HandoffOut:
                 unit_of = (lambda sup: price[(sup.sid, ln.position)]) if body.items else (lambda sup: sup.total)
                 ref = unit_of(chosen)
                 repo.put("item", item_id, Item(
-                    id=item_id, event_id=event_id, position=ln.position, description=ln.description, kind="goods",
+                    id=item_id, event_id=event_id, position=ln.position, description=ln.description, kind="scrap" if sell else "goods",
                     qty=ln.qty, unit=ln.unit, reference_price=unit_of(body.suppliers[0]),
                     suggested_target=deal.round_price(ref * t_share), suggested_limit=deal.round_price(ref * l_share),
                     target=deal.round_price(ref * t_share), limit=deal.round_price(ref * l_share),
@@ -172,21 +181,22 @@ def open_case(repo: Repo, body: HandoffIn) -> HandoffOut:
                               payment_code=sup.payment_code, incoterm="FH", delivery_days=14, validity_days=30,
                               warranty_months=0, language=sup.lang)
                     repo.put("bid", bid.id, bid, parent=item_id)
-                    repo.put("reserve", bid.id, _reserve(unit, unit * t_share, sup.sid))
+                    repo.put("reserve", bid.id, (_reserve_sell if sell else _reserve)(unit, unit * t_share, sup.sid))
         if body.details:
             repo.put("ais_info", event_id, AisInfo(event_id=event_id, details=[d.model_dump() for d in body.details]), parent=event_id)
-        mode = policy.default_mode(case_band)
         started: list[HandoffSession] = []
-        for ln in lines:
-            item_id = item_ids[ln.position]
-            existing = [x for x in neg.sessions_for_item(repo, item_id) if x.vendor_id == chosen.sid]
-            if existing:
-                started.append(HandoffSession(position=ln.position, item_id=item_id, session_id=existing[-1].id))
-                continue
-            s: Session = neg.start(repo, item_id, vendor_id=chosen.sid, mode=mode)  # type: ignore[arg-type]
-            started.append(HandoffSession(position=ln.position, item_id=item_id, session_id=s.id))
-        first = started[0]
-        return HandoffOut(event_id=event_id, item_id=first.item_id, session_id=first.session_id, sessions=started)
+        if body.auto_start:
+            mode = policy.default_mode(case_band)
+            for ln in lines:
+                item_id = item_ids[ln.position]
+                existing = [x for x in neg.sessions_for_item(repo, item_id) if x.vendor_id == chosen.sid]
+                if existing:
+                    started.append(HandoffSession(position=ln.position, item_id=item_id, session_id=existing[-1].id))
+                    continue
+                s: Session = neg.start(repo, item_id, vendor_id=chosen.sid, mode=mode)  # type: ignore[arg-type]
+                started.append(HandoffSession(position=ln.position, item_id=item_id, session_id=s.id))
+        first_item = item_ids[lines[0].position]
+        return HandoffOut(event_id=event_id, item_id=first_item, session_id=started[0].session_id if started else None, sessions=started)
 
 
 # --- the result, read by AIS ----------------------------------------------------------------------
@@ -270,7 +280,8 @@ def case_result(repo: Repo, case_no: str) -> HandoffResult:
             sid=sid, name=mine[0][1].name, initial_total=round(initial, 2),
             negotiated_total=round(sum(r.qty * o.negotiated_unit_price for r, o in mine), 2) if full else None))
     done = [s for s in suppliers if s.negotiated_total is not None]
-    recommended = min(done, key=lambda s: s.negotiated_total).sid if done else None
+    pick = max if event.direction == "sell" else min  # a scrap sale wants the highest price
+    recommended = pick(done, key=lambda s: s.negotiated_total).sid if done else None
     statuses = [r.session_status for r in rows]
     if not any(statuses):
         status = "not_started"

@@ -61,3 +61,10 @@ export function inAis(): boolean {
 export function openCaseInAis(caseNo: string): void {
   if (inAis()) window.parent.postMessage({ negOpenCase: { case_no: caseNo } }, "*");
 }
+
+/** Tell AIS the buyer has confirmed the result, so it reads it at once and moves its request on to the next step. */
+export function notifyAisDone(caseNo: string, status: AisResult["status"]): boolean {
+  if (typeof window === "undefined" || window.parent === window) return false;
+  window.parent.postMessage({ negDone: { case_no: caseNo, status } }, "*");
+  return true;
+}

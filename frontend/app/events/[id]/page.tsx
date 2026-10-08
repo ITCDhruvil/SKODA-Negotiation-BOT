@@ -4,6 +4,8 @@ import Link from "next/link";
 import { KpiGrid } from "@/components/ui/KpiGrid";
 import { Icon } from "@/components/ui/Icon";
 import { useParams } from "next/navigation";
+import { useState } from "react";
+import { Tabs, panelId, tabId } from "@/components/ui/Tabs";
 import { Button, ButtonLink, Delta, DirectionBadge, KpiCard, Panel, Pill } from "@/components/ui/basics";
 import { inAis, openCaseInAis } from "@/lib/ais";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -43,40 +45,72 @@ function Meta({ label, value }: { label: string; value: string }) {
 
 const DOC_KIND: Record<string, string> = { offer: "Supplier offer", sfo: "SFO", comparison: "Comparison sheet", other: "Document" };
 
-/** What the AIS request sent with the case: its details and its files. */
-function FromAis({ eventId }: { eventId: string }) {
-  const { data } = useApi(() => api.aisInfo(eventId), [eventId]);
-  if (!data || (data.details.length === 0 && data.documents.length === 0)) return null;
+/** What the AIS request sent with the case: its details. */
+function AisDetails({ details }: { details: AisInfo["details"] }) {
+  if (details.length === 0) return <p className="px-5 py-6 text-sm text-muted">The AIS request sent no details.</p>;
   return (
-    <Panel title="From the AIS request">
-      {data.details.length > 0 && (
-        <dl className="grid gap-x-10 2xl:grid-cols-2">
-          {data.details.map((d) => (
-            <Meta key={d.label} label={d.label} value={d.value || "—"} />
-          ))}
-        </dl>
-      )}
-      {data.documents.length > 0 && (
-        <div className={data.details.length > 0 ? "mt-5" : ""}>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Files</h3>
-          <ul className="divide-y divide-line2 rounded-m border border-line">
-            {data.documents.map((f) => (
-              <li key={f.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold text-ink">{f.name}</div>
-                  <div className="text-xs text-muted">
-                    {DOC_KIND[f.kind] ?? f.kind}
-                    {f.supplier_name ? ` · ${f.supplier_name}` : ""} · {Math.max(1, Math.round(f.size / 1024))} KB
-                    {f.generated ? " · summary built by AIS from the offer data" : ""}
-                  </div>
-                </div>
-                <a href={api.documentUrl(f.id)} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">Open</a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </Panel>
+    <dl className="grid gap-x-10 px-5 py-3 2xl:grid-cols-2">
+      {details.map((d) => (
+        <Meta key={d.label} label={d.label} value={d.value || "—"} />
+      ))}
+    </dl>
+  );
+}
+
+/** The documents that came with the case. */
+function AisDocuments({ documents }: { documents: AisInfo["documents"] }) {
+  if (documents.length === 0) return <p className="px-5 py-6 text-sm text-muted">No documents came with this case.</p>;
+  return (
+    <ul className="divide-y divide-line2">
+      {documents.map((f) => (
+        <li key={f.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-info-soft text-info">
+            <Icon name="list" size={16} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-semibold text-ink">{f.name}</div>
+            <div className="text-xs text-muted">
+              {DOC_KIND[f.kind] ?? f.kind}
+              {f.supplier_name ? ` · ${f.supplier_name}` : ""} · {Math.max(1, Math.round(f.size / 1024))} KB
+              {f.generated ? " · summary built by AIS from the offer data" : ""}
+            </div>
+          </div>
+          <a href={api.documentUrl(f.id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold text-ink hover:border-brand hover:text-brand">
+            <Icon name="external" size={13} /> Open
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type AisInfo = Awaited<ReturnType<typeof api.aisInfo>>;
+type EventTab = "items" | "ais" | "docs";
+
+/** The items, what AIS sent and its documents, one at a time, so the items are not buried under the rest. */
+function EventTabs({ eventId, fromAis, itemCount, children }: { eventId: string; fromAis: boolean; itemCount: number; children: React.ReactNode }) {
+  const { data } = useApi(() => (fromAis ? api.aisInfo(eventId) : Promise.resolve(null)), [eventId, fromAis]);
+  const [tab, setTab] = useState<EventTab>("items");
+  const tabs: { key: EventTab; label: string }[] = [{ key: "items", label: `Items (${itemCount})` }];
+  if (data && data.details.length > 0) tabs.push({ key: "ais", label: "From AIS request" });
+  if (data && data.documents.length > 0) tabs.push({ key: "docs", label: `Documents (${data.documents.length})` });
+  const shown = tabs.some((t) => t.key === tab) ? tab : "items";
+  return (
+    <section className="min-w-0 rounded-card border border-line bg-panel shadow-card">
+      <div className="px-5 pt-1">
+        <Tabs idPrefix="evt" value={shown} onChange={setTab} tabs={tabs} />
+      </div>
+      <div role="tabpanel" id={panelId("evt", shown)} aria-labelledby={tabId("evt", shown)}>
+        {shown === "items" && (
+          <>
+            {itemCount > 1 && <p className="px-5 pt-3 text-sm text-muted">This event has {itemCount} items. Open an item to see its vendors and start negotiating.</p>}
+            {children}
+          </>
+        )}
+        {shown === "ais" && data && <AisDetails details={data.details} />}
+        {shown === "docs" && data && <AisDocuments documents={data.documents} />}
+      </div>
+    </section>
   );
 }
 
@@ -236,10 +270,11 @@ function Body({ data }: { data: EventDetail }) {
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="grid min-w-0 content-start gap-5">
-          <Panel title="Items" flush>
-            <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} noScroll />
-          </Panel>
-          {e.from_ais && <FromAis eventId={e.id} />}
+          <EventTabs eventId={e.id} fromAis={e.from_ais} itemCount={data.items.length}>
+            <div className="pt-2">
+              <DataTable columns={columns} rows={data.items} rowKey={(i) => i.id} noScroll />
+            </div>
+          </EventTabs>
         </div>
         <div className="grid min-w-0 content-start gap-5">
           <EventNegotiations eventId={e.id} />

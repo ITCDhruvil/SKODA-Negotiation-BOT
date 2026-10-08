@@ -4,7 +4,7 @@ from app.api import create_app
 
 CASE = {
     "case_no": "NB-E1-2026-00037", "supplier_id": "S-11", "topic": "Training Lunch Cart SC 10124",
-    "target": 40_000, "limit": 46_000, "cart_no": "1012400001",
+    "target": 40_000, "limit": 46_000, "cart_no": "1012400001", "auto_start": True,
     "suppliers": [
         {"sid": "S-11", "name": "Alpha Foods", "lang": "en", "total": 52_000, "rating": 4.2, "payment_code": "ZD30"},
         {"sid": "S-12", "name": "Beta Caterers", "lang": "hi", "total": 55_000, "rating": 3.9, "payment_code": "ZD45"},
@@ -70,6 +70,7 @@ def test_an_agreed_ais_case_can_be_closed_here_and_gets_a_contract_document(repo
 
 
 DETAIL = {
+    "auto_start": True,
     "case_no": "NB-E1-2026-00050", "supplier_id": "S-11", "topic": "Workshop consumables SC 10130", "target": 90_000,
     "limit": 110_000, "cart_no": "1013000001",
     "suppliers": [
@@ -183,3 +184,46 @@ def test_an_event_can_be_deleted_with_everything_under_it(repo, seed_dataset):
     assert c.get("/api/handoff/NB-E1-2026-00050/result").status_code == 404
     assert all(e["id"] != "NB-E1-2026-00050" for e in c.get("/api/events").json())
     assert c.delete("/api/events/NB-E1-2026-00050").status_code == 404
+
+
+SCRAP = {
+    "case_no": "AIS-E1-2026-00200", "direction": "sell", "supplier_id": "B-1", "topic": "Aluminium chips sale",
+    "target": 70_000, "limit": 60_000, "auto_start": True,
+    "suppliers": [
+        {"sid": "B-1", "name": "Alpha Metals", "lang": "en", "total": 62_000},
+        {"sid": "B-2", "name": "Beta Recyclers", "lang": "hi", "total": 64_000},
+    ],
+}
+
+
+def test_a_scrap_sale_from_ais_is_negotiated_upwards(repo, seed_dataset):
+    c = _client(repo, seed_dataset)
+    r = c.post("/api/handoff", json=SCRAP)
+    assert r.status_code == 200, r.text
+    out = r.json()
+    ev = c.get(f"/api/events/{out['event_id']}").json()
+    assert ev["event"]["direction"] == "sell" and ev["event"]["type"] == "scrap_sale"
+    s = c.get(f"/api/sessions/{out['session_id']}").json()
+    assert s["direction"] == "sell" and s["vendor_offer"] == 62_000
+    res = c.get(f"/api/handoff/{SCRAP['case_no']}/result").json()
+    assert res["status"] == "in_negotiation" and res["recommended_supplier"] is None
+
+
+def test_a_scrap_sale_floor_must_not_exceed_the_target(repo, seed_dataset):
+    c = _client(repo, seed_dataset)
+    r = c.post("/api/handoff", json={**SCRAP, "target": 55_000, "limit": 60_000})
+    assert r.status_code == 409
+
+
+def test_a_case_from_ais_waits_for_the_buyer_to_start_the_negotiation(repo, seed_dataset):
+    c = _client(repo, seed_dataset)
+    r = c.post("/api/handoff", json={k: v for k, v in CASE.items() if k != "auto_start"})
+    assert r.status_code == 200, r.text
+    out = r.json()
+    assert out["session_id"] is None and out["sessions"] == []
+    item = c.get(f"/api/items/{out['item_id']}").json()
+    assert item["item"]["state"] == "analyzed"
+    assert c.get(f"/api/handoff/{CASE['case_no']}/result").json()["status"] == "not_started"
+    # the Buyer picks a vendor and starts it from the item, like any other event
+    s = c.post(f"/api/items/{out['item_id']}/negotiations", json={"vendor_id": "S-12", "mode": "auto"})
+    assert s.status_code == 200 and s.json()["from_ais"] and s.json()["vendor_id"] == "S-12"

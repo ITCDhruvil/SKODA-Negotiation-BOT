@@ -3638,6 +3638,20 @@
       "type": "string",
       "title": "Supplier Id"
      },
+     "auto_start": {
+      "type": "boolean",
+      "title": "Auto Start",
+      "default": false
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Direction",
+      "default": "buy"
+     },
      "topic": {
       "type": "string",
       "maxLength": 160,
@@ -3737,7 +3751,14 @@
       "title": "Item Id"
      },
      "session_id": {
-      "type": "string",
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
       "title": "Session Id"
      },
      "sessions": {
@@ -3752,7 +3773,6 @@
     "required": [
      "event_id",
      "item_id",
-     "session_id",
      "sessions"
     ],
     "title": "HandoffOut"

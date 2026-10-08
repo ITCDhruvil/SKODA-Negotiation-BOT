@@ -1,23 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { ChatHeader, ChatLog } from "@/components/negotiation/ChatLog";
+import { useEffect, useState } from "react";
+import { ConversationPanel, useLiveChat } from "@/components/negotiation/LiveChat";
 import { Icon } from "@/components/ui/Icon";
-import { Notice } from "@/components/ui/State";
+import { Loading, Notice } from "@/components/ui/State";
 import { api, type SessionSummary, type SessionView } from "@/lib/api";
 import { money } from "@/lib/format";
-import { MODE_LABEL, SESSION_LABEL } from "@/lib/labels";
+import { SESSION_LABEL } from "@/lib/labels";
 
 /** Every conversation on the item in one place: pick a vendor on the left and watch the chat on the right as it happens. */
 export function LiveConversationsTab({
   sessions,
   views,
+  onUpdate,
+  onWatch,
   onStartMore,
   onChanged,
 }: {
   sessions: SessionSummary[];
   views: Record<string, SessionView>;
+  onUpdate: (v: SessionView) => void;
+  onWatch: (id: string | null) => void;
   onStartMore: () => void;
   onChanged: () => void;
 }) {
@@ -43,18 +47,8 @@ export function LiveConversationsTab({
   const hiddenCount = allOrdered.length - ordered.length;
   const [pick, setPick] = useState<string | null>(null);
   const current = ordered.find((s) => s.id === pick) ?? ordered.find((s) => s.status === "active") ?? ordered[0];
-  const view = current ? views[current.id] : undefined;
   const [removing, setRemoving] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
-  const scroller = useRef<HTMLDivElement>(null);
-  const turns = view?.turns.length ?? 0;
-
-  // Keep the newest message in sight while the conversation grows.
-  useEffect(() => {
-    const el = scroller.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [turns, current?.id]);
-
   if (sessions.length === 0) {
     return (
       <Notice tone="info">
@@ -78,8 +72,6 @@ export function LiveConversationsTab({
       setRemoving(null);
     }
   };
-
-  const waitingOnYou = view?.mode === "approve" && view.status === "active" && !!view.pending_draft;
 
   return (
     <div className="grid gap-4">
@@ -130,60 +122,7 @@ export function LiveConversationsTab({
 
         {removeError && <Notice tone="red">{removeError}</Notice>}
 
-        {current && (
-          <section className="flex h-[clamp(32rem,calc(100vh-14rem),52rem)] min-w-0 flex-col rounded-card border border-line bg-panel" aria-label={`Conversation with ${current.vendor_name}`}>
-            <header className="shrink-0 border-b border-line2 px-4 py-3">
-              <ChatHeader
-                name={current.vendor_name}
-                subtitle={
-                  current.status === "active"
-                    ? `${MODE_LABEL[current.mode]} · round ${current.round}`
-                    : current.status === "agreed"
-                      ? "Agreed"
-                      : current.status === "on_hold"
-                        ? "On hold"
-                        : "Conversation ended"
-                }
-                typing={false}
-                live={current.status === "active"}
-                actions={
-                  <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1">
-                    {view && (
-                      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
-                        <span>
-                          Original quote <b className="text-ink">{money(view.original_price)}</b>
-                        </span>
-                        <span>
-                          Vendor now <b className="text-ink">{money(view.vendor_offer)}</b>
-                        </span>
-                        {view.our_offer != null && (
-                          <span>
-                            Our offer <b className="text-ink">{money(view.our_offer)}</b>
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  <Link href={`/negotiate/${current.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-3.5 py-1.5 text-xs font-semibold text-ink hover:border-brand hover:text-brand">
-                    Open workspace
-                    <Icon name="external" size={13} />
-                  </Link>
-                  </div>
-                }
-              />
-            </header>
-            {waitingOnYou && (
-              <div className="shrink-0 border-b border-line2 bg-amber-soft px-4 py-2 text-sm text-amber">
-                A message is waiting for your approval.{" "}
-                <Link href={`/negotiate/${current.id}`} className="font-semibold underline">
-                  Open the workspace
-                </Link>
-              </div>
-            )}
-            <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 py-3" >
-              {view ? <ChatLog turns={view.turns} vendorName={current.vendor_name} showInsights /> : <p className="py-8 text-center text-sm text-muted">Loading the conversation…</p>}
-            </div>
-          </section>
-        )}
+        {current && <WatchedConversation key={current.id} session={current} initial={views[current.id]} onUpdate={onUpdate} onWatch={onWatch} />}
       </div>
     </div>
   );
@@ -217,5 +156,57 @@ function StatusIcon({ status, label }: { status: SessionSummary["status"]; label
     <span className="grid h-4 w-4 place-items-center rounded-full bg-red-soft" role="img" aria-label={label}>
       <span className="h-[2px] w-2 rounded-sm bg-red" />
     </span>
+  );
+}
+
+/** The conversation on screen: it runs at a human pace and tells the tab about every change. */
+function WatchedConversation({
+  session,
+  initial,
+  onUpdate,
+  onWatch,
+}: {
+  session: SessionSummary;
+  initial: SessionView | undefined;
+  onUpdate: (v: SessionView) => void;
+  onWatch: (id: string | null) => void;
+}) {
+  useEffect(() => {
+    onWatch(session.id);
+    return () => onWatch(null);
+  }, [session.id, onWatch]);
+  if (!initial) return <Loading label="Loading the conversation" />;
+  return <LiveBody initial={initial} onUpdate={onUpdate} />;
+}
+
+function LiveBody({ initial, onUpdate }: { initial: SessionView; onUpdate: (v: SessionView) => void }) {
+  const chat = useLiveChat(initial, { onView: onUpdate });
+  const v = chat.s;
+  return (
+    <ConversationPanel
+      chat={chat}
+      className="h-[clamp(34rem,calc(100vh-14rem),54rem)]"
+      headerExtra={
+        <>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
+            <span>
+              Original quote <b className="text-ink">{money(v.original_price)}</b>
+            </span>
+            <span>
+              Vendor now <b className="text-ink">{money(v.vendor_offer)}</b>
+            </span>
+            {v.our_offer != null && (
+              <span>
+                Our offer <b className="text-ink">{money(v.our_offer)}</b>
+              </span>
+            )}
+          </div>
+          <Link href={`/negotiate/${v.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-3.5 py-1.5 text-xs font-semibold text-ink hover:border-brand hover:text-brand">
+            Open workspace
+            <Icon name="external" size={13} />
+          </Link>
+        </>
+      }
+    />
   );
 }
