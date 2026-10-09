@@ -75,12 +75,24 @@ html[data-embed="1"] main { padding-left: 0; padding-right: 0; padding-top: 0; }
   -webkit-text-fill-color: transparent;
   animation: shimmer-sweep 1.5s linear infinite;
 }
+/* A text link in the brand colour with a light band sweeping across it, like "Ask AIS". */
+.shimmer-link {
+  color: var(--brand);
+  background-image: linear-gradient(100deg, var(--brand) 35%, color-mix(in srgb, var(--brand) 25%, #fff) 50%, var(--brand) 65%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 2.2s linear infinite;
+}
+.shimmer-link:hover { text-decoration: underline; }
 @keyframes shimmer-sweep {
   from { background-position: 150% 0; }
   to { background-position: -50% 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .shimmer-text { animation: none; background-image: none; -webkit-text-fill-color: currentColor; }
+  .shimmer-text, .shimmer-link { animation: none; background-image: none; -webkit-text-fill-color: currentColor; }
 }
 
 /* A contract document prints on its own: the navigation and the toolbar are left out. */

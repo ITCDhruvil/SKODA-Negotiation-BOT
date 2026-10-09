@@ -12,7 +12,7 @@ import { DataTable, type Column } from "@/components/ui/DataTable";
 import { IconLink } from "@/components/ui/TableToolbar";
 import { MenuInfo, RowMenu } from "@/components/ui/RowMenu";
 import { ErrorBox, Loading, Notice, PageHeader } from "@/components/ui/State";
-import { api, type EventDetail, type ItemView } from "@/lib/api";
+import { api, type EventDetail, type ItemView, type SessionRow } from "@/lib/api";
 import { dateShort, money, moneyCompact, num } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
 import {
@@ -114,9 +114,7 @@ function EventTabs({ eventId, fromAis, itemCount, children }: { eventId: string;
   );
 }
 
-function EventNegotiations({ eventId }: { eventId: string }) {
-  const { data } = useApi(() => api.negotiations(), [eventId]);
-  const rows = (data ?? []).filter((r) => r.event_id === eventId);
+function EventNegotiations({ rows }: { rows: SessionRow[] }) {
   return (
     <Panel title="Negotiations on this event" flush>
       {rows.length === 0 ? (
@@ -124,14 +122,19 @@ function EventNegotiations({ eventId }: { eventId: string }) {
       ) : (
         <ul className="divide-y divide-line2">
           {rows.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-semibold text-ink">{r.item_description}</div>
-                <div className="text-xs text-muted">{r.vendor_name}</div>
-              </div>
-              <span className="font-semibold tabular-nums">{money(r.agreed_price ?? r.vendor_offer)}</span>
-              <Pill tone={SESSION_TONE[r.status]}>{SESSION_LABEL[r.status]}</Pill>
-              <IconLink href={`/negotiate/${r.id}`} icon={r.status === "active" ? "chat" : "eye"} label={r.status === "active" ? "Open conversation" : "View conversation"} />
+            <li key={r.id}>
+              <Link
+                href={`/negotiate/${r.id}`}
+                title={r.status === "active" ? "Open conversation" : "View conversation"}
+                className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm transition hover:bg-raise"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold text-ink">{r.item_description}</div>
+                  <div className="text-xs text-muted">{r.vendor_name}</div>
+                </div>
+                <span className="font-semibold tabular-nums">{money(r.agreed_price ?? r.vendor_offer)}</span>
+                <Pill tone={SESSION_TONE[r.status]}>{SESSION_LABEL[r.status]}</Pill>
+              </Link>
             </li>
           ))}
         </ul>
@@ -142,6 +145,10 @@ function EventNegotiations({ eventId }: { eventId: string }) {
 
 function Body({ data }: { data: EventDetail }) {
   const e = data.event;
+  const { data: all } = useApi(() => api.negotiations(), [e.id]);
+  const rows = (all ?? []).filter((r) => r.event_id === e.id);
+  const running = rows.filter((r) => r.status === "active");
+  const lead = running[0] ?? rows[0];
   const closed = e.status === "closed";
   const columns: Column<ItemView>[] = [
     {
@@ -220,6 +227,11 @@ function Body({ data }: { data: EventDetail }) {
         crumbs={
           <>
             <Link href="/events" className="hover:underline">Events</Link> / {e.id}
+            {lead && (
+              <Link href={`/items/${lead.item_id}?tab=negotiation`} className="shimmer-link ml-4 font-semibold">
+                {running.length > 0 ? `Open conversation${running.length > 1 ? `s (${running.length})` : ""}` : "View conversations"}
+              </Link>
+            )}
           </>
         }
         title={
@@ -277,7 +289,7 @@ function Body({ data }: { data: EventDetail }) {
           </EventTabs>
         </div>
         <div className="grid min-w-0 content-start gap-5">
-          <EventNegotiations eventId={e.id} />
+          <EventNegotiations rows={rows} />
           <Panel title="Details">
             <dl>
               <Meta label="Reference value" value={money(e.reference_value)} />
